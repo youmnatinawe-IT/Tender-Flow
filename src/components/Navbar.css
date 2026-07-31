@@ -1,0 +1,152 @@
+.navbar {
+  height: 70px;
+  background: #fff;
+  padding: 0 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  
+  /* التعديل لمنع أي فراغ علوي */
+  position: sticky;
+  top: 0;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 1000;
+  margin: 0; /* تأكيد تصفير المارجن */
+}
+
+/* الكلاس الخاص بالمحتوى الداخلي تخلص من المارجن القديم */
+.main-content {
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+.search-box {
+  width: 350px;
+  height: 42px;
+  background: #f5f7fb;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  gap: 10px;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  max-width: 700px;
+  height: 48px;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.notification-btn {
+  position: relative;
+  border: none;
+  background: #f5f7fb;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.navbar-lan {
+  width: 40px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fb;
+  border-radius: 50%;
+border: none;
+ cursor: pointer;
+}
+.navbar-them {
+  width: 40px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fb;
+  border-radius: 50%;
+  border: none;
+   cursor: pointer;
+}
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  background: red;
+  color: white;
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.profile p {
+  margin: 0;
+  font-size: 12px;
+  color: gray;
+}
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* المسافة بين السهم الصغير والعنوان */
+}
+
+.nav-back-icon-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  width: 32px;  /* جعل الزر دائري صغير وملموم */
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.nav-back-icon-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  transform: translateX(-2px); /* تأثير حركة خفيف جداً جهة اليسار عند الهوفر */
+}
+
+.navbar-page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1; /* لضمان السنترة العمودية مع السهم */
+}

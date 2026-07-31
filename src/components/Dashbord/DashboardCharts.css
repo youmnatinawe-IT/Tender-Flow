@@ -1,0 +1,66 @@
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 25px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+
+.chart-card h3 {
+  margin-bottom: 15px;
+  color: #0f172a;
+}
+
+.user-chart {
+  margin-top: 20px;
+}
+
+.user-chart-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pie-container {
+  width: 45%;
+  height: 320px;
+}
+
+.user-legend {
+  width: 45%;
+}
+
+.user-legend h2 {
+  margin-bottom: 10px;
+}
+
+.user-legend p {
+  color: #64748b;
+  margin-bottom: 25px;
+}
+
+.legend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.legend-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}

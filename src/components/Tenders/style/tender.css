@@ -1,0 +1,995 @@
+/* =========================
+   PAGE
+========================= */
+/* Container الرئيسي للصفحة */
+.tender_page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+/* الحاوية الرئيسية للمحتوى بجانب السايدبار */
+.main-content-wrapper {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-x: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================
+   COMPACT HERO SECTION
+========================= */
+
+.Page-hero {
+  background: linear-gradient(135deg, #0f1f38, #1e293b);
+  color: white;
+  border-radius: 12px;
+  padding: 16px 24px; /* تقليل الـ Padding لتكون رفع وحجمها أرق */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.hero-content h1 {
+  margin: 0;
+  font-size: 22px; /* تصغير حجم العنوان الرئيسي ليتناسب مع البار المدمج */
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.hero-content p {
+  margin: 4px 0 0 0;
+  color: #94a3b8;
+  font-size: 13px;
+  max-width: 450px;
+  line-height: 1.4;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-btn {
+  border: none;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.hero-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* الأزرار الثانوية (Drafts & Reports) */
+.hero-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hero-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+/* الزر الرئيسي (New Tender) */
+.hero-btn.primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.hero-btn.primary:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Responsive adjustment */
+@media (max-width: 768px) {
+  .tender-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .hero-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* =========================
+   STATS
+========================= */
+
+.tender-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+}
+
+.tender-stat-card {
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  transition: 0.3s;
+}
+
+.tender-stat-card:hover {
+  transform: translateY(-4px);
+}
+
+/* تنسيق حاوية الأيقونة الأساسي */
+.stat-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+.tender-stat-card h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.tender-stat-card p {
+  margin-top: 4px;
+  color: #64748b;
+}
+
+/* ==================================
+   ألوان الأيقونات والخلفيات حسب الحالة
+================================== */
+
+/* 1. الإجمالي (Total) -> أزرق افتراضي مريح */
+.stat-icon.total {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* 2. المنشورة (Published) -> أخضر زاهي */
+.stat-icon.published {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+/* 3. قيد التقييم (Evaluating) -> أزرق فاتح / سماوي */
+.stat-icon.evaluating {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* 4. مسودة (Draft) -> رمادي هادئ */
+.stat-icon.draft {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* 5. ملغاة (Cancelled) -> أحمر تحذيري */
+.stat-icon.cancelled {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* 6. تمت الترسية (Awarded) -> بنفسجي / ذهبي (أو برتقالي دافئ) */
+.stat-icon.awarded {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.tender-stat-card h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.tender-stat-card p {
+  margin-top: 4px;
+  color: #64748b;
+}
+
+/* =========================
+   ALERTS + ACTIVITY
+========================= */
+
+.tenders-middle-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.tender-alerts,
+.tender-activity {
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 22px;
+
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+
+.tender-alerts h3,
+.tender-activity h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px;
+
+  margin-bottom: 10px;
+
+  border-radius: 10px;
+
+  background: #fff7ed;
+
+  color: #c2410c;
+}
+
+.activity-item {
+  padding: 14px;
+
+  border-radius: 10px;
+
+  margin-bottom: 10px;
+
+  background: #f8fafc;
+
+  border-left: 4px solid #3b82f6;
+}
+/* =========================
+   COMPACT FILTER SECTION
+========================= */
+
+.tender-filter-container {
+  background: #ffffff;
+  padding: 14px 18px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #1e293b;
+}
+
+.filter-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* جعل البحث وباقي المدخلات في سطر واحد ومرن */
+.filters-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+/* ==================================
+   BUDGET RANGE FILTER STYLES
+================================== */
+
+.budget-range-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1.5;
+  min-width: 220px;
+}
+
+.budget-range-group input[type="number"] {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  font-size: 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  background-color: #f8fafc;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.budget-range-group input[type="number"]:focus {
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* إخفاء أزرار الزيادة والنقصان الافتراضية في متصفحات Chrome/Safari */
+.budget-range-group input[type="number"]::-webkit-outer-spin-button,
+.budget-range-group input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
+.range-separator {
+  color: #94a3b8;
+  font-weight: bold;
+}
+
+/* صندوق البحث المدمج */
+.search-box {
+  flex: 2;
+  min-width: 220px;
+  height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.search-box:focus-within {
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  background: transparent;
+  color: #1e293b;
+}
+
+/* القوائم المنسدلة ومدخل التاريخ */
+.filters-grid select,
+.filters-grid input[type="date"] {
+  flex: 1;
+  min-width: 140px;
+  height: 36px;
+  padding: 0 10px;
+  font-size: 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  background-color: #f8fafc;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.filters-grid select:focus,
+.filters-grid input[type="date"]:focus {
+  border-color: #2563eb;
+  background-color: #ffffff;
+}
+
+/* زر إعادة الضبط */
+.reset-btn {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+@media (max-width: 1000px) {
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1100px) {
+  .tender-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .spotlight-grid {
+    grid-template-columns: repeat(2, 1fr);
+  } 
+
+  .pipeline-container {
+    overflow-x: auto;
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tender-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .hero-actions {
+    flex-wrap: wrap;
+  }
+
+  .tender-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .tenders-middle-section {
+    grid-template-columns: 1fr;
+  }
+
+  .spotlight-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* ==========================
+   TENDER GRID
+========================== */
+
+.tender-grid {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+
+  gap: 24px;
+}
+
+/* ==================================
+   ADMIN TENDER TABLE STYLES
+================================== */
+
+.tender-table-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  border: 1px solid #eef2f6;
+  margin-top: 10px;
+}
+
+.tender-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+/* تنسيق الهيدر */
+.tender-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  padding: 16px 20px;
+  border-bottom: 2px solid #e2e8f0;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* تنسيق الخلايا */
+.tender-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+/* تأثير التمرير على الصف */
+.table-row-main {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-row-main:hover {
+  background-color: #f8fafc;
+}
+
+/* تمييز الصف النشط المفتوح حالياً */
+.active-row {
+  background-color: #f0f7ff !important;
+}
+
+.bold-text {
+  font-weight: 600;
+  color: #0f172a !important;
+}
+
+.tender-title-cell {
+  font-weight: 500;
+  color: #0f172a;
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* شريط التقدم داخل الجدول */
+.table-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+}
+
+.progress-text {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 32px;
+}
+
+.table-progress-bar {
+  flex-grow: 1;
+  height: 6px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.table-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.progress-fill-primary {
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+}
+
+.progress-fill-success {
+  background: linear-gradient(
+    90deg,
+    #10b981,
+    #059669
+  ); /* أخضر للتطبيقات المكتملة */
+}
+
+.progress-fill-danger {
+  background: linear-gradient(90deg, #ef4444, #dc2626); /* أحمر للتحذير */
+}
+
+/* بادج العروض والعدد */
+.bids-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* بادج الأيام المتبقية */
+.days-badge {
+  font-weight: 600;
+  color: #64748b;
+}
+
+.days-badge.danger {
+  color: #ef4444;
+}
+
+.days-badge.success {
+  color: #10b981;
+}
+
+/* أزرار الإجراءات */
+.icon-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ==================================
+   صف التفاصيل المتمدد (Expanded Details)
+================================== */
+
+.details-expanded-row {
+  background-color: #fcfdfe;
+}
+
+.details-content-box {
+  padding: 24px;
+  border-bottom: 2px solid #e2e8f0;
+  animation: slideDown 0.25s ease-out;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 30px;
+}
+
+.details-text-section h4,
+.details-controls-section h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.details-text-section p {
+  color: #475569;
+  line-height: 1.6;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.details-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* لوحة تحكم الأدمن الفرعية */
+.admin-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-action-btn {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.view-btn {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.view-btn:hover {
+  background-color: #dbeafe;
+}
+
+.edit-btn {
+  background-color: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.edit-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.award-btn {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+
+.award-btn:hover:not(:disabled) {
+  background-color: #d1fae5;
+}
+
+.award-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.delete-btn {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  background-color: #fee2e2;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+}
+
+.modal-container {
+  position: fixed;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  width: 650px;
+
+  max-height: 85vh;
+
+  background: white;
+
+  border-radius: 22px;
+
+  overflow: hidden;
+
+  z-index: 1001;
+
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+
+  animation: modalShow 0.25s ease;
+}
+
+@keyframes modalShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+.drawer-header {
+  position: absolute;
+
+  right: 20px;
+  top: 20px;
+
+  z-index: 2;
+}
+
+.close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background: #fee2e2;
+}
+.drawer-hero {
+  background: linear-gradient(135deg, #0f1f38, #334155);
+
+  padding: 35px;
+
+  color: white;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+}
+
+.drawer-hero h2 {
+  font-size: 24px;
+  margin: 0 0 8px;
+}
+
+.drawer-hero p {
+  opacity: 0.7;
+}
+
+.drawer-status {
+  display: flex;
+
+  gap: 10px;
+}
+
+.hero-status,
+.hero-days {
+  background: rgba(255, 255, 255, 0.15);
+
+  padding: 8px 16px;
+
+  border-radius: 20px;
+
+  font-size: 14px;
+}
+.drawer-tabs {
+  display: flex;
+
+  gap: 12px;
+
+  padding: 20px;
+
+  background: #f8fafc;
+}
+
+.drawer-tabs button {
+  flex: 1;
+
+  border: none;
+
+  padding: 12px;
+
+  border-radius: 12px;
+
+  background: #e2e8f0;
+
+  cursor: pointer;
+
+  font-weight: 600;
+}
+
+.drawer-tabs .active-tab {
+  background: #2563eb;
+
+  color: white;
+}
+.drawer-section {
+  padding: 25px;
+}
+
+.drawer-section h3 {
+  margin-bottom: 20px;
+
+  font-size: 20px;
+}
+
+.overview-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 15px;
+}
+
+.overview-grid div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  background: #f8fafc;
+
+  padding: 15px;
+
+  border-radius: 14px;
+
+  font-size: 14px;
+}
+.documents-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.drawer-document {
+  display: flex; /* تأكد من وجود display: flex ليظهر الترتيب العمودي */
+  flex-direction: column;
+  justify-content: space-between; /* لتوزيع العناصر بشكل متناسق عمودياً */
+  align-items: flex-start;
+  min-height: 120px;
+  padding: 16px;
+  background-color: #f9f9f9; /* اختياري: خلفية خفيفة للبطاقة ليظهر جمالها */
+  border-radius: 8px;
+}
+
+/* تنسيق الحاوية التي تجمع الأيقونة والنص */
+.doc-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.file-icon {
+  color: #dc2626;
+}
+
+.doc-name {
+  font-size: 14px;
+  color: #333;
+  word-break: break-all;
+}
+
+.doc-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.doc-actions button {
+  border: none;
+  background: white;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.timeline {
+  position: relative;
+}
+
+.timeline-item {
+  position: relative;
+
+  padding-left: 35px;
+
+  margin-bottom: 22px;
+
+  background: none;
+}
+
+.timeline-item::before {
+  content: "";
+
+  width: 12px;
+  height: 12px;
+
+  border-radius: 50%;
+
+  position: absolute;
+
+  left: 0;
+  top: 5px;
+
+  background: #cbd5e1;
+}
+
+.timeline-item.active::before {
+  background: #2563eb;
+}

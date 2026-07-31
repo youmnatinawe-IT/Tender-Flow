@@ -1,0 +1,256 @@
+.table-container {
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+/* -------------------------------------------------- */
+/*  Header & Tabs Styling (تنسيق الهيدر والتابات)  */
+/* -------------------------------------------------- */
+.table-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.table-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* حاوية التابات بتصميم Pill Toggle عصري */
+.approval-tabs {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+}
+
+.tab-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+}
+
+.tab-btn:hover {
+  color: #1e293b;
+}
+
+/* التاب النشط */
+.tab-btn.active {
+  background: #ffffff;
+  color: #0f1f38;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* شارات العدد داخل التاب */
+.tab-badge {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active .tab-badge {
+  background: #0f1f38;
+  color: #ffffff;
+}
+
+/* -------------------------------------------------- */
+/*  Table Styling (تنسيق الجدول)                       */
+/* -------------------------------------------------- */
+.approval-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.approval-table th {
+  background: #f8fafc;
+  color: #475569;
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.approval-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.bold-text {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Badges */
+.type-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.approved, .active {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.rejected {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* -------------------------------------------------- */
+/*  Actions Styling (أزرار القبول والرفض)              */
+/* -------------------------------------------------- */
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.approve-btn, .reject-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.approve-btn {
+  background: #16a34a;
+  color: white;
+}
+
+.approve-btn:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.reject-btn {
+  background: #dc2626;
+  color: white;
+}
+
+.reject-btn:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.action-done {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+/* -------------------------------------------------- */
+/*  Footer Button Styling (الزر السفلي)               */
+/* -------------------------------------------------- */
+.table-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid #f8fafc;
+}
+
+.view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #0f1f38;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 31, 56, 0.15);
+  transition: all 0.2s ease-in-out;
+}
+
+.view-all-btn:hover {
+  background: #1e3a5f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 31, 56, 0.25);
+}
+
+.view-all-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.view-all-btn:hover svg {
+  transform: translateX(4px);
+}
+.review-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  color: #2563eb;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.review-btn:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}

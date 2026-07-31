@@ -1,0 +1,77 @@
+.splash-bg {
+  background-color: #0f1f38;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  direction: rtl;
+}
+
+.splash-content {
+  text-align: center;
+}
+
+.logo-area {
+  margin-bottom: 40px;
+}
+
+.logo-icon {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 15px;
+  padding: 10px;
+}
+.logo-text {
+  font-size: 2rem;
+  margin: 10px 0 5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.logo-sub {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.7;
+  letter-spacing: 2px;
+}
+
+.loading-bars {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 8px;
+  height: 40px;
+}
+
+.bar {
+  width: 8px;
+  background-color: white;
+  border-radius: 4px;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.bar:nth-child(1) {
+  height: 20px;
+  animation-delay: -0.4s;
+}
+.bar:nth-child(2) {
+  height: 35px;
+  animation-delay: -0.2s;
+}
+.bar:nth-child(3) {
+  height: 15px;
+  animation-delay: 0s;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.6);
+  }
+}
