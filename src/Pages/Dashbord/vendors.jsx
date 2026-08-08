@@ -1,8 +1,8 @@
 import { useState } from "react";
-import VendorStats from "../../components/Vendors/VendorStats";
-import VendorFilter from "../../components/Vendors/VendorFilter";
-import VendorTable from "../../components/Vendors/VendorTable";
-import VendorDetails from "../../components/Vendors/VendorDetails";
+import VendorStats from "../../components/vendors/VendorStats";
+import VendorFilter from "../../components/vendors/VendorFilter";
+import VendorTable from "../../components/vendors/VendorTable";
+import VendorDetails from "../../components/vendors/VendorDetails";
 import { mockVendors } from "../../data/mockVendors";
 import "../../components/vendors/style/vendor.css";
 import Sidebar from "../../components/SideBar";
