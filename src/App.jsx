@@ -8,6 +8,8 @@ import Users from "./Pages/Dashbord/Users"
 import Vendors from "./Pages/Dashbord/vendors"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import OrganizationDetails from "./components/organaizations/organizationdetails";
+import SessionExpiryWatcher from "./components/SessionExpiryWatcher";
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,6 +27,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <SessionExpiryWatcher />
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<AuthPage />} />

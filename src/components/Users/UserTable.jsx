@@ -1,5 +1,6 @@
-import  { useState } from "react";
-import { Eye, Pencil, Trash2, UserX, UserCheck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Eye, Pencil, Trash2, UserX, UserCheck, Loader2 } from "lucide-react";
+import { getUsers } from "../../services/userService"; // عدلي المسار بحسب موقع الملف
 
 import UserDetails from "./UserDatails";
 import UserModal from "./UserModal";
@@ -13,53 +14,40 @@ export default function UserTable({ filters }) {
   const [showDelete, setShowDelete] = useState(false);
   const [showSuspend, setShowSuspend] = useState(false);
 
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Ahmed Hassan",
-      email: "ahmed@ict.gov.sy",
-      phone: "0999999999",
-      organization: "Ministry of ICT",
-      role: "Publisher Admin",
-      status: "Active",
-      lastLogin: "2 hours ago",
-    },
-    {
-      id: 2,
-      name: "Sara Ali",
-      email: "sara@abc.com",
-      phone: "0988888888",
-      organization: "ABC Company",
-      role: "Bidder Manager",
-      status: "Suspended",
-      lastLogin: "Yesterday",
-    },
-    {
-      id: 3,
-      name: "Mohammad Khaled",
-      email: "mk@xyz.com",
-      phone: "0966666666",
-      organization: "XYZ Ltd",
-      role: "Support",
-      status: "Pending",
-      lastLogin: "Never",
-    },
-    {
-      id: 4,
-      name: "Lina Ahmad",
-      email: "lina@ict.gov.sy",
-      phone: "0955555555",
-      organization: "Ministry of ICT",
-      role: "Auditor",
-      status: "Active",
-      lastLogin: "10 minutes ago",
-    },
-  ]);
+  // حالات البيانات والتحميل والخطأ
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // جلب البيانات من الـ API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getUsers();
+        
+        // قد تكون البيانات القادمة مصفوفة مباشرة (data) أو داخل كائن مثل (data.users)
+        // قم بتكييف السطر القادم حسب استجابة الباك إند
+        const userList = Array.isArray(data) ? data : (data.users || data.data || []);
+        setUsers(userList);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+        setError("فشل في جلب قائمة المستخدمين. يرجى التأكد من التسجيل مجدداً.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const filteredUsers = users.filter((user) => {
+    const search = filters.search.toLowerCase();
     const matchesSearch =
-      user.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-      user.email.toLowerCase().includes(filters.search.toLowerCase());
+      (user.name || user.fullName || "").toLowerCase().includes(search) ||
+      (user.email || "").toLowerCase().includes(search);
+    
     const matchesRole = filters.role === "All" || user.role === filters.role;
     const matchesOrg = filters.organization === "All" || user.organization === filters.organization;
     const matchesStatus = filters.status === "All" || user.status === filters.status;
@@ -87,6 +75,23 @@ export default function UserTable({ filters }) {
     setShowSuspend(false);
   };
 
+  if (loading) {
+    return (
+      <div className="table-container" style={{ textAlign: "center", padding: "40px" }}>
+        <Loader2 className="animate-spin" size={32} style={{ margin: "0 auto" }} />
+        <p style={{ marginTop: "10px" }}>جاري تحميل المستخدمين...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="table-container" style={{ textAlign: "center", padding: "30px", color: "red" }}>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="table-container">
@@ -105,25 +110,25 @@ export default function UserTable({ filters }) {
           <tbody>
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
-                <tr key={user.id}>
+                <tr key={user.id || user._id}>
                   <td>
                     <div className="user-info">
-                      <div className="avatar">{user.name.charAt(0)}</div>
+                      <div className="avatar">{(user.name || user.fullName || "U").charAt(0)}</div>
                       <div>
-                        <strong>{user.name}</strong>
-                        <p>{user.phone}</p>
+                        <strong>{user.name || user.fullName}</strong>
+                        <p>{user.phone || "N/A"}</p>
                       </div>
                     </div>
                   </td>
                   <td>{user.email}</td>
-                  <td>{user.organization}</td>
-                  <td><span className="role-badge">{user.role}</span></td>
+                  <td>{user.organization || "N/A"}</td>
+                  <td><span className="role-badge">{user.role || "N/A"}</span></td>
                   <td>
-                    <span className={`status-badge ${user.status.toLowerCase()}`}>
-                      {user.status}
+                    <span className={`status-badge ${(user.status || "active").toLowerCase()}`}>
+                      {user.status || "Active"}
                     </span>
                   </td>
-                  <td>{user.lastLogin}</td>
+                  <td>{user.lastLogin || "N/A"}</td>
                   <td>
                     <div className="actions">
                       <button

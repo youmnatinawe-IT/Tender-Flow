@@ -1,24 +1,28 @@
 import { useState } from "react";
-import { UserPlus, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { UserPlus, X, Loader2, CheckCircle2 } from "lucide-react";
 import API from "../../services/api";
+import ErrorAlert, { FieldError } from "../ErrorAlert";
+import useApiRequest from "../../hooks/useApiRequest";
 import "./style/create-account.css";
 
-export default function CreateAccount({ onClose, onCreated }) {
-  const [formData, setFormData] = useState({
-    type: "PUBLISHER",
-    f_name: "",
-    l_name: "",
-    father_name: "",
-    national_num: "",
-    email: "",
-    phone: "",
-    username: "",
-    password: "",
-  });
+const INITIAL_FORM_DATA = {
+  type: "PUBLISHER",
+  f_name: "",
+  l_name: "",
+  father_name: "",
+  national_num: "",
+  email: "",
+  phone: "",
+  username: "",
+  password: "",
+};
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+export default function CreateAccount({ onClose, onCreated }) {
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+
   const [success, setSuccess] = useState("");
+
+  const { loading, error, run, setError } = useApiRequest();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,76 +76,40 @@ export default function CreateAccount({ onClose, onCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
     setSuccess("");
 
     const validationError = validateForm();
 
     if (validationError) {
-      setError(validationError);
+      setError({
+        isApiError: true,
+        code: "VALIDATION",
+        message: validationError,
+      });
       return;
     }
 
-    setLoading(true);
+    const result = await run(
+      API.post("/api/auth/web/register", formData)
+    );
 
-    try {
-      const response = await API.post(
-        "/api/auth/web/register",
-        formData
-      );
-
-      console.log("Account created:", response.data);
-
-      setSuccess("Account created successfully.");
-
-      if (onCreated) {
-        onCreated(response.data);
-      }
-
-      setFormData({
-        type: "PUBLISHER",
-        f_name: "",
-        l_name: "",
-        father_name: "",
-        national_num: "",
-        email: "",
-        phone: "",
-        username: "",
-        password: "",
-      });
-
-      // إذا أردتِ إغلاق النافذة تلقائياً
-      setTimeout(() => {
-        if (onClose) {
-          onClose();
-        }
-      }, 1200);
-
-    } catch (err) {
-      console.error("Create account error:", err);
-
-      const backendMessage =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.response?.data?.detail;
-
-      if (err?.response?.status === 401) {
-        setError("Unauthorized. Your session may have expired.");
-      } else if (err?.response?.status === 403) {
-        setError("You do not have permission to create accounts.");
-      } else if (err?.response?.status === 409) {
-        setError(
-          "The national number, email, or username already exists."
-        );
-      } else {
-        setError(
-          backendMessage ||
-          "Failed to create account. Please try again."
-        );
-      }
-    } finally {
-      setLoading(false);
+    if (!result.success) {
+      return;
     }
+
+    setSuccess("Account created successfully.");
+
+    if (onCreated) {
+      onCreated(result.data);
+    }
+
+    setFormData({ ...INITIAL_FORM_DATA });
+
+    setTimeout(() => {
+      if (onClose) {
+        onClose();
+      }
+    }, 1200);
   };
 
   return (
@@ -194,6 +162,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                   Admin
                 </option>
               </select>
+              <FieldError error={error} name="type" />
             </div>
           </div>
 
@@ -212,6 +181,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                   onChange={handleChange}
                   placeholder="Enter first name"
                 />
+                <FieldError error={error} name="f_name" />
               </div>
 
               <div className="form-group">
@@ -224,6 +194,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                   onChange={handleChange}
                   placeholder="Enter last name"
                 />
+                <FieldError error={error} name="l_name" />
               </div>
 
               <div className="form-group">
@@ -236,6 +207,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                   onChange={handleChange}
                   placeholder="Enter father name"
                 />
+                <FieldError error={error} name="father_name" />
               </div>
 
               <div className="form-group">
@@ -248,6 +220,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                   onChange={handleChange}
                   placeholder="Enter national number"
                 />
+                <FieldError error={error} name="national_num" />
               </div>
 
             </div>
@@ -268,6 +241,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                   onChange={handleChange}
                   placeholder="example@email.com"
                 />
+                <FieldError error={error} name="email" />
               </div>
 
               <div className="form-group">
@@ -280,6 +254,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                   onChange={handleChange}
                   placeholder="Enter phone number"
                 />
+                <FieldError error={error} name="phone" />
               </div>
 
             </div>
@@ -300,6 +275,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                   onChange={handleChange}
                   placeholder="Enter username"
                 />
+                <FieldError error={error} name="username" />
               </div>
 
               <div className="form-group">
@@ -312,17 +288,13 @@ export default function CreateAccount({ onClose, onCreated }) {
                   onChange={handleChange}
                   placeholder="Enter password"
                 />
+                <FieldError error={error} name="password" />
               </div>
 
             </div>
           </div>
 
-          {error && (
-            <div className="form-message error-message">
-              <AlertCircle size={18} />
-              <span>{error}</span>
-            </div>
-          )}
+          <ErrorAlert error={error} />
 
           {success && (
             <div className="form-message success-message">
