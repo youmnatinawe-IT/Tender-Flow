@@ -1,13 +1,12 @@
 import { useState } from "react";
 import TenderHero from "../../components/Tenders/TenderHero";
-import TenderStats from "../../components/tenders/TenderStat";
+import TenderStats from "../../components/Tenders/TenderStat";
 import TenderFilter from "../../components/Tenders/TenderFilter";
-import TenderAlerts from "../../components/tenders/TenderAlerts";
+import TenderAlerts from "../../components/Tenders/TenderAlerts";
 
 import TenderTable from "../../components/Tenders/TenderTable";
 import Sidebar from "../../components/SideBar";
-import "../../components/tenders/style/tender.css";
-
+import "../../components/Tenders/style/tender.css";
 export default function Tenders() {
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
