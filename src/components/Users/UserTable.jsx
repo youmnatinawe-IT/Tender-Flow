@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
 import { Eye, Pencil, Trash2, UserX, UserCheck, Loader2 } from "lucide-react";
-import { getUsers } from "../../services/userService"; // عدلي المسار بحسب موقع الملف
+import { getUsers } from "../../services/userService";
 
 import UserDetails from "./UserDatails";
 import UserModal from "./UserModal";
 import DeleteUserModal from "./DeleteUserModal";
 import SuspendUserModal from "./SuspendUserModal";
+
+const normalizeStatus = (status) => String(status || "active").toLowerCase();
+
+const capitalizeStatus = (status) => {
+  const normalized = normalizeStatus(status);
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
 
 export default function UserTable({ filters }) {
   const [selectedUser, setSelectedUser] = useState(null);
@@ -14,22 +21,20 @@ export default function UserTable({ filters }) {
   const [showDelete, setShowDelete] = useState(false);
   const [showSuspend, setShowSuspend] = useState(false);
 
-  // حالات البيانات والتحميل والخطأ
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // جلب البيانات من الـ API
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
         setError(null);
         const data = await getUsers();
-        
-        // قد تكون البيانات القادمة مصفوفة مباشرة (data) أو داخل كائن مثل (data.users)
-        // قم بتكييف السطر القادم حسب استجابة الباك إند
-        const userList = Array.isArray(data) ? data : (data.users || data.data || []);
+
+        const userList = Array.isArray(data)
+          ? data
+          : data.users || data.data || [];
         setUsers(userList);
       } catch (err) {
         console.error("Failed to fetch users:", err);
@@ -43,42 +48,60 @@ export default function UserTable({ filters }) {
   }, []);
 
   const filteredUsers = users.filter((user) => {
-    const search = filters.search.toLowerCase();
+    const search = String(filters.search || "").toLowerCase();
+    const userName = [user.f_name, user.l_name, user.name, user.fullName]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
     const matchesSearch =
-      (user.name || user.fullName || "").toLowerCase().includes(search) ||
-      (user.email || "").toLowerCase().includes(search);
-    
+      userName.includes(search) ||
+      String(user.email || "").toLowerCase().includes(search);
+
     const matchesRole = filters.role === "All" || user.role === filters.role;
-    const matchesOrg = filters.organization === "All" || user.organization === filters.organization;
-    const matchesStatus = filters.status === "All" || user.status === filters.status;
+    const matchesOrg =
+      filters.organization === "All" ||
+      user.organization === filters.organization;
+    const matchesStatus =
+      filters.status === "All" ||
+      normalizeStatus(user.status) === String(filters.status).toLowerCase();
 
     return matchesSearch && matchesRole && matchesOrg && matchesStatus;
   });
 
   const handleDeleteUser = (userToDelete) => {
-    setUsers(users.filter((u) => u.id !== userToDelete.id));
+    const id = userToDelete?.id || userToDelete?._id;
+    setUsers((prevUsers) => prevUsers.filter((u) => (u.id || u._id) !== id));
     setShowDelete(false);
   };
 
   const handleToggleSuspend = (userToSuspend) => {
-    setUsers(
-      users.map((u) => {
-        if (u.id === userToSuspend.id) {
+    const id = userToSuspend?.id || userToSuspend?._id;
+    setUsers((prevUsers) =>
+      prevUsers.map((u) => {
+        if ((u.id || u._id) === id) {
           return {
             ...u,
-            status: u.status === "Suspended" ? "Active" : "Suspended",
+            status:
+              normalizeStatus(u.status) === "suspended" ? "active" : "suspended",
           };
         }
         return u;
-      })
+      }),
     );
     setShowSuspend(false);
   };
 
   if (loading) {
     return (
-      <div className="table-container" style={{ textAlign: "center", padding: "40px" }}>
-        <Loader2 className="animate-spin" size={32} style={{ margin: "0 auto" }} />
+      <div
+        className="table-container"
+        style={{ textAlign: "center", padding: "40px" }}
+      >
+        <Loader2
+          className="animate-spin"
+          size={32}
+          style={{ margin: "0 auto" }}
+        />
         <p style={{ marginTop: "10px" }}>جاري تحميل المستخدمين...</p>
       </div>
     );
@@ -86,7 +109,10 @@ export default function UserTable({ filters }) {
 
   if (error) {
     return (
-      <div className="table-container" style={{ textAlign: "center", padding: "30px", color: "red" }}>
+      <div
+        className="table-container"
+        style={{ textAlign: "center", padding: "30px", color: "red" }}
+      >
         <p>{error}</p>
       </div>
     );
@@ -109,75 +135,100 @@ export default function UserTable({ filters }) {
           </thead>
           <tbody>
             {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <tr key={user.id || user._id}>
-                  <td>
-                    <div className="user-info">
-                      <div className="avatar">{(user.name || user.fullName || "U").charAt(0)}</div>
-                      <div>
-                        <strong>{user.name || user.fullName}</strong>
-                        <p>{user.phone || "N/A"}</p>
+              filteredUsers.map((user) => {
+                const status = normalizeStatus(user.status);
+
+                return (
+                  <tr key={user.id || user._id}>
+                    <td>
+                      <div className="user-info">
+                        <div className="avatar">
+                          {(
+                            user.name ||
+                            user.fullName ||
+                            user.f_name ||
+                            "U"
+                          ).charAt(0)}
+                        </div>
+                        <div>
+                          <strong>
+                            {user.name ||
+                              user.fullName ||
+                              `${user.f_name || ""} ${user.l_name || ""}`.trim()}
+                          </strong>
+                          <p>{user.phone || "N/A"}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>{user.email}</td>
-                  <td>{user.organization || "N/A"}</td>
-                  <td><span className="role-badge">{user.role || "N/A"}</span></td>
-                  <td>
-                    <span className={`status-badge ${(user.status || "active").toLowerCase()}`}>
-                      {user.status || "Active"}
-                    </span>
-                  </td>
-                  <td>{user.lastLogin || "N/A"}</td>
-                  <td>
-                    <div className="actions">
-                      <button
-                        className="action-btn view"
-                        title="View Details"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowDrawer(true);
-                        }}
-                      >
-                        <Eye size={16} />
-                      </button>
+                    </td>
+                    <td>{user.email}</td>
+                    <td>{user.organization || "N/A"}</td>
+                    <td>
+                      <span className="role-badge">{user.role || "N/A"}</span>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${status}`}>
+                        {capitalizeStatus(user.status)}
+                      </span>
+                    </td>
+                    <td>{user.lastLogin || "N/A"}</td>
+                    <td>
+                      <div className="actions">
+                        <button
+                          className="action-btn view"
+                          title="View Details"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowDrawer(true);
+                          }}
+                        >
+                          <Eye size={16} />
+                        </button>
 
-                      <button
-                        className="action-btn edit"
-                        title="Edit User"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowModal(true);
-                        }}
-                      >
-                        <Pencil size={16} />
-                      </button>
+                        <button
+                          className="action-btn edit"
+                          title="Edit User"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowModal(true);
+                          }}
+                        >
+                          <Pencil size={16} />
+                        </button>
 
-                      <button
-                        className={`action-btn ${user.status === "Suspended" ? "activate" : "suspend"}`}
-                        title={user.status === "Suspended" ? "Activate User" : "Suspend User"}
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowSuspend(true);
-                        }}
-                      >
-                        {user.status === "Suspended" ? <UserCheck size={16} /> : <UserX size={16} />}
-                      </button>
+                        <button
+                          className={`action-btn ${status === "suspended" ? "activate" : "suspend"}`}
+                          title={
+                            status === "suspended"
+                              ? "Activate User"
+                              : "Suspend User"
+                          }
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowSuspend(true);
+                          }}
+                        >
+                          {status === "suspended" ? (
+                            <UserCheck size={16} />
+                          ) : (
+                            <UserX size={16} />
+                          )}
+                        </button>
 
-                      <button
-                        className="action-btn delete"
-                        title="Delete User"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowDelete(true);
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                        <button
+                          className="action-btn delete"
+                          title="Delete User"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowDelete(true);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan="7" className="no-data">
@@ -195,14 +246,20 @@ export default function UserTable({ filters }) {
 
       {showModal && (
         <UserModal
+          key={selectedUser?.id || selectedUser?._id}
           user={selectedUser}
           onClose={() => setShowModal(false)}
           onSave={(updatedUser) => {
-            if (selectedUser) {
-              setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
-            } else {
-              setUsers([...users, { ...updatedUser, id: Date.now() }]);
-            }
+            setUsers((prevUsers) =>
+              prevUsers.map((u) => {
+                const updatedId = updatedUser?.id || updatedUser?._id;
+                const currentId = u.id || u._id;
+                if (updatedId && currentId === updatedId) {
+                  return { ...u, ...updatedUser };
+                }
+                return u;
+              }),
+            );
           }}
         />
       )}

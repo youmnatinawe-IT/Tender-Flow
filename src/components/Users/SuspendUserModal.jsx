@@ -5,7 +5,8 @@ import "./style/users.css";
 export default function SuspendUserModal({ user, onClose, onSuspend }) {
   if (!user) return null;
 
-  const isSuspended = user.status === "Suspended";
+  const isSuspended =
+    String(user.status || "active").toLowerCase() === "suspended";
 
   return (
     <div className="modal-overlay">
