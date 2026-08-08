@@ -89,10 +89,7 @@ export default function CreateAccount({ onClose, onCreated }) {
       return;
     }
 
-    const result = await run(
-      API.post("/api/auth/web/register", formData)
-    );
-
+    const result = await run(API.post("/api/users", formData));
     if (!result.success) {
       return;
     }
@@ -115,7 +112,6 @@ export default function CreateAccount({ onClose, onCreated }) {
   return (
     <div className="create-account-overlay">
       <div className="create-account-modal">
-
         <div className="create-account-header">
           <div className="create-account-title">
             <div className="create-account-icon">
@@ -128,39 +124,21 @@ export default function CreateAccount({ onClose, onCreated }) {
             </div>
           </div>
 
-          <button
-            className="close-button"
-            onClick={onClose}
-            type="button"
-          >
+          <button className="close-button" onClick={onClose} type="button">
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-
           <div className="form-section">
             <h3>Account Information</h3>
 
             <div className="form-group">
               <label>Account Type</label>
 
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-              >
-                <option value="PUBLISHER">
-                  Publisher
-                </option>
-
-                <option value="SYSTEM_EMPLOYEE">
-                  System Employee
-                </option>
-
-                <option value="ADMIN">
-                  Admin
-                </option>
+              <select name="type" value={formData.type} onChange={handleChange}>
+                <option value="PUBLISHER">Publisher</option>
+                <option value="SYSTEM_EMPLOYEE">System Employee</option>
               </select>
               <FieldError error={error} name="type" />
             </div>
@@ -170,7 +148,6 @@ export default function CreateAccount({ onClose, onCreated }) {
             <h3>Personal Information</h3>
 
             <div className="form-grid">
-
               <div className="form-group">
                 <label>First Name</label>
 
@@ -222,7 +199,6 @@ export default function CreateAccount({ onClose, onCreated }) {
                 />
                 <FieldError error={error} name="national_num" />
               </div>
-
             </div>
           </div>
 
@@ -230,7 +206,6 @@ export default function CreateAccount({ onClose, onCreated }) {
             <h3>Contact Information</h3>
 
             <div className="form-grid">
-
               <div className="form-group">
                 <label>Email</label>
 
@@ -256,7 +231,6 @@ export default function CreateAccount({ onClose, onCreated }) {
                 />
                 <FieldError error={error} name="phone" />
               </div>
-
             </div>
           </div>
 
@@ -264,7 +238,6 @@ export default function CreateAccount({ onClose, onCreated }) {
             <h3>Login Credentials</h3>
 
             <div className="form-grid">
-
               <div className="form-group">
                 <label>Username</label>
 
@@ -290,7 +263,6 @@ export default function CreateAccount({ onClose, onCreated }) {
                 />
                 <FieldError error={error} name="password" />
               </div>
-
             </div>
           </div>
 
@@ -304,7 +276,6 @@ export default function CreateAccount({ onClose, onCreated }) {
           )}
 
           <div className="create-account-actions">
-
             <button
               type="button"
               className="cancel-button"
@@ -314,17 +285,10 @@ export default function CreateAccount({ onClose, onCreated }) {
               Cancel
             </button>
 
-            <button
-              type="submit"
-              className="create-button"
-              disabled={loading}
-            >
+            <button type="submit" className="create-button" disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2
-                    size={18}
-                    className="loading-icon"
-                  />
+                  <Loader2 size={18} className="loading-icon" />
                   Creating...
                 </>
               ) : (
@@ -334,9 +298,7 @@ export default function CreateAccount({ onClose, onCreated }) {
                 </>
               )}
             </button>
-
           </div>
-
         </form>
       </div>
     </div>
