@@ -160,3 +160,41 @@
 .auth-card[dir="ltr"] {
   text-align: left;
 }
+/* =========================================
+   Password Eye Toggle Styling
+   ========================================= */
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 42px; /* ترك مسافة داخلية للأيقونة لكي لا يتداخل النص معها */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  color: #0f1f38;
+  background-color: #f1f5f9;
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+}

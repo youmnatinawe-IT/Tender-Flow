@@ -28,3 +28,24 @@ export const updateUser = async (id, userData) => {
     return { success: false, error: parsedError };
   }
 };
+// قبول المستخدم وتغيير حالته إلى ACTIVE
+export const acceptUser = async (id) => {
+  try {
+    const response = await API.put(`/api/users/accept/${id}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const parsedError = normalizeError(error);
+    return { success: false, error: parsedError };
+  }
+};
+
+// حظر المستخدم وتغيير حالته إلى BANNED
+export const banUser = async (id) => {
+  try {
+    const response = await API.put(`/api/users/ban/${id}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const parsedError = normalizeError(error);
+    return { success: false, error: parsedError };
+  }
+};

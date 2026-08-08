@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react"; // 👈 استيراد الأيقونات
 import API from "../../services/api";
 import { setToken } from "../../services/session";
 import ErrorAlert from "../../components/ErrorAlert";
@@ -12,6 +13,7 @@ const AuthPage = () => {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👈 حالة إظهار وإخفاء كلمة المرور
 
   const { loading, error, run } = useApiRequest();
 
@@ -59,14 +61,25 @@ const AuthPage = () => {
 
           <div className="input-group">
             <label>Password</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required 
-              dir="ltr" 
-            />
+            {/* 👈 حاوية حقل كلمة المرور والأيقونة */}
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"} // 👈 التبديل الديناميكي
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                dir="ltr"
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword((prev) => !prev)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading}>

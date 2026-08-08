@@ -74,19 +74,19 @@ export default function UserTable({ filters }) {
     setShowDelete(false);
   };
 
-  const handleToggleSuspend = (userToSuspend) => {
-    const id = userToSuspend?.id || userToSuspend?._id;
+  // 🎯 تحديث حالة المستخدم في الـ State بعد نجاح الحظر (BAN) أو القبول (ACCEPT)
+  const handleStatusChanged = (userId, newStatus) => {
     setUsers((prevUsers) =>
       prevUsers.map((u) => {
-        if ((u.id || u._id) === id) {
+        const id = u.id || u._id;
+        if (id === userId) {
           return {
             ...u,
-            status:
-              normalizeStatus(u.status) === "suspended" ? "active" : "suspended",
+            status: newStatus,
           };
         }
         return u;
-      }),
+      })
     );
     setShowSuspend(false);
   };
@@ -138,6 +138,12 @@ export default function UserTable({ filters }) {
               filteredUsers.map((user) => {
                 const status = normalizeStatus(user.status);
 
+                // 🎯 حالة الحساب تتطلب قبول/تفعيل إذا كانت pending أو banned أو suspended
+                const isPendingOrBanned =
+                  status === "pending" ||
+                  status === "banned" ||
+                  status === "suspended";
+
                 return (
                   <tr key={user.id || user._id}>
                     <td>
@@ -173,6 +179,7 @@ export default function UserTable({ filters }) {
                     <td>{user.lastLogin || "N/A"}</td>
                     <td>
                       <div className="actions">
+                        {/* 1. View Details */}
                         <button
                           className="action-btn view"
                           title="View Details"
@@ -184,6 +191,7 @@ export default function UserTable({ filters }) {
                           <Eye size={16} />
                         </button>
 
+                        {/* 2. Edit User */}
                         <button
                           className="action-btn edit"
                           title="Edit User"
@@ -195,25 +203,31 @@ export default function UserTable({ filters }) {
                           <Pencil size={16} />
                         </button>
 
+                        {/* 3. Accept / Activate / Ban User */}
                         <button
-                          className={`action-btn ${status === "suspended" ? "activate" : "suspend"}`}
+                          className={`action-btn ${
+                            isPendingOrBanned ? "activate" : "suspend"
+                          }`}
                           title={
-                            status === "suspended"
+                            status === "pending"
+                              ? "Accept User"
+                              : isPendingOrBanned
                               ? "Activate User"
-                              : "Suspend User"
+                              : "Ban User"
                           }
                           onClick={() => {
                             setSelectedUser(user);
                             setShowSuspend(true);
                           }}
                         >
-                          {status === "suspended" ? (
+                          {isPendingOrBanned ? (
                             <UserCheck size={16} />
                           ) : (
                             <UserX size={16} />
                           )}
                         </button>
 
+                        {/* 4. Delete User */}
                         <button
                           className="action-btn delete"
                           title="Delete User"
@@ -241,7 +255,10 @@ export default function UserTable({ filters }) {
       </div>
 
       {showDrawer && (
-        <UserDetails user={selectedUser} onClose={() => setShowDrawer(false)} />
+        <UserDetails
+          user={selectedUser}
+          onClose={() => setShowDrawer(false)}
+        />
       )}
 
       {showModal && (
@@ -258,7 +275,7 @@ export default function UserTable({ filters }) {
                   return { ...u, ...updatedUser };
                 }
                 return u;
-              }),
+              })
             );
           }}
         />
@@ -276,7 +293,7 @@ export default function UserTable({ filters }) {
         <SuspendUserModal
           user={selectedUser}
           onClose={() => setShowSuspend(false)}
-          onSuspend={handleToggleSuspend}
+          onStatusChanged={handleStatusChanged}
         />
       )}
     </>
