@@ -366,79 +366,131 @@
 .warning-icon { background: #fef2f2; color: #dc2626; }
 .suspend-icon { background: #fffbeb; color: #d97706; }
 
-/* Drawer */
-.user-drawer {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-  max-width: 500px;
-  background: #ffffff;
-  padding: 28px;
-  overflow-y: auto;
-  box-shadow: -10px 0 25px rgba(0,0,0,0.1);
-}
+/* =========================================
+   User Details Modal Clean Styling
+   ========================================= */
 
-.drawer-header { display: flex; justify-content: space-between; align-items: center; }
-.drawer-profile { display: flex; align-items: center; gap: 16px; margin: 20px 0; }
-
-.drawer-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #2563eb;
-  color: #fff;
-  font-size: 24px;
-  font-weight: 700;
+/* الخلفية المعتمة من وراء المودال */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
+  padding: 20px;
 }
 
-.drawer-tabs {
+/* المودال المركزي الأنيق */
+.user-details-modal {
+  width: 100%;
+  max-width: 620px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  animation: modalCenterIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalCenterIn {
+  from { opacity: 0; transform: scale(0.95) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* الهيدر العلوي */
+.modal-top-bar {
   display: flex;
-  gap: 8px;
-  border-bottom: 1px solid #e2e8f0;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
   margin-bottom: 20px;
-  padding-bottom: 8px;
 }
 
-.drawer-tabs button {
-  background: none;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.title-area h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.sub-id {
   font-size: 13px;
   color: #64748b;
+  margin: 4px 0 0 0;
 }
 
-.drawer-tabs button.active { background: #2563eb; color: #fff; }
+/* عنوان القسم الداخلي */
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 14px 0;
+}
 
-.details-grid { display: flex; flex-direction: column; gap: 12px; }
+/* الشبكة الموزعة لبطاقات التفاصيل */
+.details-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
 
-.detail-item {
+.detail-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 12px 14px;
   background: #f8fafc;
-  border-radius: 8px;
-  font-size: 13px;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
 }
 
-.detail-item span { color: #64748b; }
-.detail-item strong { display: block; color: #1e293b; margin-top: 2px; }
+.card-icon.blue {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-.role-card { background: #f8fafc; padding: 16px; border-radius: 8px; font-size: 14px; }
-.permission-item { display: flex; align-items: center; gap: 8px; padding: 10px; background: #f0fdf4; border-radius: 6px; margin-bottom: 8px; font-size: 13px; color: #166534; }
-.activity-item { padding: 12px; border-left: 3px solid #2563eb; background: #f8fafc; margin-bottom: 8px; border-radius: 0 6px 6px 0; }
-.activity-item h4 { margin: 0; font-size: 14px; }
-.activity-item p { margin: 4px 0 0 0; font-size: 12px; color: #64748b; }
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.card-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.card-value {
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 40px 0;
+  color: #64748b;
+}
+
+.loading-state svg {
+  color: #2563eb;
+  margin-bottom: 8px;
+}
 
 /* تنسيق زر Create Account احترافي */
 .create-account-btn {
