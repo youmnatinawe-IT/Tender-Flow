@@ -1,15 +1,15 @@
 import { useState } from "react";
+import { UserPlus } from "lucide-react";
 import UserStats from "../../components/Users/UserStats";
 import UserFilters from "../../components/Users/UserFilters";
 import UserTable from "../../components/Users/UserTable";
 import Sidebar from "../../components/SideBar";
 import "../../components/Users/style/users.css";
+import CreateAccount from "../../components/Users/CreateAccount";
 
 export default function Users() {
-  // 1️⃣ حالة التحكم بتوسيع وإغلاق السايدبار بنفس تسمية صفحة المناقصات
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  // حالة الفلاتر الخاصة بالصفحة
+  const [showCreateAccount, setShowCreateAccount] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     role: "All",
@@ -19,23 +19,42 @@ export default function Users() {
 
   return (
     <div className={`users_page ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
-      {/* 2️⃣ السايدبار وتمرير الحالة ليتطابق مع باقي الصفحات */}
       <Sidebar 
         isCollapsed={isSidebarCollapsed} 
         setIsCollapsed={setIsSidebarCollapsed} 
       />
 
-      {/* 3️⃣ تغليف المحتوى للحفاظ على محاذاة وسلاسة التوسع والانكماش */}
       <div className="main-content-wrapper">
+        {/* Page Hero قسم الهيدر الرئيسي */}
         <div className="Page-hero">
           <div className="hero-content">
             <h1>Users Management</h1>
             <p>Monitor, manage and review all registered users profiles and statuses.</p>
           </div>
+
+          {/* زر إنشاء الحساب المنظّم */}
+          <button 
+            className="create-account-btn" 
+            onClick={() => setShowCreateAccount(true)}
+          >
+            <UserPlus size={18} />
+            <span>Create Account</span>
+          </button>
         </div>
+
+        {showCreateAccount && (
+          <CreateAccount
+            onClose={() => setShowCreateAccount(false)}
+            onCreated={(data) => {
+              console.log("New account:", data);
+              // إمكانية تحديث قائمة المستخدمين هنا
+            }}
+          />
+        )}
 
         <UserStats />
 
+        {/* تم الاستغناء عن زر add-user-btn داخل الفلاتر */}
         <UserFilters
           filters={filters}
           setFilters={setFilters}

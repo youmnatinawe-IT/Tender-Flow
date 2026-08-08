@@ -439,3 +439,37 @@
 .activity-item { padding: 12px; border-left: 3px solid #2563eb; background: #f8fafc; margin-bottom: 8px; border-radius: 0 6px 6px 0; }
 .activity-item h4 { margin: 0; font-size: 14px; }
 .activity-item p { margin: 4px 0 0 0; font-size: 12px; color: #64748b; }
+
+/* تنسيق زر Create Account احترافي */
+.create-account-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 20px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.create-account-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.create-account-btn:active {
+  transform: translateY(0);
+}
+
+/* إخفاء زر add-user-btn من الفلاتر إن وجد */
+.add-user-btn {
+  display: none !important;
+}
