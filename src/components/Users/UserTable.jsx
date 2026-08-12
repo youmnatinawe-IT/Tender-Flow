@@ -38,7 +38,7 @@ export default function UserTable({ filters }) {
         setUsers(userList);
       } catch (err) {
         console.error("Failed to fetch users:", err);
-        setError("فشل في جلب قائمة المستخدمين. يرجى التأكد من التسجيل مجدداً.");
+        setError("Failed to fetch user list. Please ensure you are logged in again.");
       } finally {
         setLoading(false);
       }
@@ -74,7 +74,7 @@ export default function UserTable({ filters }) {
     setShowDelete(false);
   };
 
-  // 🎯 تحديث حالة المستخدم في الـ State بعد نجاح الحظر (BAN) أو القبول (ACCEPT)
+  // 🎯 Update user status in state after successful ban (BAN) or acceptance (ACCEPT)
   const handleStatusChanged = (userId, newStatus) => {
     setUsers((prevUsers) =>
       prevUsers.map((u) => {
@@ -102,7 +102,7 @@ export default function UserTable({ filters }) {
           size={32}
           style={{ margin: "0 auto" }}
         />
-        <p style={{ marginTop: "10px" }}>جاري تحميل المستخدمين...</p>
+        <p style={{ marginTop: "10px" }}>Loading users...</p>
       </div>
     );
   }
@@ -138,7 +138,7 @@ export default function UserTable({ filters }) {
               filteredUsers.map((user) => {
                 const status = normalizeStatus(user.status);
 
-                // 🎯 حالة الحساب تتطلب قبول/تفعيل إذا كانت pending أو banned أو suspended
+                // 🎯 Account status requires accept/activate if it is pending, banned, or suspended
                 const isPendingOrBanned =
                   status === "pending" ||
                   status === "banned" ||
