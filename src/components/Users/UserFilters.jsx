@@ -1,7 +1,6 @@
+import { Search, RotateCcw } from "lucide-react";
 
-import { Search, RotateCcw, UserPlus } from "lucide-react";
-
-export default function UserFilters({ filters, setFilters, onAddUser }) {
+export default function UserFilters({ filters, setFilters }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
@@ -44,7 +43,11 @@ export default function UserFilters({ filters, setFilters, onAddUser }) {
           <option value="Auditor">Auditor</option>
         </select>
 
-        <select name="organization" value={filters.organization} onChange={handleChange}>
+        <select
+          name="organization"
+          value={filters.organization}
+          onChange={handleChange}
+        >
           <option value="All">All Organizations</option>
           <option value="Ministry of ICT">Ministry of ICT</option>
           <option value="ABC Company">ABC Company</option>
@@ -60,14 +63,13 @@ export default function UserFilters({ filters, setFilters, onAddUser }) {
       </div>
 
       <div className="filter-actions">
-        <button className="reset-btn" onClick={resetFilters} title="Reset Filters">
+        <button
+          className="reset-btn"
+          onClick={resetFilters}
+          title="Reset Filters"
+        >
           <RotateCcw size={16} />
           <span>Reset</span>
-        </button>
-
-        <button className="add-user-btn" onClick={onAddUser}>
-          <UserPlus size={16} />
-          <span>Add User</span>
         </button>
       </div>
     </div>

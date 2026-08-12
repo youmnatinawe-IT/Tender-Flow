@@ -643,12 +643,21 @@
   animation: slideDown 0.25s ease-out;
 }
 
+
 .details-grid {
   display: grid;
   grid-template-columns: 3fr 2fr;
   gap: 30px;
+  align-items: center; /* تضمن تتوسيط المحتوى عمودياً بين القسم الأيسر والأيمن */
 }
-
+/* حاوية زر التفاصيل تتوسط المساحة المتاحة */
+.details-controls-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
 .details-text-section h4,
 .details-controls-section h4 {
   margin-top: 0;
@@ -698,43 +707,31 @@
 .view-btn {
   background-color: #eff6ff;
   color: #2563eb;
+  padding: 12px 28px;        /* زيادة الـ padding لإعطاء الزر اتساعاً أفقياً متناسقاً */
+  border-radius: 10px;        /* حواف ناعمة واحترافية */
+  border: 1px solid #dbeafe;  /* إطار خفيف لتمييز الزر */
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.06);
 }
 
+/* تأثير التمرير (Hover Effect) */
 .view-btn:hover {
-  background-color: #dbeafe;
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  transform: translateY(-2px); /* رفعة خفيفة جداً تمنح شعوراً بالاستجابة */
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
 }
 
-.edit-btn {
-  background-color: #f8fafc;
-  color: #334155;
-  border: 1px solid #e2e8f0;
-}
-
-.edit-btn:hover {
-  background-color: #e2e8f0;
-}
-
-.award-btn {
-  background-color: #ecfdf5;
-  color: #059669;
-}
-
-.award-btn:hover:not(:disabled) {
-  background-color: #d1fae5;
-}
-
-.award-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.delete-btn {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.delete-btn:hover {
-  background-color: #fee2e2;
+.view-btn:active {
+  transform: translateY(0);
 }
 
 .modal-overlay {

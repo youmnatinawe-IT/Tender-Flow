@@ -49,3 +49,27 @@ export const banUser = async (id) => {
     return { success: false, error: parsedError };
   }
 };
+// تعليق الحساب / إرجاع الحالة إلى معلق (PUT /api/users/resend/:id)
+export const resendPendingUser = async (id) => {
+  try {
+    const response = await API.put(`/api/users/resend/${id}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const parsedError = normalizeError(error);
+    return { success: false, error: parsedError };
+  }
+};
+
+// رفض المستخدم وتغيير حالته إلى REJECTED مع إرسال سبب الرفض
+// رفض المستخدم وتغيير حالته إلى REJECTED مع إرسال سبب الرفض
+export const rejectUser = async (id, reason) => {
+  try {
+    const response = await API.put(`/api/users/reject/${id}`, {
+      reject_message: reason // 👈 التعديل هنا: استخدام reject_message
+    });
+    return { success: true, data: response.data };
+  } catch (error) {
+    const parsedError = normalizeError(error);
+    return { success: false, error: parsedError };
+  }
+};
