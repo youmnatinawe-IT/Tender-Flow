@@ -1,91 +1,119 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Sidebar from "../../components/SideBar";
 import { Plus, Download } from "lucide-react";
-import OrganizationStats from "../../components/organaizations/organaizationstats";
-import OrganizationFilters from "../../components/organaizations/organaizationfilters";
 import OrganizationsTable from "../../components/organaizations/organaizationtable";
+import OrganizationTabs from "../../components/organaizations/OrganizationTabs";
+import AddPublisherModal from "../../components/organaizations/AddPublisherModal";
+import CreateAdminModal from "../../components/organaizations/CreateAdminModal";
 import "../../components/organaizations/style/organaization.css";
 import { useNavigate } from "react-router-dom";
+import {
+  getPublisherOrgs,
+  getExecutorOrgs,
+  getOrgUsers, // 👈 استيراد دالة جلب المستخدمين لكل منظمة
+} from "../../services/organizationService";
 
 export default function Organizations() {
-  const [organizations, setOrganizations] = useState([
-    {
-      id: 1,
-      name: "Modern Technology Company",
-      type: "Publisher",
-      taxNumber: "123456789",
-      email: "info@modern.com",
-      phone: "+963 933 111 222",
-      status: "Active",
-      createdAt: "2026-07-02",
-      documents: [
-        {
-          id: 101,
-          type: "Commercial Register",
-          name: "commercial_register_modern.pdf",
-        },
-        { id: 102, type: "Tax Card", name: "tax_card_modern.pdf" },
-      ],
-    },
-    {
-      id: 2,
-      name: "Al-Emar Foundation",
-      type: "Bidder",
-      taxNumber: "987654321",
-      email: "contact@alemar.com",
-      phone: "+963 944 555 666",
-      status: "Pending",
-      createdAt: "2026-07-01",
-      documents: [
-        { id: 201, type: "Commercial Register", name: "alemar_register.pdf" },
-      ],
-    },
-    {
-      id: 3,
-      name: "Future Systems",
-      type: "Publisher",
-      taxNumber: "111222333",
-      email: "future@test.com",
-      phone: "+963 955 777 888",
-      status: "Suspended",
-      createdAt: "2026-06-20",
-      documents: [
-        {
-          id: 301,
-          type: "Commercial Register",
-          name: "future_systems_reg.pdf",
-        },
-        { id: 302, type: "License", name: "future_license.pdf" },
-      ],
-    },
-    {
-      id: 4,
-      name: "Global Security Ltd",
-      type: "System",
-      taxNumber: "555666777",
-      email: "security@global.com",
-      phone: "+963 911 222 333",
-      status: "Banned",
-      createdAt: "2026-05-15",
-      documents: [
-        {
-          id: 401,
-          type: "Commercial Register",
-          name: "global_security_docs.pdf",
-        },
-      ],
-    },
-  ]);
+  const [organizations, setOrganizations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [activeTab, setActiveTab] = useState("PUBLISHER");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Modals state
+  const [isAddPublisherOpen, setIsAddPublisherOpen] = useState(false);
+  const [selectedOrgForAdmin, setSelectedOrgForAdmin] = useState(null);
+
   const navigate = useNavigate();
+
+  // دالة تحويل نسق بيانات الباك إند ليتطابق مع الجدول
+  const mapOrgData = (org, type, users = []) => ({
+    id: org._id || org.id,
+    name: org.org_name || org.name || "N/A",
+    type: type, // 'Publisher' or 'Executor'
+    taxNumber: org.commercial_register_num || org.taxNumber || "N/A",
+    email: org.email || "N/A",
+    phone: org.phone_number || org.phone || "N/A",
+    status: org.status || "Pending",
+    createdAt: org.createdAt
+      ? new Date(org.createdAt).toISOString().split("T")[0]
+      : "N/A",
+    accounts: users,
+    hasAdmin:
+      users.length > 0 ||
+      Boolean(org.has_admin || org.hasAdmin || org.adminUser),
+  });
+
+  // دالة جلب البيانات مع استعلام المستخدمين لكل منظمة
+  const fetchOrgs = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const res =
+        activeTab === "PUBLISHER"
+          ? await getPublisherOrgs()
+          : await getExecutorOrgs();
+
+      if (res.success) {
+        const rawData = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+            ? res.data.data
+            : Array.isArray(res.data?.publishers)
+              ? res.data.publishers
+              : Array.isArray(res.data?.executors)
+                ? res.data.executors
+                : Array.isArray(res.data?.organizations)
+                  ? res.data.organizations
+                  : [];
+
+        const currentType = activeTab === "PUBLISHER" ? "Publisher" : "Executor";
+
+        // جلب مستخدمين كل منظمة بالتوازي لتحديث حالة الـ Admin تلقائياً
+        const updatedOrgs = await Promise.all(
+          rawData.map(async (org) => {
+            const orgId = org._id || org.id;
+            let users = [];
+
+            if (orgId && activeTab === "PUBLISHER") {
+              const usersRes = await getOrgUsers(orgId);
+              if (usersRes?.success) {
+                const uData = usersRes.data;
+                users = Array.isArray(uData)
+                  ? uData
+                  : Array.isArray(uData?.users)
+                    ? uData.users
+                    : Array.isArray(uData?.data)
+                      ? uData.data
+                      : [];
+              }
+            }
+
+            return mapOrgData(org, currentType, users);
+          })
+        );
+
+        setOrganizations(updatedOrgs);
+      } else {
+        setError(res.error?.message || "فشل في جلب البيانات من السيرفر");
+      }
+    } catch (err) {
+      console.error("Error loading organizations:", err);
+      setError("حدث خطأ غير متوقع أثناء تحميل البيانات");
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchOrgs();
+  }, [fetchOrgs]);
 
   const handleUpdateStatus = (id, newStatus) => {
     setOrganizations((prev) =>
-      prev.map((org) => (org.id === id ? { ...org, status: newStatus } : org)),
+      prev.map((org) => (org.id === id ? { ...org, status: newStatus } : org))
     );
   };
 
@@ -93,66 +121,105 @@ export default function Organizations() {
     navigate(`/organizations/${id}`);
   };
 
-  const filteredOrganizations = organizations.filter((org) => {
-    const matchesSearch =
-      org.name.toLowerCase().includes(search.toLowerCase()) ||
-      org.taxNumber.includes(search);
-
-    const matchesType = typeFilter === "All" || org.type === typeFilter;
-    const matchesStatus = statusFilter === "All" || org.status === statusFilter;
-
-    return matchesSearch && matchesType && matchesStatus;
-  });
+  const handleRefreshData = () => {
+    fetchOrgs();
+  };
 
   return (
     <div
       className={`page-layout ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}
     >
-      {/* السايد بار الجانبي */}
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
       />
-     <div className="main-content-wrapper">
-      
-      {/* هيدر الصفحة بتصميم الـ Hero */}
-      <div className="Page-hero">
-        <div className="hero-content">
-          <h1>Organizations Management</h1>
-          <p>Monitor, manage and review all registered organization profiles and statuses.</p>
-        </div>
+      <div className="main-content-wrapper">
+        <div className="Page-hero">
+          <div className="hero-content">
+            <h1>Organizations Management</h1>
+            <p>
+              Monitor, manage and review all registered organization profiles
+              and statuses.
+            </p>
+          </div>
 
-        <div className="hero-actions">
-          {/* أزرار اختيارية بنفس نمط زري Drafts و Reports في تصميم المناقصات */}
-          <button className="hero-btn secondary">
-            <Download size={15} /> Export
-          </button>
-          
-          <button className="hero-btn primary">
-            <Plus size={15} /> Add Organization
-          </button>
+          <div className="hero-actions">
+            <button className="hero-btn secondary">
+              <Download size={15} /> Export
+            </button>
+
+            {activeTab === "PUBLISHER" && (
+              <button
+                className="hero-btn primary"
+                onClick={() => setIsAddPublisherOpen(true)}
+              >
+                <Plus size={15} /> Add Publisher Org
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
         <div className="organizations-container">
-          <OrganizationStats organizations={organizations} />
-
-          <OrganizationFilters
-            search={search}
-            setSearch={setSearch}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
+          <OrganizationTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
           />
 
-          <OrganizationsTable
-            organizations={filteredOrganizations}
-            onUpdateStatus={handleUpdateStatus}
-            onViewDetails={handleViewDetails}
-          />
+          {error && (
+            <div
+              className="modal-error-alert"
+              style={{ marginBottom: "16px" }}
+            >
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div
+              style={{
+                padding: "40px",
+                textAlign: "center",
+                color: "#64748b",
+              }}
+            >
+              Loading organizations...
+            </div>
+          ) : (
+            <OrganizationsTable
+              organizations={organizations}
+              onUpdateStatus={handleUpdateStatus}
+              onViewDetails={handleViewDetails}
+              activeTab={activeTab}
+              onCreateAdmin={(org) => setSelectedOrgForAdmin(org)}
+            />
+          )}
         </div>
       </div>
+
+      {/* Modals */}
+      <AddPublisherModal
+        isOpen={isAddPublisherOpen}
+        onClose={() => setIsAddPublisherOpen(false)}
+        onRefresh={handleRefreshData}
+      />
+
+      <CreateAdminModal
+        isOpen={Boolean(selectedOrgForAdmin)}
+        org={selectedOrgForAdmin}
+        onClose={() => setSelectedOrgForAdmin(null)}
+        onRefresh={() => {
+          if (selectedOrgForAdmin) {
+            setOrganizations((prevOrgs) =>
+              prevOrgs.map((org) =>
+                org.id === selectedOrgForAdmin.id
+                  ? { ...org, hasAdmin: true, status: "Active" }
+                  : org
+              )
+            );
+          }
+          fetchOrgs();
+        }}
+      />
     </div>
   );
 }

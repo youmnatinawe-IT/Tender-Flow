@@ -39,10 +39,12 @@ export const acceptUser = async (id) => {
   }
 };
 
-// حظر المستخدم وتغيير حالته إلى BANNED
-export const banUser = async (id) => {
+// حظر المستخدم وتغيير حالته إلى BANNED مع إرسال سبب الحظر
+export const banUser = async (id, message) => {
   try {
-    const response = await API.put(`/api/users/ban/${id}`);
+    const response = await API.put(`/api/users/ban/${id}`, {
+      bann_message: message // 👈 التعديل هنا: إرسال bann_message للباك إند
+    });
     return { success: true, data: response.data };
   } catch (error) {
     const parsedError = normalizeError(error);
@@ -60,7 +62,7 @@ export const resendPendingUser = async (id) => {
   }
 };
 
-// رفض المستخدم وتغيير حالته إلى REJECTED مع إرسال سبب الرفض
+ 
 // رفض المستخدم وتغيير حالته إلى REJECTED مع إرسال سبب الرفض
 export const rejectUser = async (id, reason) => {
   try {

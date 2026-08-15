@@ -20,21 +20,33 @@ export default function SuspendUserModal({ user, onClose, onStatusChanged }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // State to determine selected action ('REJECT' for rejection, or NULL for general actions)
+  // حالة الرفض
   const [isRejectMode, setIsRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+
+  // 🎯 1. إضافة حالة الحظر والسبب
+  const [isBanMode, setIsBanMode] = useState(false);
+  const [banReason, setBanReason] = useState("");
 
   if (!user) return null;
 
   const userId = user.id || user._id;
   const currentStatus = String(user.status || "").toUpperCase();
 
-  // Handle all actions (Accept, Ban, Suspend/Pending, Reject)
   const handleExecuteAction = async (actionType) => {
     if (actionType === "REJECT" && !rejectReason.trim()) {
       setError({
         isApiError: false,
         message: "Please enter a rejection reason before submitting.",
+      });
+      return;
+    }
+
+    // 🎯 2. التحقق من وجود سبب الحظر
+    if (actionType === "BAN" && !banReason.trim()) {
+      setError({
+        isApiError: false,
+        message: "Please enter a ban reason before submitting.",
       });
       return;
     }
@@ -49,7 +61,8 @@ export default function SuspendUserModal({ user, onClose, onStatusChanged }) {
       result = await acceptUser(userId);
       newStatus = "ACTIVE";
     } else if (actionType === "BAN") {
-      result = await banUser(userId);
+      // 🎯 3. تمرير سبب الحظر لدالة banUser
+      result = await banUser(userId, banReason.trim());
       newStatus = "BANNED";
     } else if (actionType === "RESEND") {
       result = await resendPendingUser(userId);
@@ -100,7 +113,7 @@ export default function SuspendUserModal({ user, onClose, onStatusChanged }) {
           </b>
         </p>
 
-        {/* Input field for rejection reason when in rejection mode */}
+        {/* Input field for rejection reason */}
         {isRejectMode && (
           <div
             className="form-group"
@@ -114,7 +127,7 @@ export default function SuspendUserModal({ user, onClose, onStatusChanged }) {
                 display: "block",
               }}
             >
-              Rejection Reason (will be sent in the message):
+              Rejection Reason:
             </label>
 
             <textarea
@@ -122,6 +135,41 @@ export default function SuspendUserModal({ user, onClose, onStatusChanged }) {
               placeholder="Enter the reason for rejecting this account..."
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                fontSize: "14px",
+                outline: "none",
+              }}
+            />
+          </div>
+        )}
+
+        {/* 🎯 4. حقل إدخال سبب الحظر عند التفعيل */}
+        {isBanMode && (
+          <div
+            className="form-group"
+            style={{ textAlign: "left", marginTop: "12px" }}
+          >
+            <label
+              style={{
+                fontSize: "13px",
+                fontWeight: "600",
+                marginBottom: "4px",
+                display: "block",
+              }}
+            >
+              Ban Reason (bann_message):
+            </label>
+
+            <textarea
+              rows={3}
+              placeholder="Enter the reason for banning this account..."
+              value={banReason}
+              onChange={(e) => setBanReason(e.target.value)}
               disabled={loading}
               style={{
                 width: "100%",
@@ -166,18 +214,45 @@ export default function SuspendUserModal({ user, onClose, onStatusChanged }) {
                 )}
               </button>
             </>
+          ) : isBanMode ? (
+            /* 🎯 5. أزرار التحكم بوضع الحظر */
+            <>
+              <button
+                className="cancel-btn"
+                onClick={() => {
+                  setIsBanMode(false);
+                  setError(null);
+                }}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="delete-btn"
+                style={{ backgroundColor: "#334155" }}
+                onClick={() => handleExecuteAction("BAN")}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  "Confirm & Ban Account"
+                )}
+              </button>
+            </>
           ) : (
             <>
               {currentStatus !== "ACTIVE" && (
                 <button
-                  className="accept-btn" 
+                  className="accept-btn"
                   onClick={() => handleExecuteAction("ACCEPT")}
                   disabled={loading}
                 >
                   <CheckCircle size={16} /> Accept Account
                 </button>
               )}
-              {/* 2. Suspend / Set Pending Button */}
+
               {currentStatus !== "PENDING" && (
                 <button
                   className="suspend-btn"
@@ -188,23 +263,28 @@ export default function SuspendUserModal({ user, onClose, onStatusChanged }) {
                 </button>
               )}
 
-              {/* 3. Reject Account Button */}
               {currentStatus !== "REJECTED" && (
                 <button
                   className="delete-btn"
-                  onClick={() => setIsRejectMode(true)}
+                  onClick={() => {
+                    setIsRejectMode(true);
+                    setIsBanMode(false);
+                  }}
                   disabled={loading}
                 >
                   <XCircle size={16} /> Reject Account
                 </button>
               )}
 
-              {/* 4. Ban Account Button */}
+              {/* 🎯 6. زر الحظر يقوم بالانتقال إلى isBanMode بدلاً من التنفيذ المباشر */}
               {currentStatus !== "BANNED" && (
                 <button
                   className="delete-btn"
                   style={{ backgroundColor: "#334155" }}
-                  onClick={() => handleExecuteAction("BAN")}
+                  onClick={() => {
+                    setIsBanMode(true);
+                    setIsRejectMode(false);
+                  }}
                   disabled={loading}
                 >
                   Ban Account

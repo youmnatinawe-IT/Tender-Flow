@@ -213,7 +213,7 @@ export default function UserTable({ filters }) {
                               ? "Accept User"
                               : isPendingOrBanned
                               ? "Activate User"
-                              : "Ban User"
+                              : " Options "
                           }
                           onClick={() => {
                             setSelectedUser(user);
