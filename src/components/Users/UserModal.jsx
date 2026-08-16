@@ -148,7 +148,7 @@ const handleSubmit = async (e) => {
                   <Loader2 size={18} className="animate-spin" /> Updating...
                 </>
               ) : (
-                <>
+                <> 
                   <Save size={18} /> Update User
                 </>
               )}

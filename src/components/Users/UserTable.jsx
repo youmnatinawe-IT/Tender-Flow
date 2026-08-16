@@ -1,32 +1,76 @@
 import { useState, useEffect } from "react";
-import {
-  Eye,
-  Pencil,
-  Trash2,
-  UserX,
-  UserCheck,
-  Loader2,
-} from "lucide-react";
+import { Eye, Pencil, Trash2, UserX, UserCheck, Loader2 } from "lucide-react";
 
 import { getUsers } from "../../services/userService";
 
+import {
+  getPublisherOrgs,
+  getExecutorOrgs,
+} from "../../services/organizationService";
 import UserDetails from "./UserDatails";
 import UserModal from "./UserModal";
 import DeleteUserModal from "./DeleteUserModal";
 import SuspendUserModal from "./SuspendUserModal";
 
-const normalizeStatus = (status) =>
-  String(status || "active").toLowerCase();
+const normalizeStatus = (status) => String(status || "active").toLowerCase();
 
 const capitalizeStatus = (status) => {
   const normalized = normalizeStatus(status);
 
-  return (
-    normalized.charAt(0).toUpperCase() +
-    normalized.slice(1)
-  );
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
+const getUserRole = (user) => {
+  return user?.role || user?.type || "N/A";
 };
 
+const getOrganizationName = (user) => {
+  if (!user) return "N/A";
+
+  // في حال كان الحقل نصاً مباشراً
+  if (typeof user.organization === "string" && user.organization.trim()) {
+    return user.organization;
+  }
+
+  // في حال كانت المنظمة Object
+  if (user.organization && typeof user.organization === "object") {
+    return (
+      user.organization.org_name ||
+      user.organization.name ||
+      user.organization.title ||
+      "N/A"
+    );
+  }
+
+  // مفاتيح بديلة شائعة من الباك إند
+  return (
+    user.org_name ||
+    user.organization_name ||
+    user.org?.org_name ||
+    user.org?.name ||
+    user.PublisherOrg?.org_name ||
+    user.ExecutorOrg?.org_name ||
+    "N/A"
+  );
+};
+const formatLastLogin = (user) => {
+  // البحث عن الحقل بأكثر من مسمى محتمل من الباك إند
+  const loginDate =
+    user?.lastLogin || user?.last_login || user?.lastLoginAt || user?.updatedAt;
+
+  if (!loginDate) return "N/A";
+
+  const date = new Date(loginDate);
+  if (isNaN(date.getTime())) return String(loginDate);
+
+  // تنسيق التاريخ والوقت بشكل لطيف (مثل: Aug 16, 2026, 07:50 PM)
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 export default function UserTable({ filters }) {
   const [selectedUser, setSelectedUser] = useState(null);
 
@@ -40,33 +84,55 @@ export default function UserTable({ filters }) {
   const [error, setError] = useState(null);
 
   // ============================================================
-  // Fetch Users
+  // Fetch Users & Organizations (الدالة الجديدة)
   // ============================================================
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const result = await getUsers();
+        const [usersRes, pubRes, execRes] = await Promise.all([
+          getUsers(),
+          getPublisherOrgs(),
+          getExecutorOrgs(),
+        ]);
 
-        // getUsers in your service returns:
-        // { success: true, data: ... }
-        const data = result?.success
-          ? result.data
-          : result;
+        const rawUsers = usersRes?.success ? usersRes.data : usersRes;
+        const userList = Array.isArray(rawUsers)
+          ? rawUsers
+          : rawUsers?.users || rawUsers?.data || [];
 
-        const userList = Array.isArray(data)
-          ? data
-          : data?.users ||
-            data?.data ||
-            [];
+        // دمج قوائم المنظمات
+        const publishers = pubRes?.success
+          ? pubRes.data?.data || pubRes.data?.publishers || pubRes.data || []
+          : [];
+        const executors = execRes?.success
+          ? execRes.data?.data || execRes.data?.executors || execRes.data || []
+          : [];
+        const allOrgs =
+          Array.isArray(publishers) && Array.isArray(executors)
+            ? [...publishers, ...executors]
+            : [];
 
-        setUsers(userList);
+        // خريطة لسهولة البحث بواسطة ID المنظمة
+        const orgMap = new Map(
+          allOrgs.map((org) => [
+            String(org._id || org.id),
+            org.org_name || org.name || "N/A",
+          ]),
+        );
+
+        // ربط اسم المنظمة بكل مستخدم عبر org_id
+        const enrichedUsers = userList.map((u) => ({
+          ...u,
+          organization: orgMap.get(String(u.org_id)) || u.organization || "N/A",
+        }));
+
+        setUsers(enrichedUsers);
       } catch (err) {
-        console.error("Failed to fetch users:", err);
-
+        console.error("Failed to fetch data:", err);
         setError(
           "Failed to fetch user list. Please ensure you are logged in again.",
         );
@@ -75,9 +141,8 @@ export default function UserTable({ filters }) {
       }
     };
 
-    fetchUsers();
+    fetchData();
   }, []);
-
   // ============================================================
   // Filters
   // ============================================================
@@ -90,16 +155,9 @@ export default function UserTable({ filters }) {
   };
 
   const filteredUsers = users.filter((user) => {
-    const search = String(
-      safeFilters.search || "",
-    ).toLowerCase();
+    const search = String(safeFilters.search || "").toLowerCase();
 
-    const userName = [
-      user.f_name,
-      user.l_name,
-      user.name,
-      user.fullName,
-    ]
+    const userName = [user.f_name, user.l_name, user.name, user.fullName]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
@@ -110,25 +168,21 @@ export default function UserTable({ filters }) {
         .toLowerCase()
         .includes(search);
 
+    const userRole = getUserRole(user);
+
     const matchesRole =
-      safeFilters.role === "All" ||
-      user.role === safeFilters.role;
+      safeFilters.role === "All" || userRole === safeFilters.role;
+
+    const userOrg = getOrganizationName(user);
 
     const matchesOrg =
       safeFilters.organization === "All" ||
-      user.organization === safeFilters.organization;
-
+      userOrg === safeFilters.organization;
     const matchesStatus =
       safeFilters.status === "All" ||
-      normalizeStatus(user.status) ===
-        String(safeFilters.status).toLowerCase();
+      normalizeStatus(user.status) === String(safeFilters.status).toLowerCase();
 
-    return (
-      matchesSearch &&
-      matchesRole &&
-      matchesOrg &&
-      matchesStatus
-    );
+    return matchesSearch && matchesRole && matchesOrg && matchesStatus;
   });
 
   // ============================================================
@@ -136,15 +190,9 @@ export default function UserTable({ filters }) {
   // ============================================================
 
   const handleDeleteUser = (userToDelete) => {
-    const id =
-      userToDelete?.id ||
-      userToDelete?._id;
+    const id = userToDelete?.id || userToDelete?._id;
 
-    setUsers((prevUsers) =>
-      prevUsers.filter(
-        (u) => (u.id || u._id) !== id,
-      ),
-    );
+    setUsers((prevUsers) => prevUsers.filter((u) => (u.id || u._id) !== id));
 
     setShowDelete(false);
   };
@@ -153,10 +201,7 @@ export default function UserTable({ filters }) {
   // Update User Status after API success
   // ============================================================
 
-  const handleStatusChanged = (
-    userId,
-    newStatus,
-  ) => {
+  const handleStatusChanged = (userId, newStatus) => {
     setUsers((prevUsers) =>
       prevUsers.map((u) => {
         const id = u.id || u._id;
@@ -194,9 +239,7 @@ export default function UserTable({ filters }) {
           style={{ margin: "0 auto" }}
         />
 
-        <p style={{ marginTop: "10px" }}>
-          Loading users...
-        </p>
+        <p style={{ marginTop: "10px" }}>Loading users...</p>
       </div>
     );
   }
@@ -236,9 +279,7 @@ export default function UserTable({ filters }) {
               <th>Role</th>
               <th>Status</th>
               <th>Last Login</th>
-              <th className="text-center">
-                Actions
-              </th>
+              <th className="text-center">Actions</th>
             </tr>
           </thead>
 
@@ -250,29 +291,18 @@ export default function UserTable({ filters }) {
                 // Normalize status only once
                 // ==================================================
 
-                const status = normalizeStatus(
-                  user.status,
-                );
+                const status = normalizeStatus(user.status);
 
-                const isPending =
-                  status === "pending";
+                const isPending = status === "pending";
 
-                const isActive =
-                  status === "active";
+                const isActive = status === "active";
 
-                const isRejected =
-                  status === "rejected";
+                const isRejected = status === "rejected";
 
-                const isBanned =
-                  status === "banned";
+                const isBanned = status === "banned";
 
                 return (
-                  <tr
-                    key={
-                      user.id ||
-                      user._id
-                    }
-                  >
+                  <tr key={user.id || user._id}>
                     {/* ================= USER ================= */}
 
                     <td>
@@ -295,61 +325,36 @@ export default function UserTable({ filters }) {
                               }`.trim()}
                           </strong>
 
-                          <p>
-                            {user.phone ||
-                              "N/A"}
-                          </p>
+                          <p>{user.phone || "N/A"}</p>
                         </div>
                       </div>
                     </td>
 
                     {/* ================= EMAIL ================= */}
 
-                    <td>
-                      {user.email ||
-                        "N/A"}
-                    </td>
+                    <td>{user.email || "N/A"}</td>
 
                     {/* ================= ORGANIZATION ================= */}
-
-                    <td>
-                      {user.organization ||
-                        "N/A"}
-                    </td>
-
+                    <td>{getOrganizationName(user)}</td>
                     {/* ================= ROLE ================= */}
-
                     <td>
-                      <span className="role-badge">
-                        {user.role ||
-                          "N/A"}
-                      </span>
+                      <span className="role-badge">{getUserRole(user)}</span>
                     </td>
-
                     {/* ================= STATUS ================= */}
 
                     <td>
-                      <span
-                        className={`status-badge ${status}`}
-                      >
-                        {capitalizeStatus(
-                          user.status,
-                        )}
+                      <span className={`status-badge ${status}`}>
+                        {capitalizeStatus(user.status)}
                       </span>
                     </td>
 
                     {/* ================= LAST LOGIN ================= */}
-
-                    <td>
-                      {user.lastLogin ||
-                        "N/A"}
-                    </td>
+                    <td>{formatLastLogin(user)}</td>
 
                     {/* ================= ACTIONS ================= */}
 
                     <td>
                       <div className="actions">
-
                         {/* --------------------------------------
                             1. VIEW
                         --------------------------------------- */}
@@ -358,12 +363,8 @@ export default function UserTable({ filters }) {
                           className="action-btn view"
                           title="View Details"
                           onClick={() => {
-                            setSelectedUser(
-                              user,
-                            );
-                            setShowDrawer(
-                              true,
-                            );
+                            setSelectedUser(user);
+                            setShowDrawer(true);
                           }}
                         >
                           <Eye size={16} />
@@ -377,12 +378,8 @@ export default function UserTable({ filters }) {
                           className="action-btn edit"
                           title="Edit User"
                           onClick={() => {
-                            setSelectedUser(
-                              user,
-                            );
-                            setShowModal(
-                              true,
-                            );
+                            setSelectedUser(user);
+                            setShowModal(true);
                           }}
                         >
                           <Pencil size={16} />
@@ -399,17 +396,11 @@ export default function UserTable({ filters }) {
                             className="action-btn activate"
                             title="Review User"
                             onClick={() => {
-                              setSelectedUser(
-                                user,
-                              );
-                              setShowSuspend(
-                                true,
-                              );
+                              setSelectedUser(user);
+                              setShowSuspend(true);
                             }}
                           >
-                            <UserCheck
-                              size={16}
-                            />
+                            <UserCheck size={16} />
                           </button>
                         )}
 
@@ -420,17 +411,11 @@ export default function UserTable({ filters }) {
                             className="action-btn suspend"
                             title="Ban User"
                             onClick={() => {
-                              setSelectedUser(
-                                user,
-                              );
-                              setShowSuspend(
-                                true,
-                              );
+                              setSelectedUser(user);
+                              setShowSuspend(true);
                             }}
                           >
-                            <UserX
-                              size={16}
-                            />
+                            <UserX size={16} />
                           </button>
                         )}
 
@@ -441,17 +426,11 @@ export default function UserTable({ filters }) {
                             className="action-btn activate"
                             title="Send for Review Again"
                             onClick={() => {
-                              setSelectedUser(
-                                user,
-                              );
-                              setShowSuspend(
-                                true,
-                              );
+                              setSelectedUser(user);
+                              setShowSuspend(true);
                             }}
                           >
-                            <UserCheck
-                              size={16}
-                            />
+                            <UserCheck size={16} />
                           </button>
                         )}
 
@@ -467,13 +446,10 @@ export default function UserTable({ filters }) {
                             disabled
                             style={{
                               opacity: 0.45,
-                              cursor:
-                                "not-allowed",
+                              cursor: "not-allowed",
                             }}
                           >
-                            <UserX
-                              size={16}
-                            />
+                            <UserX size={16} />
                           </button>
                         )}
 
@@ -485,17 +461,11 @@ export default function UserTable({ filters }) {
                           className="action-btn delete"
                           title="Delete User"
                           onClick={() => {
-                            setSelectedUser(
-                              user,
-                            );
-                            setShowDelete(
-                              true,
-                            );
+                            setSelectedUser(user);
+                            setShowDelete(true);
                           }}
                         >
-                          <Trash2
-                            size={16}
-                          />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -504,12 +474,8 @@ export default function UserTable({ filters }) {
               })
             ) : (
               <tr>
-                <td
-                  colSpan="7"
-                  className="no-data"
-                >
-                  No users found matching
-                  your filters.
+                <td colSpan="7" className="no-data">
+                  No users found matching your filters.
                 </td>
               </tr>
             )}
@@ -522,12 +488,7 @@ export default function UserTable({ filters }) {
       ======================================================== */}
 
       {showDrawer && (
-        <UserDetails
-          user={selectedUser}
-          onClose={() =>
-            setShowDrawer(false)
-          }
-        />
+        <UserDetails user={selectedUser} onClose={() => setShowDrawer(false)} />
       )}
 
       {/* ========================================================
@@ -536,29 +497,17 @@ export default function UserTable({ filters }) {
 
       {showModal && (
         <UserModal
-          key={
-            selectedUser?.id ||
-            selectedUser?._id
-          }
+          key={selectedUser?.id || selectedUser?._id}
           user={selectedUser}
-          onClose={() =>
-            setShowModal(false)
-          }
+          onClose={() => setShowModal(false)}
           onSave={(updatedUser) => {
             setUsers((prevUsers) =>
               prevUsers.map((u) => {
-                const updatedId =
-                  updatedUser?.id ||
-                  updatedUser?._id;
+                const updatedId = updatedUser?.id || updatedUser?._id;
 
-                const currentId =
-                  u.id || u._id;
+                const currentId = u.id || u._id;
 
-                if (
-                  updatedId &&
-                  currentId ===
-                    updatedId
-                ) {
+                if (updatedId && currentId === updatedId) {
                   return {
                     ...u,
                     ...updatedUser,
@@ -579,12 +528,8 @@ export default function UserTable({ filters }) {
       {showDelete && (
         <DeleteUserModal
           user={selectedUser}
-          onClose={() =>
-            setShowDelete(false)
-          }
-          onDelete={
-            handleDeleteUser
-          }
+          onClose={() => setShowDelete(false)}
+          onDelete={handleDeleteUser}
         />
       )}
 
@@ -595,12 +540,8 @@ export default function UserTable({ filters }) {
       {showSuspend && (
         <SuspendUserModal
           user={selectedUser}
-          onClose={() =>
-            setShowSuspend(false)
-          }
-          onStatusChanged={
-            handleStatusChanged
-          }
+          onClose={() => setShowSuspend(false)}
+          onStatusChanged={handleStatusChanged}
         />
       )}
     </>
