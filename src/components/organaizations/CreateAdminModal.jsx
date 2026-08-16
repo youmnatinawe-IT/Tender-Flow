@@ -15,6 +15,10 @@ export default function CreateAdminModal({ isOpen, onClose, org, onRefresh }) {
     password: "",
   });
 
+  // حالة لحفظ صور الهوية
+  const [idCardFront, setIdCardFront] = useState(null);
+  const [idCardBack, setIdCardBack] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,15 +29,36 @@ export default function CreateAdminModal({ isOpen, onClose, org, onRefresh }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (files && files[0]) {
+      if (name === "id_card_front") {
+        setIdCardFront(files[0]);
+      } else if (name === "id_card_back") {
+        setIdCardBack(files[0]);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const payload = {
-      org_id: org.id || org._id,
-      ...formData,
-    };
+    // إنشاء FormData بدلاً من JSON عادي لدعم رفع الصور
+    const payload = new FormData();
+    payload.append("org_id", org.id || org._id);
+
+    Object.keys(formData).forEach((key) => {
+      payload.append(key, formData[key]);
+    });
+
+    if (idCardFront) {
+      payload.append("id_card_front", idCardFront);
+    }
+    if (idCardBack) {
+      payload.append("id_card_back", idCardBack);
+    }
 
     try {
       const res = await createAdminUser(payload);
@@ -104,6 +129,17 @@ export default function CreateAdminModal({ isOpen, onClose, org, onRefresh }) {
           <div className="form-group">
             <label>Password *</label>
             <input type="password" name="password" required value={formData.password} onChange={handleInputChange} />
+          </div>
+
+          {/* قسم رفع الصور (الهوية) */}
+          <div className="form-group">
+            <label>ID Card Front Image</label>
+            <input type="file" name="id_card_front" accept="image/*" onChange={handleFileChange} />
+          </div>
+
+          <div className="form-group">
+            <label>ID Card Back Image</label>
+            <input type="file" name="id_card_back" accept="image/*" onChange={handleFileChange} />
           </div>
 
           <div className="modal-actions-footer full-width">

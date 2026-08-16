@@ -19,67 +19,50 @@ const INITIAL_FORM_DATA = {
 
 export default function CreateAccount({ onClose, onCreated }) {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  // إضافة حالة لحفظ صور الهوية
+  const [idCardFront, setIdCardFront] = useState(null);
+  const [idCardBack, setIdCardBack] = useState(null);
 
   const [success, setSuccess] = useState("");
-
   const { loading, error, run, setError } = useApiRequest();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (files && files[0]) {
+      if (name === "id_card_front") {
+        setIdCardFront(files[0]);
+      } else if (name === "id_card_back") {
+        setIdCardBack(files[0]);
+      }
+    }
+  };
+
   const validateForm = () => {
-    if (!formData.f_name.trim()) {
-      return "First name is required";
-    }
-
-    if (!formData.l_name.trim()) {
-      return "Last name is required";
-    }
-
-    if (!formData.father_name.trim()) {
-      return "Father name is required";
-    }
-
-    if (!formData.national_num.trim()) {
-      return "National number is required";
-    }
-
-    if (!formData.email.trim()) {
-      return "Email is required";
-    }
-
-    if (!formData.phone.trim()) {
-      return "Phone is required";
-    }
-
-    if (!formData.username.trim()) {
-      return "Username is required";
-    }
-
-    if (!formData.password) {
-      return "Password is required";
-    }
-
-    if (formData.password.length < 6) {
-      return "Password must be at least 6 characters";
-    }
-
+    if (!formData.f_name.trim()) return "First name is required";
+    if (!formData.l_name.trim()) return "Last name is required";
+    if (!formData.father_name.trim()) return "Father name is required";
+    if (!formData.national_num.trim()) return "National number is required";
+    if (!formData.email.trim()) return "Email is required";
+    if (!formData.phone.trim()) return "Phone is required";
+    if (!formData.username.trim()) return "Username is required";
+    if (!formData.password) return "Password is required";
+    if (formData.password.length < 6) return "Password must be at least 6 characters";
     return "";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setSuccess("");
 
     const validationError = validateForm();
-
     if (validationError) {
       setError({
         isApiError: true,
@@ -89,7 +72,28 @@ export default function CreateAccount({ onClose, onCreated }) {
       return;
     }
 
-    const result = await run(API.post("/api/users", formData));
+    // بناء FormData لإرسال النصوص مع الملفات
+    const payload = new FormData();
+    Object.keys(formData).forEach((key) => {
+      payload.append(key, formData[key]);
+    });
+
+    if (idCardFront) {
+      payload.append("id_card_front", idCardFront);
+    }
+    if (idCardBack) {
+      payload.append("id_card_back", idCardBack);
+    }
+
+    // إرسال الطلب مع تحديد Content-Type كـ multipart/form-data
+    const result = await run(
+      API.post("/api/users", payload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+    );
+
     if (!result.success) {
       return;
     }
@@ -101,6 +105,8 @@ export default function CreateAccount({ onClose, onCreated }) {
     }
 
     setFormData({ ...INITIAL_FORM_DATA });
+    setIdCardFront(null);
+    setIdCardBack(null);
 
     setTimeout(() => {
       if (onClose) {
@@ -117,7 +123,6 @@ export default function CreateAccount({ onClose, onCreated }) {
             <div className="create-account-icon">
               <UserPlus size={22} />
             </div>
-
             <div>
               <h2>Create Account</h2>
               <p>Create a new system account</p>
@@ -135,7 +140,6 @@ export default function CreateAccount({ onClose, onCreated }) {
 
             <div className="form-group">
               <label>Account Type</label>
-
               <select name="type" value={formData.type} onChange={handleChange}>
                 <option value="PUBLISHER">Publisher</option>
                 <option value="SYSTEM_EMPLOYEE">System Employee</option>
@@ -150,7 +154,6 @@ export default function CreateAccount({ onClose, onCreated }) {
             <div className="form-grid">
               <div className="form-group">
                 <label>First Name</label>
-
                 <input
                   type="text"
                   name="f_name"
@@ -163,7 +166,6 @@ export default function CreateAccount({ onClose, onCreated }) {
 
               <div className="form-group">
                 <label>Last Name</label>
-
                 <input
                   type="text"
                   name="l_name"
@@ -176,7 +178,6 @@ export default function CreateAccount({ onClose, onCreated }) {
 
               <div className="form-group">
                 <label>Father Name</label>
-
                 <input
                   type="text"
                   name="father_name"
@@ -189,7 +190,6 @@ export default function CreateAccount({ onClose, onCreated }) {
 
               <div className="form-group">
                 <label>National Number</label>
-
                 <input
                   type="text"
                   name="national_num"
@@ -202,13 +202,47 @@ export default function CreateAccount({ onClose, onCreated }) {
             </div>
           </div>
 
+          {/* قسم رفع وثائق الهوية الوطنية */}
+          <div className="form-section">
+            <h3>ID Documents</h3>
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label>ID Card Front</label>
+                <input
+                  type="file"
+                  name="id_card_front"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+                {idCardFront && (
+                  <span className="file-name-preview">{idCardFront.name}</span>
+                )}
+                <FieldError error={error} name="id_card_front" />
+              </div>
+
+              <div className="form-group">
+                <label>ID Card Back</label>
+                <input
+                  type="file"
+                  name="id_card_back"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+                {idCardBack && (
+                  <span className="file-name-preview">{idCardBack.name}</span>
+                )}
+                <FieldError error={error} name="id_card_back" />
+              </div>
+            </div>
+          </div>
+
           <div className="form-section">
             <h3>Contact Information</h3>
 
             <div className="form-grid">
               <div className="form-group">
                 <label>Email</label>
-
                 <input
                   type="email"
                   name="email"
@@ -221,7 +255,6 @@ export default function CreateAccount({ onClose, onCreated }) {
 
               <div className="form-group">
                 <label>Phone</label>
-
                 <input
                   type="tel"
                   name="phone"
@@ -240,7 +273,6 @@ export default function CreateAccount({ onClose, onCreated }) {
             <div className="form-grid">
               <div className="form-group">
                 <label>Username</label>
-
                 <input
                   type="text"
                   name="username"
@@ -253,7 +285,6 @@ export default function CreateAccount({ onClose, onCreated }) {
 
               <div className="form-group">
                 <label>Password</label>
-
                 <input
                   type="password"
                   name="password"
