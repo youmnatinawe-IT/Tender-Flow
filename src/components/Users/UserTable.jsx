@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Eye, Pencil, Trash2, UserX, UserCheck, Loader2 } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  UserX,
+  UserCheck,
+  Loader2,
+} from "lucide-react";
+
 import { getUsers } from "../../services/userService";
 
 import UserDetails from "./UserDatails";
@@ -7,15 +15,21 @@ import UserModal from "./UserModal";
 import DeleteUserModal from "./DeleteUserModal";
 import SuspendUserModal from "./SuspendUserModal";
 
-const normalizeStatus = (status) => String(status || "active").toLowerCase();
+const normalizeStatus = (status) =>
+  String(status || "active").toLowerCase();
 
 const capitalizeStatus = (status) => {
   const normalized = normalizeStatus(status);
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+
+  return (
+    normalized.charAt(0).toUpperCase() +
+    normalized.slice(1)
+  );
 };
 
 export default function UserTable({ filters }) {
   const [selectedUser, setSelectedUser] = useState(null);
+
   const [showDrawer, setShowDrawer] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -25,20 +39,37 @@ export default function UserTable({ filters }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // ============================================================
+  // Fetch Users
+  // ============================================================
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getUsers();
+
+        const result = await getUsers();
+
+        // getUsers in your service returns:
+        // { success: true, data: ... }
+        const data = result?.success
+          ? result.data
+          : result;
 
         const userList = Array.isArray(data)
           ? data
-          : data.users || data.data || [];
+          : data?.users ||
+            data?.data ||
+            [];
+
         setUsers(userList);
       } catch (err) {
         console.error("Failed to fetch users:", err);
-        setError("Failed to fetch user list. Please ensure you are logged in again.");
+
+        setError(
+          "Failed to fetch user list. Please ensure you are logged in again.",
+        );
       } finally {
         setLoading(false);
       }
@@ -47,76 +78,151 @@ export default function UserTable({ filters }) {
     fetchUsers();
   }, []);
 
+  // ============================================================
+  // Filters
+  // ============================================================
+
+  const safeFilters = filters || {
+    search: "",
+    role: "All",
+    organization: "All",
+    status: "All",
+  };
+
   const filteredUsers = users.filter((user) => {
-    const search = String(filters.search || "").toLowerCase();
-    const userName = [user.f_name, user.l_name, user.name, user.fullName]
+    const search = String(
+      safeFilters.search || "",
+    ).toLowerCase();
+
+    const userName = [
+      user.f_name,
+      user.l_name,
+      user.name,
+      user.fullName,
+    ]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
+
     const matchesSearch =
       userName.includes(search) ||
-      String(user.email || "").toLowerCase().includes(search);
+      String(user.email || "")
+        .toLowerCase()
+        .includes(search);
 
-    const matchesRole = filters.role === "All" || user.role === filters.role;
+    const matchesRole =
+      safeFilters.role === "All" ||
+      user.role === safeFilters.role;
+
     const matchesOrg =
-      filters.organization === "All" ||
-      user.organization === filters.organization;
-    const matchesStatus =
-      filters.status === "All" ||
-      normalizeStatus(user.status) === String(filters.status).toLowerCase();
+      safeFilters.organization === "All" ||
+      user.organization === safeFilters.organization;
 
-    return matchesSearch && matchesRole && matchesOrg && matchesStatus;
+    const matchesStatus =
+      safeFilters.status === "All" ||
+      normalizeStatus(user.status) ===
+        String(safeFilters.status).toLowerCase();
+
+    return (
+      matchesSearch &&
+      matchesRole &&
+      matchesOrg &&
+      matchesStatus
+    );
   });
 
+  // ============================================================
+  // Delete User
+  // ============================================================
+
   const handleDeleteUser = (userToDelete) => {
-    const id = userToDelete?.id || userToDelete?._id;
-    setUsers((prevUsers) => prevUsers.filter((u) => (u.id || u._id) !== id));
+    const id =
+      userToDelete?.id ||
+      userToDelete?._id;
+
+    setUsers((prevUsers) =>
+      prevUsers.filter(
+        (u) => (u.id || u._id) !== id,
+      ),
+    );
+
     setShowDelete(false);
   };
 
-  // 🎯 Update user status in state after successful ban (BAN) or acceptance (ACCEPT)
-  const handleStatusChanged = (userId, newStatus) => {
+  // ============================================================
+  // Update User Status after API success
+  // ============================================================
+
+  const handleStatusChanged = (
+    userId,
+    newStatus,
+  ) => {
     setUsers((prevUsers) =>
       prevUsers.map((u) => {
         const id = u.id || u._id;
+
         if (id === userId) {
           return {
             ...u,
             status: newStatus,
           };
         }
+
         return u;
-      })
+      }),
     );
+
     setShowSuspend(false);
   };
+
+  // ============================================================
+  // Loading
+  // ============================================================
 
   if (loading) {
     return (
       <div
         className="table-container"
-        style={{ textAlign: "center", padding: "40px" }}
+        style={{
+          textAlign: "center",
+          padding: "40px",
+        }}
       >
         <Loader2
           className="animate-spin"
           size={32}
           style={{ margin: "0 auto" }}
         />
-        <p style={{ marginTop: "10px" }}>Loading users...</p>
+
+        <p style={{ marginTop: "10px" }}>
+          Loading users...
+        </p>
       </div>
     );
   }
+
+  // ============================================================
+  // Error
+  // ============================================================
 
   if (error) {
     return (
       <div
         className="table-container"
-        style={{ textAlign: "center", padding: "30px", color: "red" }}
+        style={{
+          textAlign: "center",
+          padding: "30px",
+          color: "red",
+        }}
       >
         <p>{error}</p>
       </div>
     );
   }
+
+  // ============================================================
+  // Table
+  // ============================================================
 
   return (
     <>
@@ -130,22 +236,45 @@ export default function UserTable({ filters }) {
               <th>Role</th>
               <th>Status</th>
               <th>Last Login</th>
-              <th className="text-center">Actions</th>
+              <th className="text-center">
+                Actions
+              </th>
             </tr>
           </thead>
+
           <tbody>
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => {
-                const status = normalizeStatus(user.status);
+                // ==================================================
+                // IMPORTANT:
+                // Normalize status only once
+                // ==================================================
 
-                // 🎯 Account status requires accept/activate if it is pending, banned, or suspended
-                const isPendingOrBanned =
-                  status === "pending" ||
-                  status === "banned" ||
-                  status === "suspended";
+                const status = normalizeStatus(
+                  user.status,
+                );
+
+                const isPending =
+                  status === "pending";
+
+                const isActive =
+                  status === "active";
+
+                const isRejected =
+                  status === "rejected";
+
+                const isBanned =
+                  status === "banned";
 
                 return (
-                  <tr key={user.id || user._id}>
+                  <tr
+                    key={
+                      user.id ||
+                      user._id
+                    }
+                  >
+                    {/* ================= USER ================= */}
+
                     <td>
                       <div className="user-info">
                         <div className="avatar">
@@ -156,87 +285,217 @@ export default function UserTable({ filters }) {
                             "U"
                           ).charAt(0)}
                         </div>
+
                         <div>
                           <strong>
                             {user.name ||
                               user.fullName ||
-                              `${user.f_name || ""} ${user.l_name || ""}`.trim()}
+                              `${user.f_name || ""} ${
+                                user.l_name || ""
+                              }`.trim()}
                           </strong>
-                          <p>{user.phone || "N/A"}</p>
+
+                          <p>
+                            {user.phone ||
+                              "N/A"}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td>{user.email}</td>
-                    <td>{user.organization || "N/A"}</td>
+
+                    {/* ================= EMAIL ================= */}
+
                     <td>
-                      <span className="role-badge">{user.role || "N/A"}</span>
+                      {user.email ||
+                        "N/A"}
                     </td>
+
+                    {/* ================= ORGANIZATION ================= */}
+
                     <td>
-                      <span className={`status-badge ${status}`}>
-                        {capitalizeStatus(user.status)}
+                      {user.organization ||
+                        "N/A"}
+                    </td>
+
+                    {/* ================= ROLE ================= */}
+
+                    <td>
+                      <span className="role-badge">
+                        {user.role ||
+                          "N/A"}
                       </span>
                     </td>
-                    <td>{user.lastLogin || "N/A"}</td>
+
+                    {/* ================= STATUS ================= */}
+
+                    <td>
+                      <span
+                        className={`status-badge ${status}`}
+                      >
+                        {capitalizeStatus(
+                          user.status,
+                        )}
+                      </span>
+                    </td>
+
+                    {/* ================= LAST LOGIN ================= */}
+
+                    <td>
+                      {user.lastLogin ||
+                        "N/A"}
+                    </td>
+
+                    {/* ================= ACTIONS ================= */}
+
                     <td>
                       <div className="actions">
-                        {/* 1. View Details */}
+
+                        {/* --------------------------------------
+                            1. VIEW
+                        --------------------------------------- */}
+
                         <button
                           className="action-btn view"
                           title="View Details"
                           onClick={() => {
-                            setSelectedUser(user);
-                            setShowDrawer(true);
+                            setSelectedUser(
+                              user,
+                            );
+                            setShowDrawer(
+                              true,
+                            );
                           }}
                         >
                           <Eye size={16} />
                         </button>
 
-                        {/* 2. Edit User */}
+                        {/* --------------------------------------
+                            2. EDIT
+                        --------------------------------------- */}
+
                         <button
                           className="action-btn edit"
                           title="Edit User"
                           onClick={() => {
-                            setSelectedUser(user);
-                            setShowModal(true);
+                            setSelectedUser(
+                              user,
+                            );
+                            setShowModal(
+                              true,
+                            );
                           }}
                         >
                           <Pencil size={16} />
                         </button>
 
-                        {/* 3. Accept / Activate / Ban User */}
-                        <button
-                          className={`action-btn ${
-                            isPendingOrBanned ? "activate" : "suspend"
-                          }`}
-                          title={
-                            status === "pending"
-                              ? "Accept User"
-                              : isPendingOrBanned
-                              ? "Activate User"
-                              : " Options "
-                          }
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowSuspend(true);
-                          }}
-                        >
-                          {isPendingOrBanned ? (
-                            <UserCheck size={16} />
-                          ) : (
-                            <UserX size={16} />
-                          )}
-                        </button>
+                        {/* --------------------------------------
+                            3. STATUS ACTION
+                        --------------------------------------- */}
 
-                        {/* 4. Delete User */}
+                        {/* PENDING → Accept / Reject */}
+
+                        {isPending && (
+                          <button
+                            className="action-btn activate"
+                            title="Review User"
+                            onClick={() => {
+                              setSelectedUser(
+                                user,
+                              );
+                              setShowSuspend(
+                                true,
+                              );
+                            }}
+                          >
+                            <UserCheck
+                              size={16}
+                            />
+                          </button>
+                        )}
+
+                        {/* ACTIVE → Ban */}
+
+                        {isActive && (
+                          <button
+                            className="action-btn suspend"
+                            title="Ban User"
+                            onClick={() => {
+                              setSelectedUser(
+                                user,
+                              );
+                              setShowSuspend(
+                                true,
+                              );
+                            }}
+                          >
+                            <UserX
+                              size={16}
+                            />
+                          </button>
+                        )}
+
+                        {/* REJECTED → Resend */}
+
+                        {isRejected && (
+                          <button
+                            className="action-btn activate"
+                            title="Send for Review Again"
+                            onClick={() => {
+                              setSelectedUser(
+                                user,
+                              );
+                              setShowSuspend(
+                                true,
+                              );
+                            }}
+                          >
+                            <UserCheck
+                              size={16}
+                            />
+                          </button>
+                        )}
+
+                        {/* BANNED
+                            No action because
+                            backend has no unban API
+                        */}
+
+                        {isBanned && (
+                          <button
+                            className="action-btn"
+                            title="Banned Account"
+                            disabled
+                            style={{
+                              opacity: 0.45,
+                              cursor:
+                                "not-allowed",
+                            }}
+                          >
+                            <UserX
+                              size={16}
+                            />
+                          </button>
+                        )}
+
+                        {/* --------------------------------------
+                            4. DELETE
+                        --------------------------------------- */}
+
                         <button
                           className="action-btn delete"
                           title="Delete User"
                           onClick={() => {
-                            setSelectedUser(user);
-                            setShowDelete(true);
+                            setSelectedUser(
+                              user,
+                            );
+                            setShowDelete(
+                              true,
+                            );
                           }}
                         >
-                          <Trash2 size={16} />
+                          <Trash2
+                            size={16}
+                          />
                         </button>
                       </div>
                     </td>
@@ -245,8 +504,12 @@ export default function UserTable({ filters }) {
               })
             ) : (
               <tr>
-                <td colSpan="7" className="no-data">
-                  No users found matching your filters.
+                <td
+                  colSpan="7"
+                  className="no-data"
+                >
+                  No users found matching
+                  your filters.
                 </td>
               </tr>
             )}
@@ -254,46 +517,90 @@ export default function UserTable({ filters }) {
         </table>
       </div>
 
+      {/* ========================================================
+          USER DETAILS
+      ======================================================== */}
+
       {showDrawer && (
         <UserDetails
           user={selectedUser}
-          onClose={() => setShowDrawer(false)}
+          onClose={() =>
+            setShowDrawer(false)
+          }
         />
       )}
 
+      {/* ========================================================
+          EDIT USER
+      ======================================================== */}
+
       {showModal && (
         <UserModal
-          key={selectedUser?.id || selectedUser?._id}
+          key={
+            selectedUser?.id ||
+            selectedUser?._id
+          }
           user={selectedUser}
-          onClose={() => setShowModal(false)}
+          onClose={() =>
+            setShowModal(false)
+          }
           onSave={(updatedUser) => {
             setUsers((prevUsers) =>
               prevUsers.map((u) => {
-                const updatedId = updatedUser?.id || updatedUser?._id;
-                const currentId = u.id || u._id;
-                if (updatedId && currentId === updatedId) {
-                  return { ...u, ...updatedUser };
+                const updatedId =
+                  updatedUser?.id ||
+                  updatedUser?._id;
+
+                const currentId =
+                  u.id || u._id;
+
+                if (
+                  updatedId &&
+                  currentId ===
+                    updatedId
+                ) {
+                  return {
+                    ...u,
+                    ...updatedUser,
+                  };
                 }
+
                 return u;
-              })
+              }),
             );
           }}
         />
       )}
 
+      {/* ========================================================
+          DELETE USER
+      ======================================================== */}
+
       {showDelete && (
         <DeleteUserModal
           user={selectedUser}
-          onClose={() => setShowDelete(false)}
-          onDelete={handleDeleteUser}
+          onClose={() =>
+            setShowDelete(false)
+          }
+          onDelete={
+            handleDeleteUser
+          }
         />
       )}
+
+      {/* ========================================================
+          USER STATUS MODAL
+      ======================================================== */}
 
       {showSuspend && (
         <SuspendUserModal
           user={selectedUser}
-          onClose={() => setShowSuspend(false)}
-          onStatusChanged={handleStatusChanged}
+          onClose={() =>
+            setShowSuspend(false)
+          }
+          onStatusChanged={
+            handleStatusChanged
+          }
         />
       )}
     </>

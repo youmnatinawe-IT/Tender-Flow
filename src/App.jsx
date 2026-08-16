@@ -9,7 +9,7 @@ import Vendors from "./Pages/Dashbord/vendors"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import OrganizationDetails from "./components/organaizations/organizationdetails";
 import SessionExpiryWatcher from "./components/SessionExpiryWatcher";
-import Accounts from "./components/Dashbord/Accounts"
+// import Accounts from "./components/Dashbord/Accounts"
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,7 +37,7 @@ function App() {
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/users" element={<Users />} />
            <Route path="/vendors" element={<  Vendors />} />
-           <Route path="/accounts" element={<Accounts />} />
+           {/* <Route path="/accounts" element={<Accounts />} /> */}
       </Routes>
     </BrowserRouter>
   );

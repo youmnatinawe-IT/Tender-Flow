@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../../components/SideBar";
-import { Plus, Download } from "lucide-react";
+import { Plus } from "lucide-react";
 import OrganizationsTable from "../../components/organaizations/organaizationtable";
 import OrganizationTabs from "../../components/organaizations/OrganizationTabs";
 import AddPublisherModal from "../../components/organaizations/AddPublisherModal";
@@ -10,12 +10,79 @@ import { useNavigate } from "react-router-dom";
 import {
   getPublisherOrgs,
   getExecutorOrgs,
-  getOrgUsers, // 👈 استيراد دالة جلب المستخدمين لكل منظمة
+  getOrgUsers,
 } from "../../services/organizationService";
+
+const mapOrgData = (org, type, users = []) => ({
+  id: org._id || org.id,
+  name: org.org_name || org.name || "N/A",
+  type,
+  taxNumber: org.commercial_register_num || org.taxNumber || "N/A",
+  email: org.email || "N/A",
+  phone: org.phone_number || org.phone || "N/A",
+  status: org.status || "Pending",
+  createdAt: org.createdAt
+    ? new Date(org.createdAt).toISOString().split("T")[0]
+    : "N/A",
+  accounts: users,
+  hasAdmin:
+    users.length > 0 ||
+    Boolean(org.has_admin || org.hasAdmin || org.adminUser),
+});
+
+async function fetchOrgList(activeTab) {
+  const res =
+    activeTab === "PUBLISHER"
+      ? await getPublisherOrgs()
+      : await getExecutorOrgs();
+
+  if (!res.success) {
+    throw new Error(res.error?.message || "فشل في جلب البيانات من السيرفر");
+  }
+
+  const rawData = Array.isArray(res.data)
+    ? res.data
+    : Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data?.publishers)
+        ? res.data.publishers
+        : Array.isArray(res.data?.executors)
+          ? res.data.executors
+          : Array.isArray(res.data?.organizations)
+            ? res.data.organizations
+            : [];
+
+  const currentType = activeTab === "PUBLISHER" ? "Publisher" : "Executor";
+
+  const updatedOrgs = await Promise.all(
+    rawData.map(async (org) => {
+      const orgId = org._id || org.id;
+      let users = [];
+
+      if (orgId && activeTab === "PUBLISHER") {
+        const usersRes = await getOrgUsers(orgId);
+        if (usersRes?.success) {
+          const uData = usersRes.data;
+          users = Array.isArray(uData)
+            ? uData
+            : Array.isArray(uData?.users)
+              ? uData.users
+              : Array.isArray(uData?.data)
+                ? uData.data
+                : [];
+        }
+      }
+
+      return mapOrgData(org, currentType, users);
+    })
+  );
+
+  return updatedOrgs;
+}
 
 export default function Organizations() {
   const [organizations, setOrganizations] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [activeTab, setActiveTab] = useState("PUBLISHER");
@@ -27,102 +94,45 @@ export default function Organizations() {
 
   const navigate = useNavigate();
 
-  // دالة تحويل نسق بيانات الباك إند ليتطابق مع الجدول
-  const mapOrgData = (org, type, users = []) => ({
-    id: org._id || org.id,
-    name: org.org_name || org.name || "N/A",
-    type: type, // 'Publisher' or 'Executor'
-    taxNumber: org.commercial_register_num || org.taxNumber || "N/A",
-    email: org.email || "N/A",
-    phone: org.phone_number || org.phone || "N/A",
-    status: org.status || "Pending",
-    createdAt: org.createdAt
-      ? new Date(org.createdAt).toISOString().split("T")[0]
-      : "N/A",
-    accounts: users,
-    hasAdmin:
-      users.length > 0 ||
-      Boolean(org.has_admin || org.hasAdmin || org.adminUser),
-  });
-
-  // دالة جلب البيانات مع استعلام المستخدمين لكل منظمة
-  const fetchOrgs = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const res =
-        activeTab === "PUBLISHER"
-          ? await getPublisherOrgs()
-          : await getExecutorOrgs();
-
-      if (res.success) {
-        const rawData = Array.isArray(res.data)
-          ? res.data
-          : Array.isArray(res.data?.data)
-            ? res.data.data
-            : Array.isArray(res.data?.publishers)
-              ? res.data.publishers
-              : Array.isArray(res.data?.executors)
-                ? res.data.executors
-                : Array.isArray(res.data?.organizations)
-                  ? res.data.organizations
-                  : [];
-
-        const currentType = activeTab === "PUBLISHER" ? "Publisher" : "Executor";
-
-        // جلب مستخدمين كل منظمة بالتوازي لتحديث حالة الـ Admin تلقائياً
-        const updatedOrgs = await Promise.all(
-          rawData.map(async (org) => {
-            const orgId = org._id || org.id;
-            let users = [];
-
-            if (orgId && activeTab === "PUBLISHER") {
-              const usersRes = await getOrgUsers(orgId);
-              if (usersRes?.success) {
-                const uData = usersRes.data;
-                users = Array.isArray(uData)
-                  ? uData
-                  : Array.isArray(uData?.users)
-                    ? uData.users
-                    : Array.isArray(uData?.data)
-                      ? uData.data
-                      : [];
-              }
-            }
-
-            return mapOrgData(org, currentType, users);
-          })
-        );
-
-        setOrganizations(updatedOrgs);
-      } else {
-        setError(res.error?.message || "فشل في جلب البيانات من السيرفر");
-      }
-    } catch (err) {
-      console.error("Error loading organizations:", err);
-      setError("حدث خطأ غير متوقع أثناء تحميل البيانات");
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab]);
-
   useEffect(() => {
-    fetchOrgs();
-  }, [fetchOrgs]);
+    let cancelled = false;
 
-  const handleUpdateStatus = (id, newStatus) => {
-    setOrganizations((prev) =>
-      prev.map((org) => (org.id === id ? { ...org, status: newStatus } : org))
-    );
-  };
+    const load = async () => {
+      try {
+        const list = await fetchOrgList(activeTab);
+        if (cancelled) return;
+        setOrganizations(list);
+        setError("");
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Error loading organizations:", err);
+        setError(err?.message || "حدث خطأ غير متوقع أثناء تحميل البيانات");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   const handleViewDetails = (id) => {
     navigate(`/organizations/${id}`);
   };
 
   const handleRefreshData = () => {
-    fetchOrgs();
+    fetchOrgList(activeTab)
+      .then((list) => {
+        setOrganizations(list);
+        setError("");
+      })
+      .catch((err) => {
+        console.error("Error loading organizations:", err);
+        setError(err?.message || "حدث خطأ غير متوقع أثناء تحميل البيانات");
+      });
   };
 
   return (
@@ -144,9 +154,7 @@ export default function Organizations() {
           </div>
 
           <div className="hero-actions">
-            <button className="hero-btn secondary">
-              <Download size={15} /> Export
-            </button>
+          
 
             {activeTab === "PUBLISHER" && (
               <button
@@ -187,10 +195,8 @@ export default function Organizations() {
           ) : (
             <OrganizationsTable
               organizations={organizations}
-              onUpdateStatus={handleUpdateStatus}
               onViewDetails={handleViewDetails}
               activeTab={activeTab}
-              onCreateAdmin={(org) => setSelectedOrgForAdmin(org)}
             />
           )}
         </div>
@@ -217,7 +223,15 @@ export default function Organizations() {
               )
             );
           }
-          fetchOrgs();
+          fetchOrgList(activeTab)
+            .then((list) => {
+              setOrganizations(list);
+              setError("");
+            })
+            .catch((err) => {
+              console.error("Error loading organizations:", err);
+              setError(err?.message || "حدث خطأ غير متوقع أثناء تحميل البيانات");
+            });
         }}
       />
     </div>

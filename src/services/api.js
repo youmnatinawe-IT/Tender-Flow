@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { normalizeError, logError } from './errorHandler';
 import { getToken, clearToken, notifySessionExpired } from './session';
-
+export const BASE_URL = 'https://unprotractive-hyperpyretic-zonia.ngrok-free.dev';
 const API = axios.create({
-  baseURL: 'https://unprotractive-hyperpyretic-zonia.ngrok-free.dev',
+  baseURL:BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': '1',

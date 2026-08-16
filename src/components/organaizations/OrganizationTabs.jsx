@@ -1,23 +1,22 @@
-
 import { Building, ShieldCheck } from "lucide-react";
 
 export default function OrganizationTabs({ activeTab, setActiveTab }) {
   return (
     <div className="org-tabs-container">
       <button
-        className={`tab-btn ${activeTab === "PUBLISHER" ? "active" : ""}`}
+        className={`org-tab-btn ${activeTab === "PUBLISHER" ? "active" : ""}`}
         onClick={() => setActiveTab("PUBLISHER")}
       >
         <Building size={18} />
-        Publishers 
+        Publishers
       </button>
 
       <button
-        className={`tab-btn ${activeTab === "BIDDER" ? "active" : ""}`}
-        onClick={() => setActiveTab("BIDDER")}
+        className={`org-tab-btn ${activeTab === "EXECUTOR" ? "active" : ""}`}
+        onClick={() => setActiveTab("EXECUTOR")}
       >
         <ShieldCheck size={18} />
-        Executors / Bidders
+        Executors
       </button>
     </div>
   );

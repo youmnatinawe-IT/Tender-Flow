@@ -5,7 +5,7 @@ import {
   Building2,
   FileCheck,
   Users,
-  UserCheck,
+
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -44,12 +44,7 @@ const Sidebar = () => {
       path: "/vendors",
     },
     { id: "users", text: "Users", icon: <Users size={18} />, path: "/users" },
-    {
-      id: "accounts",
-      text: " Accounts",
-      icon: <UserCheck size={18} />,
-      path: "/accounts",
-    },
+  
     //   { id: 'analytics', text: 'Analytics', icon: <BarChart3 size={18} />, path: '/analytics' },
     //   { id: 'settings', text: 'Settings', icon: <Settings size={18} />, path: '/settings' },
   ];
