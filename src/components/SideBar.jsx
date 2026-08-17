@@ -5,7 +5,7 @@ import {
   Building2,
   FileCheck,
   Users,
-
+Settings,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -46,7 +46,7 @@ const Sidebar = () => {
     { id: "users", text: "Users", icon: <Users size={18} />, path: "/users" },
   
     //   { id: 'analytics', text: 'Analytics', icon: <BarChart3 size={18} />, path: '/analytics' },
-    //   { id: 'settings', text: 'Settings', icon: <Settings size={18} />, path: '/settings' },
+      { id: 'settings', text: 'Settings', icon: <Settings size={18} />, path: '/settings' },
   ];
 
   return (

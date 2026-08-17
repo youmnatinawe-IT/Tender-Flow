@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import OrganizationDetails from "./components/organaizations/organizationdetails";
 import SessionExpiryWatcher from "./components/SessionExpiryWatcher";
 // import Accounts from "./components/Dashbord/Accounts"
+import AdminProfile from "./Pages/Dashbord/Adminprofail";
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,6 +38,7 @@ function App() {
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/users" element={<Users />} />
            <Route path="/vendors" element={<  Vendors />} />
+           <Route path="/settings" element={<AdminProfile />} />
            {/* <Route path="/accounts" element={<Accounts />} /> */}
       </Routes>
     </BrowserRouter>

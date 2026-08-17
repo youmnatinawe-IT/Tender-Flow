@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
-import UserStats from "../../components/Users/UserStats";
+// import UserStats from "../../components/Users/UserStats";
 import UserFilters from "../../components/Users/UserFilters";
 import UserTable from "../../components/Users/UserTable";
 import Sidebar from "../../components/SideBar";
@@ -52,7 +52,7 @@ export default function Users() {
           />
         )}
 
-        <UserStats />
+        {/* <UserStats /> */}
 
         {/* تم الاستغناء عن زر add-user-btn داخل الفلاتر */}
         <UserFilters
