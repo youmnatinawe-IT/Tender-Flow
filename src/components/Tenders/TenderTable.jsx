@@ -169,11 +169,9 @@ export default function TenderTable({ filters = {} }) {
   };
 
   useEffect(() => {
-  const fetchTenders = async () => {
-    // ...
-  };
-  fetchTenders();
-}, []);
+    fetchTenders();
+  }, []);
+
   /* =========================================================
      Filtering
   ========================================================= */
