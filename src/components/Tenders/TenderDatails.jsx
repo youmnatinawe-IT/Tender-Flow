@@ -1,10 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   X,
   FileText,
-  Download,
-  Eye,
   CalendarDays,
   Building2,
   MapPin,
@@ -20,7 +18,14 @@ import {
   BadgeCheck,
   Landmark,
   FileCheck2,
+  Loader2,
+  RefreshCw,
+  AlertCircle,
+  Eye,
+  Download,
 } from "lucide-react";
+
+import { getTenderAttachments } from "../../services/tenderService";
 
 /* =========================================================
    Helpers
@@ -61,11 +66,7 @@ const formatDateTime = (date) => {
 };
 
 const formatBudget = (value, currency) => {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
+  if (value === null || value === undefined || value === "") {
     return "N/A";
   }
 
@@ -76,7 +77,7 @@ const formatBudget = (value, currency) => {
   }
 
   return `${new Intl.NumberFormat("en-US").format(
-    number
+    number,
   )} ${currency || ""}`.trim();
 };
 
@@ -90,14 +91,11 @@ const getDaysLeft = (deadline) => {
     return null;
   }
 
-  const diff =
-    endDate.getTime() - now.getTime();
+  const diff = endDate.getTime() - now.getTime();
 
   if (diff <= 0) return 0;
 
-  return Math.ceil(
-    diff / (1000 * 60 * 60 * 24)
-  );
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
 
 const getTenderId = (id) => {
@@ -107,56 +105,149 @@ const getTenderId = (id) => {
 };
 
 const getStatusClass = (status) => {
-  const normalized =
-    status?.toLowerCase().replace(/\s+/g, "-") ||
-    "unknown";
+  const normalized = status?.toLowerCase().replace(/\s+/g, "-") || "unknown";
 
   return `drawer-status-badge drawer-status-${normalized}`;
 };
 
 const getTypeClass = (type) => {
-  const normalized =
-    type?.toLowerCase().replace(/\s+/g, "-") ||
-    "unknown";
+  const normalized = type?.toLowerCase().replace(/\s+/g, "-") || "unknown";
 
   return `drawer-type-badge drawer-type-${normalized}`;
+};
+
+/* =========================================================
+   Attachment Helpers
+========================================================= */
+
+const getAttachmentTypeLabel = (type) => {
+  const labels = {
+    TECHNICAL_CONDITIONS: "Technical Conditions",
+    FINANCIAL_CONDITIONS: "Financial Conditions",
+    ADMINISTRATIVE_CONDITIONS: "Administrative Conditions",
+    QUANTITY_SCHEDULE: "Quantity Schedule",
+    OTHER: "Other",
+  };
+
+  return labels[type] || type || "Other";
+};
+
+const getAttachmentTypeClass = (type) => {
+  const normalized = type?.toLowerCase().replace(/_/g, "-") || "other";
+
+  return `attachment-type attachment-type-${normalized}`;
+};
+
+const getAttachmentFileName = (filePath) => {
+  if (!filePath) return "Attachment";
+
+  const parts = filePath.split("/");
+
+  return parts[parts.length - 1] || "Attachment";
+};
+
+const getAttachmentExtension = (filePath) => {
+  const fileName = getAttachmentFileName(filePath);
+
+  if (!fileName.includes(".")) {
+    return "FILE";
+  }
+
+  return fileName.split(".").pop()?.toUpperCase() || "FILE";
+};
+
+const handleOpenFile = (filePath) => {
+  if (!filePath) return;
+
+  if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+    window.open(filePath, "_blank", "noopener,noreferrer");
+  } else {
+    const baseUrl = window.location.origin;
+    const fullPath = filePath.startsWith("/") ? filePath : `/${filePath}`;
+    window.open(`${baseUrl}${fullPath}`, "_blank", "noopener,noreferrer");
+  }
 };
 
 /* =========================================================
    Component
 ========================================================= */
 
-export default function TenderDetailsDrawer({
-  tender,
-  onClose,
-}) {
-  const [activeTab, setActiveTab] =
-    useState("overview");
+export default function TenderDetailsDrawer({ tender, onClose }) {
+  const [activeTab, setActiveTab] = useState("overview");
+
+  /* =========================================================
+     Attachments State
+  ========================================================= */
+
+  const [documents, setDocuments] = useState([]);
+
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+
+  const [documentsError, setDocumentsError] = useState(null);
+
+  /* =========================================================
+     Fetch Attachments
+  ========================================================= */
+
+  const fetchAttachments = async (tenderId) => {
+    if (!tenderId) {
+      setDocuments([]);
+      return;
+    }
+
+    try {
+      setDocumentsLoading(true);
+      setDocumentsError(null);
+
+      const attachments = await getTenderAttachments(tenderId);
+
+      setDocuments(Array.isArray(attachments) ? attachments : []);
+    } catch (error) {
+      console.error("Failed to fetch tender attachments:", error);
+
+      setDocuments([]);
+
+      setDocumentsError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load tender attachments.",
+      );
+    } finally {
+      setDocumentsLoading(false);
+    }
+  };
+
+  /* =========================================================
+     Fetch When Tender Changes
+  ========================================================= */
+
+  useEffect(() => {
+    if (!tender?._id) {
+      setDocuments([]);
+      setDocumentsError(null);
+      return;
+    }
+
+    fetchAttachments(tender._id);
+  }, [tender?._id]);
+
+  /* =========================================================
+     Empty
+  ========================================================= */
 
   if (!tender) return null;
 
-  const publisher =
-    tender?.publisher_org_id || {};
+  const publisher = tender?.publisher_org_id || {};
 
-  const daysLeft = getDaysLeft(
-    tender?.submission_deadline
-  );
+  const daysLeft = getDaysLeft(tender?.submission_deadline);
 
-  /*
-    Documents تظهر فقط إذا رجعت فعلياً من الـAPI.
-  */
+  const createdAt = tender?.createdAt;
 
-  const documents = Array.isArray(
-    tender?.documents
-  )
-    ? tender.documents
-    : [];
+  const updatedAt = tender?.updatedAt;
 
-  const createdAt =
-    tender?.createdAt;
-
-  const updatedAt =
-    tender?.updatedAt;
+  /* =========================================================
+     Render
+  ========================================================= */
 
   return (
     <>
@@ -164,10 +255,7 @@ export default function TenderDetailsDrawer({
           Overlay
       ===================================================== */}
 
-      <div
-        className="modal-overlay"
-        onClick={onClose}
-      />
+      <div className="modal-overlay" onClick={onClose} />
 
       {/* =====================================================
           Drawer
@@ -175,35 +263,22 @@ export default function TenderDetailsDrawer({
 
       <div
         className="modal-container tender-details-modal"
-        onClick={(event) =>
-          event.stopPropagation()
-        }
+        onClick={(event) => event.stopPropagation()}
       >
-
         {/* =================================================
             Header
         ================================================= */}
 
         <div className="drawer-header">
-
           <div className="drawer-header-title">
-            <span>
-              TENDER DETAILS
-            </span>
+            <span>TENDER DETAILS</span>
 
-            <strong>
-              {getTenderId(tender?._id)}
-            </strong>
+            <strong>{getTenderId(tender?._id)}</strong>
           </div>
 
-          <button
-            className="close-btn"
-            onClick={onClose}
-            aria-label="Close"
-          >
+          <button className="close-btn" onClick={onClose} aria-label="Close">
             <X size={19} />
           </button>
-
         </div>
 
         {/* =================================================
@@ -211,56 +286,36 @@ export default function TenderDetailsDrawer({
         ================================================= */}
 
         <div className="drawer-hero">
-
           <div className="drawer-hero-main">
-
             <div className="drawer-id">
               <Hash size={14} />
 
               {getTenderId(tender?._id)}
             </div>
 
-            <h2>
-              {tender?.title ||
-                "Untitled Tender"}
-            </h2>
+            <h2>{tender?.title || "Untitled Tender"}</h2>
 
             <p className="drawer-publisher">
               <Building2 size={15} />
 
-              {publisher?.org_name ||
-                "N/A"}
+              {publisher?.org_name || "N/A"}
             </p>
-
           </div>
 
           <div className="drawer-status-group">
-
-            <span
-              className={getStatusClass(
-                tender?.status
-              )}
-            >
+            <span className={getStatusClass(tender?.status)}>
               <span className="status-dot" />
 
               {tender?.status || "N/A"}
             </span>
 
-            <span
-              className={getTypeClass(
-                tender?.type
-              )}
-            >
+            <span className={getTypeClass(tender?.type)}>
               {tender?.type || "N/A"}
             </span>
 
             <span
               className={`hero-days ${
-                daysLeft === 0
-                  ? "expired"
-                  : daysLeft <= 7
-                  ? "urgent"
-                  : ""
+                daysLeft === 0 ? "expired" : daysLeft <= 7 ? "urgent" : ""
               }`}
             >
               <Clock3 size={14} />
@@ -271,9 +326,7 @@ export default function TenderDetailsDrawer({
                   : "Expired"
                 : "N/A"}
             </span>
-
           </div>
-
         </div>
 
         {/* =================================================
@@ -281,57 +334,32 @@ export default function TenderDetailsDrawer({
         ================================================= */}
 
         <div className="drawer-tabs">
-
           <button
-            className={
-              activeTab === "overview"
-                ? "active-tab"
-                : ""
-            }
-            onClick={() =>
-              setActiveTab("overview")
-            }
+            className={activeTab === "overview" ? "active-tab" : ""}
+            onClick={() => setActiveTab("overview")}
           >
             <Info size={15} />
             Overview
           </button>
 
           <button
-            className={
-              activeTab === "documents"
-                ? "active-tab"
-                : ""
-            }
-            onClick={() =>
-              setActiveTab("documents")
-            }
+            className={activeTab === "documents" ? "active-tab" : ""}
+            onClick={() => setActiveTab("documents")}
           >
             <FileText size={15} />
-
             Documents
-
             {documents.length > 0 && (
-              <span className="tab-count">
-                {documents.length}
-              </span>
+              <span className="tab-count">{documents.length}</span>
             )}
           </button>
 
           <button
-            className={
-              activeTab === "timeline"
-                ? "active-tab"
-                : ""
-            }
-            onClick={() =>
-              setActiveTab("timeline")
-            }
+            className={activeTab === "timeline" ? "active-tab" : ""}
+            onClick={() => setActiveTab("timeline")}
           >
             <CalendarDays size={15} />
-
             Timeline
           </button>
-
         </div>
 
         {/* =================================================
@@ -340,683 +368,448 @@ export default function TenderDetailsDrawer({
 
         {activeTab === "overview" && (
           <div className="drawer-scroll">
-
             <div className="drawer-section">
-
-              {/* =================================================
-                  Section Header
-              ================================================= */}
-
               <div className="section-heading">
-
                 <div>
-                  <span className="section-eyebrow">
-                    TENDER INFORMATION
-                  </span>
+                  <span className="section-eyebrow">TENDER INFORMATION</span>
 
-                  <h3>
-                    Tender Overview
-                  </h3>
+                  <h3>Tender Overview</h3>
                 </div>
 
                 <span className="section-record">
-                  {getTenderId(
-                    tender?._id
-                  )}
+                  {getTenderId(tender?._id)}
                 </span>
-
               </div>
 
-              {/* =================================================
-                  Stats
-              ================================================= */}
+              {/* Stats */}
 
               <div className="overview-grid">
-
                 <div className="overview-card">
-
                   <div className="overview-card-icon blue">
                     <Wallet size={19} />
                   </div>
 
                   <div>
-                    <span>
-                      Estimated Value
-                    </span>
+                    <span>Estimated Value</span>
 
                     <strong>
-                      {formatBudget(
-                        tender?.estimated_value,
-                        tender?.currency
-                      )}
+                      {formatBudget(tender?.estimated_value, tender?.currency)}
                     </strong>
                   </div>
-
                 </div>
 
                 <div className="overview-card">
-
                   <div className="overview-card-icon purple">
                     <CalendarDays size={19} />
                   </div>
 
                   <div>
-                    <span>
-                      Submission Deadline
-                    </span>
+                    <span>Submission Deadline</span>
 
-                    <strong>
-                      {formatDate(
-                        tender?.submission_deadline
-                      )}
-                    </strong>
+                    <strong>{formatDate(tender?.submission_deadline)}</strong>
                   </div>
-
                 </div>
 
                 <div className="overview-card">
-
                   <div className="overview-card-icon green">
                     <MapPin size={19} />
                   </div>
 
                   <div>
-                    <span>
-                      Execution Location
-                    </span>
+                    <span>Execution Location</span>
 
-                    <strong>
-                      {tender?.execution_location ||
-                        "N/A"}
-                    </strong>
+                    <strong>{tender?.execution_location || "N/A"}</strong>
                   </div>
-
                 </div>
-
               </div>
 
-              {/* =================================================
-                  Description
-              ================================================= */}
+              {/* Description */}
 
               <div className="drawer-info-card description-card">
-
                 <div className="info-card-title">
-
                   <div className="info-title-icon">
                     <FileText size={17} />
                   </div>
 
                   <div>
-                    <span>
-                      TENDER DESCRIPTION
-                    </span>
+                    <span>TENDER DESCRIPTION</span>
 
-                    <h4>
-                      Description
-                    </h4>
+                    <h4>Description</h4>
                   </div>
-
                 </div>
 
                 <p className="drawer-description">
-                  {tender?.description ||
-                    "No description provided."}
+                  {tender?.description || "No description provided."}
                 </p>
-
               </div>
 
-              {/* =================================================
-                  Tender Details
-              ================================================= */}
+              {/* Tender Details */}
 
               <div className="drawer-info-card">
-
                 <div className="info-card-title">
-
                   <div className="info-title-icon">
                     <ShieldCheck size={17} />
                   </div>
 
                   <div>
-                    <span>
-                      GENERAL INFORMATION
-                    </span>
+                    <span>GENERAL INFORMATION</span>
 
-                    <h4>
-                      Tender Details
-                    </h4>
+                    <h4>Tender Details</h4>
                   </div>
-
                 </div>
 
                 <div className="information-grid">
-
                   <div className="information-item">
-
-                    <span>
-                      Tender ID
-                    </span>
+                    <span>Tender ID</span>
 
                     <strong className="mono-value">
-                      {tender?._id ||
-                        "N/A"}
+                      {tender?._id || "N/A"}
                     </strong>
-
                   </div>
 
                   <div className="information-item">
+                    <span>Tender Type</span>
 
-                    <span>
-                      Tender Type
-                    </span>
-
-                    <strong>
-                      {tender?.type ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{tender?.type || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
+                    <span>Status</span>
 
-                    <span>
-                      Status
-                    </span>
-
-                    <strong>
-                      {tender?.status ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{tender?.status || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
+                    <span>Currency</span>
 
-                    <span>
-                      Currency
-                    </span>
-
-                    <strong>
-                      {tender?.currency ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{tender?.currency || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
-
-                    <span>
-                      Estimated Value
-                    </span>
+                    <span>Estimated Value</span>
 
                     <strong>
-                      {formatBudget(
-                        tender?.estimated_value,
-                        tender?.currency
-                      )}
+                      {formatBudget(tender?.estimated_value, tender?.currency)}
                     </strong>
-
                   </div>
 
                   <div className="information-item">
+                    <span>Execution Location</span>
 
-                    <span>
-                      Execution Location
-                    </span>
-
-                    <strong>
-                      {tender?.execution_location ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{tender?.execution_location || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
+                    <span>Submission Start</span>
 
-                    <span>
-                      Submission Start
-                    </span>
-
-                    <strong>
-                      {formatDateTime(
-                        tender?.submission_start
-                      )}
-                    </strong>
-
+                    <strong>{formatDateTime(tender?.submission_start)}</strong>
                   </div>
 
                   <div className="information-item">
-
-                    <span>
-                      Submission Deadline
-                    </span>
+                    <span>Submission Deadline</span>
 
                     <strong>
-                      {formatDateTime(
-                        tender?.submission_deadline
-                      )}
+                      {formatDateTime(tender?.submission_deadline)}
                     </strong>
-
                   </div>
-
                 </div>
-
               </div>
 
-              {/* =================================================
-                  Publisher
-              ================================================= */}
+              {/* Publisher */}
 
               <div className="drawer-info-card">
-
                 <div className="info-card-title">
-
                   <div className="info-title-icon">
                     <Building2 size={17} />
                   </div>
 
                   <div>
-                    <span>
-                      ORGANIZATION
-                    </span>
+                    <span>ORGANIZATION</span>
 
-                    <h4>
-                      Publisher Information
-                    </h4>
+                    <h4>Publisher Information</h4>
                   </div>
-
                 </div>
 
-                {/* Publisher Header */}
-
                 <div className="publisher-details-header">
-
                   <div className="publisher-avatar">
                     <Building2 size={23} />
                   </div>
 
                   <div className="publisher-header-content">
+                    <strong>{publisher?.org_name || "N/A"}</strong>
 
-                    <strong>
-                      {publisher?.org_name ||
-                        "N/A"}
-                    </strong>
-
-                    <span>
-                      {publisher?._type ||
-                        "PUBLISHER"}
-                    </span>
-
+                    <span>{publisher?._type || "PUBLISHER"}</span>
                   </div>
 
                   <div className="publisher-verified">
                     <BadgeCheck size={16} />
-
                     Verified Organization
                   </div>
-
                 </div>
 
-                {/* Publisher Information */}
-
                 <div className="information-grid publisher-grid">
-
                   <div className="information-item">
-
                     <div className="info-label-with-icon">
                       <Mail size={14} />
 
-                      <span>
-                        Email
-                      </span>
+                      <span>Email</span>
                     </div>
 
-                    <strong>
-                      {publisher?.email ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{publisher?.email || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
-
                     <div className="info-label-with-icon">
                       <Phone size={14} />
 
-                      <span>
-                        Phone
-                      </span>
+                      <span>Phone</span>
                     </div>
 
-                    <strong>
-                      {publisher?.phone_number ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{publisher?.phone_number || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
-
                     <div className="info-label-with-icon">
                       <MapPin size={14} />
 
-                      <span>
-                        Address
-                      </span>
+                      <span>Address</span>
                     </div>
 
-                    <strong>
-                      {publisher?._address ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{publisher?._address || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
-
                     <div className="info-label-with-icon">
                       <Globe2 size={14} />
 
-                      <span>
-                        Organization Type
-                      </span>
+                      <span>Organization Type</span>
                     </div>
 
-                    <strong>
-                      {publisher?._type ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{publisher?._type || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
-
                     <div className="info-label-with-icon">
                       <Landmark size={14} />
 
-                      <span>
-                        Commercial Register
-                      </span>
+                      <span>Commercial Register</span>
                     </div>
 
                     <strong>
-                      {publisher?.commercial_register_num ||
-                        "N/A"}
+                      {publisher?.commercial_register_num || "N/A"}
                     </strong>
-
                   </div>
 
                   <div className="information-item">
-
                     <div className="info-label-with-icon">
                       <FileCheck2 size={14} />
 
-                      <span>
-                        License Number
-                      </span>
+                      <span>License Number</span>
                     </div>
 
-                    <strong>
-                      {publisher?.license_num ||
-                        "N/A"}
-                    </strong>
-
+                    <strong>{publisher?.license_num || "N/A"}</strong>
                   </div>
 
                   <div className="information-item">
-
-                    <span>
-                      Register Date
-                    </span>
+                    <span>Register Date</span>
 
                     <strong>
-                      {formatDate(
-                        publisher?.commercial_register_date
-                      )}
+                      {formatDate(publisher?.commercial_register_date)}
                     </strong>
-
                   </div>
 
                   <div className="information-item">
+                    <span>License Date</span>
 
-                    <span>
-                      License Date
-                    </span>
-
-                    <strong>
-                      {formatDate(
-                        publisher?.license_date
-                      )}
-                    </strong>
-
+                    <strong>{formatDate(publisher?.license_date)}</strong>
                   </div>
-
                 </div>
-
               </div>
 
-              {/* =================================================
-                  System Information
-              ================================================= */}
+              {/* System Information */}
 
               <div className="drawer-info-card">
-
                 <div className="info-card-title">
-
                   <div className="info-title-icon">
                     <CalendarDays size={17} />
                   </div>
 
                   <div>
-                    <span>
-                      SYSTEM
-                    </span>
+                    <span>SYSTEM</span>
 
-                    <h4>
-                      System Information
-                    </h4>
+                    <h4>System Information</h4>
                   </div>
-
                 </div>
 
                 <div className="information-grid">
-
                   <div className="information-item">
+                    <span>Created At</span>
 
-                    <span>
-                      Created At
-                    </span>
-
-                    <strong>
-                      {formatDateTime(
-                        createdAt
-                      )}
-                    </strong>
-
+                    <strong>{formatDateTime(createdAt)}</strong>
                   </div>
 
                   <div className="information-item">
+                    <span>Last Updated</span>
 
-                    <span>
-                      Last Updated
-                    </span>
-
-                    <strong>
-                      {formatDateTime(
-                        updatedAt
-                      )}
-                    </strong>
-
+                    <strong>{formatDateTime(updatedAt)}</strong>
                   </div>
-
-                  <div className="information-item">
-
-                    <span>
-                      Record Version
-                    </span>
-
-                    <strong>
-                      {tender?.__v ??
-                        "N/A"}
-                    </strong>
-
-                  </div>
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
         )}
 
         {/* =================================================
-            DOCUMENTS
+            DOCUMENTS / ATTACHMENTS
         ================================================= */}
 
         {activeTab === "documents" && (
           <div className="drawer-scroll">
-
             <div className="drawer-section">
-
               <div className="section-heading">
-
                 <div>
-                  <span className="section-eyebrow">
-                    ATTACHMENTS
-                  </span>
+                  <span className="section-eyebrow">ATTACHMENTS</span>
 
-                  <h3>
-                    Tender Documents
-                  </h3>
+                  <h3>Tender Documents</h3>
                 </div>
 
+                {documents.length > 0 && (
+                  <span className="section-record">
+                    {documents.length}{" "}
+                    {documents.length === 1 ? "File" : "Files"}
+                  </span>
+                )}
               </div>
 
-              {documents.length === 0 ? (
+              {/* Loading */}
 
+              {documentsLoading && (
                 <div className="empty-documents">
-
                   <div className="empty-documents-icon">
-                    <FileText size={30} />
+                    <Loader2 size={30} className="animate-spin" />
                   </div>
 
-                  <h4>
-                    No Documents Available
-                  </h4>
+                  <h4>Loading Attachments</h4>
 
-                  <p>
-                    The current API response
-                    does not contain tender
-                    documents.
-                  </p>
-
-                  <span>
-                    Documents will appear here
-                    when the backend provides
-                    them.
-                  </span>
-
+                  <p>Please wait while tender attachments are being loaded.</p>
                 </div>
+              )}
 
-              ) : (
+              {/* Error */}
 
+              {!documentsLoading && documentsError && (
+                <div className="empty-documents">
+                  <div className="empty-documents-icon">
+                    <AlertCircle size={30} />
+                  </div>
+
+                  <h4>Unable to Load Attachments</h4>
+
+                  <p>{documentsError}</p>
+
+                  <button
+                    type="button"
+                    className="tender-refresh-btn"
+                    onClick={() => fetchAttachments(tender?._id)}
+                  >
+                    <RefreshCw size={15} />
+                    Try Again
+                  </button>
+                </div>
+              )}
+
+              {/* Empty */}
+
+              {!documentsLoading &&
+                !documentsError &&
+                documents.length === 0 && (
+                  <div className="empty-documents">
+                    <div className="empty-documents-icon">
+                      <FileText size={30} />
+                    </div>
+
+                    <h4>No Attachments Available</h4>
+
+                    <p>This tender does not have any attachments.</p>
+                  </div>
+                )}
+
+              {/* Attachments */}
+
+              {!documentsLoading && !documentsError && documents.length > 0 && (
                 <div className="documents-grid">
+                  {documents.map((doc, index) => {
+                    const documentName = doc?.name || `Attachment ${index + 1}`;
 
-                  {documents.map(
-                    (doc, index) => {
+                    const documentType = doc?.type;
 
-                      const documentName =
-                        typeof doc === "string"
-                          ? doc
-                          : doc?.name ||
-                            doc?.file_name ||
-                            `Document ${
-                              index + 1
-                            }`;
+                    const description = doc?.description;
 
-                      const documentUrl =
-                        typeof doc === "object"
-                          ? doc?.url ||
-                            doc?.file_url
-                          : null;
+                    const filePath = doc?.file_path;
 
-                      return (
-                        <div
-                          className="drawer-document"
-                          key={
-                            doc?._id ||
-                            index
-                          }
-                        >
+                    const fileName = getAttachmentFileName(filePath);
 
-                          <div className="doc-info">
+                    const extension = getAttachmentExtension(filePath);
 
-                            <div className="document-icon-wrapper">
-                              <FileText
-                                size={21}
-                              />
-                            </div>
+                    return (
+                      <div className="drawer-document" key={doc?._id || index}>
+                        {/* Document Information */}
 
-                            <div>
-
-                              <span className="doc-name">
-                                {documentName}
-                              </span>
-
-                              <small>
-                                Tender Document
-                              </small>
-
-                            </div>
-
+                        <div className="doc-info">
+                          <div className="document-icon-wrapper">
+                            <FileText size={21} />
                           </div>
 
-                          {documentUrl && (
-                            <div className="doc-actions">
+                          <div className="doc-content">
+                            <span className="doc-name">{documentName}</span>
 
+                            {documentType && (
+                              <span
+                                className={getAttachmentTypeClass(documentType)}
+                              >
+                                {getAttachmentTypeLabel(documentType)}
+                              </span>
+                            )}
+
+                            {description && <small>{description}</small>}
+
+                            <small>{fileName}</small>
+
+                            <small>{extension}</small>
+                          </div>
+                        </div>
+
+                        {/* Document Actions */}
+
+                        <div className="doc-actions">
+                          {filePath && (
+                            <>
                               <button
                                 type="button"
-                                title="View"
-                                onClick={() =>
-                                  window.open(
-                                    documentUrl,
-                                    "_blank"
-                                  )
-                                }
+                                title="Open / Preview File"
+                                onClick={() => handleOpenFile(filePath)}
                               >
-                                <Eye size={16} />
+                                <Eye size={15} />
                               </button>
 
                               <a
-                                href={
-                                  documentUrl
-                                }
+                                href={filePath}
+                                download={fileName}
                                 target="_blank"
-                                rel="noreferrer"
-                                title="Download"
+                                rel="noopener noreferrer"
+                                title="Download File"
                               >
-                                <Download
-                                  size={16}
-                                />
+                                <Download size={15} />
                               </a>
-
-                            </div>
+                            </>
                           )}
-
                         </div>
-                      );
-                    }
-                  )}
-
+                      </div>
+                    );
+                  })}
                 </div>
-
               )}
-
             </div>
-
           </div>
         )}
 
@@ -1026,181 +819,101 @@ export default function TenderDetailsDrawer({
 
         {activeTab === "timeline" && (
           <div className="drawer-scroll">
-
             <div className="drawer-section">
-
               <div className="section-heading">
-
                 <div>
-                  <span className="section-eyebrow">
-                    TENDER LIFECYCLE
-                  </span>
+                  <span className="section-eyebrow">TENDER LIFECYCLE</span>
 
-                  <h3>
-                    Tender Timeline
-                  </h3>
+                  <h3>Tender Timeline</h3>
                 </div>
-
               </div>
 
               <div className="real-timeline">
-
                 {/* Created */}
 
                 <div className="real-timeline-item completed">
-
                   <div className="timeline-dot">
                     <CircleCheck size={14} />
                   </div>
 
                   <div className="timeline-content">
-
                     <div className="timeline-title-row">
+                      <h4>Tender Created</h4>
 
-                      <h4>
-                        Tender Created
-                      </h4>
-
-                      <span>
-                        {formatDateTime(
-                          tender?.createdAt
-                        )}
-                      </span>
-
+                      <span>{formatDateTime(tender?.createdAt)}</span>
                     </div>
 
-                    <p>
-                      The tender was created
-                      and registered in the
-                      system.
-                    </p>
-
+                    <p>The tender was created and registered in the system.</p>
                   </div>
-
                 </div>
 
                 {/* Submission Start */}
 
                 <div
                   className={`real-timeline-item ${
-                    new Date() >=
-                    new Date(
-                      tender?.submission_start
-                    )
+                    new Date() >= new Date(tender?.submission_start)
                       ? "completed"
                       : ""
                   }`}
                 >
-
                   <div className="timeline-dot">
                     <CalendarDays size={14} />
                   </div>
 
                   <div className="timeline-content">
-
                     <div className="timeline-title-row">
+                      <h4>Submission Starts</h4>
 
-                      <h4>
-                        Submission Starts
-                      </h4>
-
-                      <span>
-                        {formatDateTime(
-                          tender?.submission_start
-                        )}
-                      </span>
-
+                      <span>{formatDateTime(tender?.submission_start)}</span>
                     </div>
 
-                    <p>
-                      Bid submissions become
-                      available from this
-                      date.
-                    </p>
-
+                    <p>Bid submissions become available from this date.</p>
                   </div>
-
                 </div>
 
                 {/* Deadline */}
 
                 <div
                   className={`real-timeline-item ${
-                    daysLeft === 0
-                      ? "completed"
-                      : ""
+                    daysLeft === 0 ? "completed" : ""
                   }`}
                 >
-
                   <div className="timeline-dot">
                     <Clock3 size={14} />
                   </div>
 
                   <div className="timeline-content">
-
                     <div className="timeline-title-row">
+                      <h4>Submission Deadline</h4>
 
-                      <h4>
-                        Submission Deadline
-                      </h4>
-
-                      <span>
-                        {formatDateTime(
-                          tender?.submission_deadline
-                        )}
-                      </span>
-
+                      <span>{formatDateTime(tender?.submission_deadline)}</span>
                     </div>
 
-                    <p>
-                      Final deadline for
-                      submitting bids.
-                    </p>
-
+                    <p>Final deadline for submitting bids.</p>
                   </div>
-
                 </div>
 
                 {/* Updated */}
 
                 <div className="real-timeline-item">
-
                   <div className="timeline-dot">
                     <CalendarDays size={14} />
                   </div>
 
                   <div className="timeline-content">
-
                     <div className="timeline-title-row">
+                      <h4>Last Updated</h4>
 
-                      <h4>
-                        Last Updated
-                      </h4>
-
-                      <span>
-                        {formatDateTime(
-                          tender?.updatedAt
-                        )}
-                      </span>
-
+                      <span>{formatDateTime(tender?.updatedAt)}</span>
                     </div>
 
-                    <p>
-                      Latest update recorded
-                      by the system.
-                    </p>
-
+                    <p>Latest update recorded by the system.</p>
                   </div>
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
         )}
-
       </div>
     </>
   );

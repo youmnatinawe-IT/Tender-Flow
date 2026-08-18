@@ -1,29 +1,29 @@
-import { AlertTriangle } from "lucide-react";
+// import { AlertTriangle } from "lucide-react";
 
-export default function TenderAlerts() {
+// export default function TenderAlerts() {
 
-  const alerts = [
-    "Tender closes tomorrow",
-    "No bids received",
-    "Committee not assigned",
-    "Bid guarantee expired"
-  ];
+//   const alerts = [
+//     "Tender closes tomorrow",
+//     "No bids received",
+//     "Committee not assigned",
+//     "Bid guarantee expired"
+//   ];
 
-  return (
-    <div className="tender-alerts">
+//   return (
+//     <div className="tender-alerts">
 
-      <h3>Critical Alerts</h3>
+//       <h3>Critical Alerts</h3>
 
-      {alerts.map((alert,index)=>(
-        <div key={index} className="alert-item">
+//       {alerts.map((alert,index)=>(
+//         <div key={index} className="alert-item">
 
-          <AlertTriangle size={18}/>
+//           <AlertTriangle size={18}/>
 
-          <span>{alert}</span>
+//           <span>{alert}</span>
 
-        </div>
-      ))}
+//         </div>
+//       ))}
 
-    </div>
-  );
-}
+//     </div>
+//   );
+// }

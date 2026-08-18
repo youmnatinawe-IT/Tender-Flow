@@ -620,7 +620,7 @@
 
 .tender-table {
   width: 100%;
-  min-width: 1250px;
+  min-width: 100%;
 
   border-collapse: separate;
   border-spacing: 0;
@@ -696,7 +696,7 @@
 ========================================================= */
 
 .tender-main-cell {
-  min-width: 280px;
+  min-width: 200px;
 }
 
 .tender-title-area {
@@ -774,7 +774,7 @@
 ========================================================= */
 
 .publisher-table-cell {
-  min-width: 210px;
+  min-width: 160px;
 
   display: flex;
   align-items: center;
@@ -833,7 +833,7 @@
 ========================================================= */
 
 .value-table-cell {
-  min-width: 175px;
+  min-width: 130px;
 
   display: flex;
   align-items: center;
@@ -965,7 +965,7 @@
 ========================================================= */
 
 .location-table-cell {
-  min-width: 130px;
+  min-width: 100px;
 
   display: flex;
   align-items: center;
@@ -1073,7 +1073,7 @@
 ========================================================= */
 
 .tender-view-btn {
-  min-width: 95px;
+  min-width: 85px;
 
   height: 34px;
 

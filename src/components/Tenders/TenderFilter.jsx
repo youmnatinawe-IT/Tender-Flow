@@ -44,10 +44,10 @@ export default function TenderFilters({ filters, setFilters }) {
         <select name="status" value={filters.status} onChange={handleChange}>
           <option value="">All Status</option>
           <option value="Draft">Draft</option>
-          <option value="Pending Approval">Pending Approval</option>
+          
           <option value="Published">Published</option>
-          <option value="Open for Bidding">Open for Bidding</option>
-          <option value="Under Evaluation">Under Evaluation</option>
+          <option value="Open ">Open </option>
+          <option value="REPUBLISHED">REPUBLISHED</option>
           <option value="Awarded">Awarded</option>
           <option value="Closed">Closed</option>
           <option value="Cancelled">Cancelled</option>
@@ -60,9 +60,9 @@ export default function TenderFilters({ filters, setFilters }) {
           onChange={handleChange}
         >
           <option value="">All Publishers</option>
-          <option value="Ministry">Ministry of Transport</option>
+          {/* <option value="Ministry">Ministry of Transport</option>
           <option value="Municipality">Municipality</option>
-          <option value="Company">Construction Company</option>
+          <option value="Company">Construction Company</option> */}
         </select>
 
         {/* Date */}

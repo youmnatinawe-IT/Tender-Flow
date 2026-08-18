@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "../Tenders/style/tender.css";
 import TenderDetailsDrawer from "./TenderDatails";
 
@@ -6,10 +6,8 @@ import {
   Eye,
   Loader2,
   MapPin,
-  CalendarDays,
   Building2,
   Wallet,
-  Clock3,
   ChevronRight,
   Search,
   RefreshCw,
@@ -23,26 +21,10 @@ import { getAllTenders } from "../../services/tenderService";
 
 const formatTenderId = (id) => {
   if (!id) return "N/A";
+
   return `#${id.slice(-6).toUpperCase()}`;
 };
 
-const formatDate = (date) => {
-  if (!date) return "N/A";
-
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "N/A";
-  }
-
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(parsedDate);
-};
-
- 
 const formatBudget = (value, currency) => {
   if (
     value === null ||
@@ -59,42 +41,24 @@ const formatBudget = (value, currency) => {
   }
 
   return `${new Intl.NumberFormat("en-US").format(
-    number
+    number,
   )} ${currency || ""}`.trim();
-};
-
-const getDaysLeft = (deadline) => {
-  if (!deadline) return null;
-
-  const now = new Date();
-  const endDate = new Date(deadline);
-
-  if (Number.isNaN(endDate.getTime())) {
-    return null;
-  }
-
-  const diff =
-    endDate.getTime() - now.getTime();
-
-  if (diff <= 0) return 0;
-
-  return Math.ceil(
-    diff / (1000 * 60 * 60 * 24)
-  );
 };
 
 const getStatusClass = (status) => {
   const normalized =
-    status?.toLowerCase().replace(/\s+/g, "-") ||
-    "unknown";
+    status
+      ?.toLowerCase()
+      .replace(/\s+/g, "-") || "unknown";
 
   return `status-badge status-${normalized}`;
 };
 
 const getTypeClass = (type) => {
   const normalized =
-    type?.toLowerCase().replace(/\s+/g, "-") ||
-    "unknown";
+    type
+      ?.toLowerCase()
+      .replace(/\s+/g, "-") || "unknown";
 
   return `type-badge type-${normalized}`;
 };
@@ -105,7 +69,9 @@ const getTypeClass = (type) => {
 
 export default function TenderTable({ filters = {} }) {
   const [tenders, setTenders] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState(null);
 
   const [selectedTender, setSelectedTender] =
@@ -115,7 +81,14 @@ export default function TenderTable({ filters = {} }) {
     useState(false);
 
   /* =========================================================
-     Fetch
+     Fetch All Tenders - ADMIN
+     
+     API:
+     GET /api/tenders/all
+     
+     Required:
+     - Token
+     - type: admin
   ========================================================= */
 
   const fetchTenders = async (isRefresh = false) => {
@@ -128,21 +101,39 @@ export default function TenderTable({ filters = {} }) {
 
       setError(null);
 
+      console.log(
+        "==========================================",
+      );
+
+      console.log(
+        "Fetching ALL tenders for ADMIN...",
+      );
+
+      console.log(
+        "API: GET /api/tenders/all",
+      );
+
+      console.log(
+        "==========================================",
+      );
+
+      /* =====================================================
+         Call Admin API
+      ===================================================== */
+
       const response = await getAllTenders();
 
-      /*
-        يدعم أكثر من شكل محتمل للـservice:
-
-        1. Array
-        2. { data: [] }
-        3. { data: { data: [] } }
-      */
+      /* =====================================================
+         Normalize Response
+      ===================================================== */
 
       let tenderData = [];
 
       if (Array.isArray(response)) {
         tenderData = response;
-      } else if (Array.isArray(response?.data)) {
+      } else if (
+        Array.isArray(response?.data)
+      ) {
         tenderData = response.data;
       } else if (
         Array.isArray(response?.data?.data)
@@ -150,23 +141,38 @@ export default function TenderTable({ filters = {} }) {
         tenderData = response.data.data;
       }
 
+      console.log(
+        "Admin tenders received:",
+        tenderData,
+      );
+
+      console.log(
+        "Number of tenders:",
+        tenderData.length,
+      );
+
       setTenders(tenderData);
     } catch (err) {
       console.error(
-        "Failed to fetch tenders:",
-        err
+        "Failed to fetch admin tenders:",
+        err,
       );
 
-      setError(
+      const errorMessage =
         err?.response?.data?.message ||
-          err?.message ||
-          "An error occurred while fetching tender data"
-      );
+        err?.message ||
+        "An error occurred while fetching tender data";
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
+
+  /* =========================================================
+     Initial Fetch
+  ========================================================= */
 
   useEffect(() => {
     fetchTenders();
@@ -178,6 +184,10 @@ export default function TenderTable({ filters = {} }) {
 
   const filteredTenders = useMemo(() => {
     return tenders.filter((tender) => {
+      /* =====================================================
+         Tender Basic Data
+      ===================================================== */
+
       const title =
         tender?.title?.toLowerCase() || "";
 
@@ -187,25 +197,44 @@ export default function TenderTable({ filters = {} }) {
       const id =
         tender?._id?.toLowerCase() || "";
 
+      /* =====================================================
+         Publisher
+      ===================================================== */
+
       const publisherName =
         tender?.publisher_org_id?.org_name?.toLowerCase() ||
         "";
+
+      /* =====================================================
+         Location
+      ===================================================== */
 
       const location =
         tender?.execution_location?.toLowerCase() ||
         "";
 
+      /* =====================================================
+         Status
+      ===================================================== */
+
       const status =
         tender?.status?.toLowerCase() || "";
+
+      /* =====================================================
+         Type
+      ===================================================== */
 
       const type =
         tender?.type?.toLowerCase() || "";
 
-      const searchValue =
-        filters?.search?.toLowerCase()?.trim() ||
-        "";
+      /* =====================================================
+         Search
+      ===================================================== */
 
-      /* Search */
+      const searchValue =
+        filters?.search
+          ?.toLowerCase()
+          ?.trim() || "";
 
       const matchesSearch =
         !searchValue ||
@@ -215,41 +244,52 @@ export default function TenderTable({ filters = {} }) {
         publisherName.includes(searchValue) ||
         location.includes(searchValue);
 
-      /* Status */
+      /* =====================================================
+         Status Filter
+      ===================================================== */
 
       const matchesStatus =
         !filters?.status ||
-        status === filters.status.toLowerCase();
+        status ===
+          filters.status.toLowerCase();
 
-      /* Publisher */
+      /* =====================================================
+         Publisher Filter
+      ===================================================== */
 
       const matchesPublisher =
         !filters?.publisher ||
         publisherName.includes(
-          filters.publisher.toLowerCase()
+          filters.publisher.toLowerCase(),
         );
 
-      /* Type */
+      /* =====================================================
+         Type Filter
+      ===================================================== */
 
       const matchesType =
         !filters?.type ||
-        type === filters.type.toLowerCase();
+        type ===
+          filters.type.toLowerCase();
 
-      /* Created Date */
+      /* =====================================================
+         Created Date Filter
+      ===================================================== */
 
-      const createdDate =
-        tender?.createdAt
-          ? tender.createdAt.split("T")[0]
-          : "";
+      const createdDate = tender?.createdAt
+        ? tender.createdAt.split("T")[0]
+        : "";
 
       const matchesDate =
         !filters?.date ||
         createdDate === filters.date;
 
-      /* Minimum Value */
+      /* =====================================================
+         Minimum Budget
+      ===================================================== */
 
       const estimatedValue = Number(
-        tender?.estimated_value || 0
+        tender?.estimated_value || 0,
       );
 
       const matchesMinBudget =
@@ -257,12 +297,18 @@ export default function TenderTable({ filters = {} }) {
         estimatedValue >=
           Number(filters.minBudget);
 
-      /* Maximum Value */
+      /* =====================================================
+         Maximum Budget
+      ===================================================== */
 
       const matchesMaxBudget =
         !filters?.maxBudget ||
         estimatedValue <=
           Number(filters.maxBudget);
+
+      /* =====================================================
+         Final Filter Result
+      ===================================================== */
 
       return (
         matchesSearch &&
@@ -277,7 +323,7 @@ export default function TenderTable({ filters = {} }) {
   }, [tenders, filters]);
 
   /* =========================================================
-     Loading
+     Loading State
   ========================================================= */
 
   if (loading) {
@@ -293,15 +339,15 @@ export default function TenderTable({ filters = {} }) {
         <h3>Loading Tenders</h3>
 
         <p>
-          Please wait while tender data is
-          being loaded.
+          Please wait while tender data is being
+          loaded.
         </p>
       </div>
     );
   }
 
   /* =========================================================
-     Error
+     Error State
   ========================================================= */
 
   if (error) {
@@ -320,6 +366,7 @@ export default function TenderTable({ filters = {} }) {
           onClick={() => fetchTenders()}
         >
           <RefreshCw size={16} />
+
           Try Again
         </button>
       </div>
@@ -353,9 +400,15 @@ export default function TenderTable({ filters = {} }) {
             </p>
           </div>
 
+          {/* =================================================
+              Refresh
+          ================================================= */}
+
           <button
             className="tender-refresh-icon-btn"
-            onClick={() => fetchTenders(true)}
+            onClick={() =>
+              fetchTenders(true)
+            }
             disabled={refreshing}
             title="Refresh"
           >
@@ -371,11 +424,12 @@ export default function TenderTable({ filters = {} }) {
         </div>
 
         {/* =================================================
-            Empty
+            Empty State
         ================================================= */}
 
         {filteredTenders.length === 0 ? (
           <div className="tender-empty-state">
+
             <div className="tender-empty-icon">
               <Search size={30} />
             </div>
@@ -386,9 +440,11 @@ export default function TenderTable({ filters = {} }) {
               No tenders match your current
               search or filter criteria.
             </p>
+
           </div>
         ) : (
           <div className="tender-table-scroll">
+
             <table className="tender-table">
 
               {/* =================================================
@@ -398,11 +454,15 @@ export default function TenderTable({ filters = {} }) {
               <thead>
                 <tr>
                   <th>TENDER</th>
+
                   <th>PUBLISHER</th>
+
                   <th>ESTIMATED VALUE</th>
-                  <th>SUBMISSION PERIOD</th>
+
                   <th>LOCATION</th>
+
                   <th>STATUS</th>
+
                   <th>ACTIONS</th>
                 </tr>
               </thead>
@@ -417,11 +477,6 @@ export default function TenderTable({ filters = {} }) {
                     const publisher =
                       tender?.publisher_org_id ||
                       {};
-
-                    const daysLeft =
-                      getDaysLeft(
-                        tender?.submission_deadline
-                      );
 
                     return (
                       <tr
@@ -440,7 +495,7 @@ export default function TenderTable({ filters = {} }) {
 
                               <div className="tender-id">
                                 {formatTenderId(
-                                  tender?._id
+                                  tender?._id,
                                 )}
                               </div>
 
@@ -450,14 +505,16 @@ export default function TenderTable({ filters = {} }) {
                               </div>
 
                               <div className="tender-type-row">
+
                                 <span
                                   className={getTypeClass(
-                                    tender?.type
+                                    tender?.type,
                                   )}
                                 >
                                   {tender?.type ||
                                     "N/A"}
                                 </span>
+
                               </div>
 
                             </div>
@@ -473,9 +530,7 @@ export default function TenderTable({ filters = {} }) {
                           <div className="publisher-table-cell">
 
                             <div className="publisher-icon">
-                              <Building2
-                                size={17}
-                              />
+                              <Building2 size={17} />
                             </div>
 
                             <div className="publisher-text">
@@ -503,87 +558,23 @@ export default function TenderTable({ filters = {} }) {
                           <div className="value-table-cell">
 
                             <div className="value-icon">
-                              <Wallet
-                                size={16}
-                              />
+                              <Wallet size={16} />
                             </div>
 
                             <div>
+
                               <strong>
                                 {formatBudget(
                                   tender?.estimated_value,
-                                  tender?.currency
+                                  tender?.currency,
                                 )}
                               </strong>
 
                               <span>
                                 Estimated Value
                               </span>
+
                             </div>
-
-                          </div>
-                        </td>
-
-                        {/* =====================================
-                            Submission Period
-                        ===================================== */}
-
-                        <td>
-                          <div className="submission-cell">
-
-                            <div className="submission-date">
-                              <CalendarDays
-                                size={14}
-                              />
-
-                              <div>
-                                <span>
-                                  Starts
-                                </span>
-
-                                <strong>
-                                  {formatDate(
-                                    tender?.submission_start
-                                  )}
-                                </strong>
-                              </div>
-                            </div>
-
-                            <div className="submission-divider" />
-
-                            <div className="submission-date deadline">
-                              <Clock3
-                                size={14}
-                              />
-
-                              <div>
-                                <span>
-                                  Deadline
-                                </span>
-
-                                <strong>
-                                  {formatDate(
-                                    tender?.submission_deadline
-                                  )}
-                                </strong>
-                              </div>
-                            </div>
-
-                            {daysLeft !== null && (
-                              <span
-                                className={`deadline-mini ${
-                                  daysLeft === 0
-                                    ? "expired"
-                                    : daysLeft <= 7
-                                    ? "urgent"
-                                    : ""
-                                }`}
-                              >
-                                {daysLeft > 0
-                                  ? `${daysLeft} days left`
-                                  : "Expired"}
-                              </span>
-                            )}
 
                           </div>
                         </td>
@@ -595,9 +586,7 @@ export default function TenderTable({ filters = {} }) {
                         <td>
                           <div className="location-table-cell">
 
-                            <MapPin
-                              size={16}
-                            />
+                            <MapPin size={16} />
 
                             <span>
                               {tender?.execution_location ||
@@ -614,13 +603,15 @@ export default function TenderTable({ filters = {} }) {
                         <td>
                           <span
                             className={getStatusClass(
-                              tender?.status
+                              tender?.status,
                             )}
                           >
+
                             <span className="status-dot" />
 
                             {tender?.status ||
                               "N/A"}
+
                           </span>
                         </td>
 
@@ -633,7 +624,7 @@ export default function TenderTable({ filters = {} }) {
                             className="tender-view-btn"
                             onClick={() =>
                               setSelectedTender(
-                                tender
+                                tender,
                               )
                             }
                           >
@@ -651,18 +642,18 @@ export default function TenderTable({ filters = {} }) {
 
                       </tr>
                     );
-                  }
+                  },
                 )}
               </tbody>
 
             </table>
+
           </div>
         )}
-
       </div>
 
       {/* =====================================================
-          Details Drawer
+          Tender Details
       ===================================================== */}
 
       <TenderDetailsDrawer
