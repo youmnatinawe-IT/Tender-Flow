@@ -82,13 +82,6 @@ export default function TenderTable({ filters = {} }) {
 
   /* =========================================================
      Fetch All Tenders - ADMIN
-     
-     API:
-     GET /api/tenders/all
-     
-     Required:
-     - Token
-     - type: admin
   ========================================================= */
 
   const fetchTenders = async (isRefresh = false) => {
@@ -117,15 +110,7 @@ export default function TenderTable({ filters = {} }) {
         "==========================================",
       );
 
-      /* =====================================================
-         Call Admin API
-      ===================================================== */
-
       const response = await getAllTenders();
-
-      /* =====================================================
-         Normalize Response
-      ===================================================== */
 
       let tenderData = [];
 
@@ -152,6 +137,21 @@ export default function TenderTable({ filters = {} }) {
       );
 
       setTenders(tenderData);
+
+      /* =====================================================
+         Keep currently opened tender updated after refresh
+      ===================================================== */
+
+      if (selectedTender?._id) {
+        const refreshedTender = tenderData.find(
+          (item) =>
+            item?._id === selectedTender?._id,
+        );
+
+        if (refreshedTender) {
+          setSelectedTender(refreshedTender);
+        }
+      }
     } catch (err) {
       console.error(
         "Failed to fetch admin tenders:",
@@ -184,10 +184,6 @@ export default function TenderTable({ filters = {} }) {
 
   const filteredTenders = useMemo(() => {
     return tenders.filter((tender) => {
-      /* =====================================================
-         Tender Basic Data
-      ===================================================== */
-
       const title =
         tender?.title?.toLowerCase() || "";
 
@@ -197,39 +193,19 @@ export default function TenderTable({ filters = {} }) {
       const id =
         tender?._id?.toLowerCase() || "";
 
-      /* =====================================================
-         Publisher
-      ===================================================== */
-
       const publisherName =
         tender?.publisher_org_id?.org_name?.toLowerCase() ||
         "";
-
-      /* =====================================================
-         Location
-      ===================================================== */
 
       const location =
         tender?.execution_location?.toLowerCase() ||
         "";
 
-      /* =====================================================
-         Status
-      ===================================================== */
-
       const status =
         tender?.status?.toLowerCase() || "";
 
-      /* =====================================================
-         Type
-      ===================================================== */
-
       const type =
         tender?.type?.toLowerCase() || "";
-
-      /* =====================================================
-         Search
-      ===================================================== */
 
       const searchValue =
         filters?.search
@@ -244,18 +220,9 @@ export default function TenderTable({ filters = {} }) {
         publisherName.includes(searchValue) ||
         location.includes(searchValue);
 
-      /* =====================================================
-         Status Filter
-      ===================================================== */
-
       const matchesStatus =
         !filters?.status ||
-        status ===
-          filters.status.toLowerCase();
-
-      /* =====================================================
-         Publisher Filter
-      ===================================================== */
+        status === filters.status.toLowerCase();
 
       const matchesPublisher =
         !filters?.publisher ||
@@ -263,18 +230,9 @@ export default function TenderTable({ filters = {} }) {
           filters.publisher.toLowerCase(),
         );
 
-      /* =====================================================
-         Type Filter
-      ===================================================== */
-
       const matchesType =
         !filters?.type ||
-        type ===
-          filters.type.toLowerCase();
-
-      /* =====================================================
-         Created Date Filter
-      ===================================================== */
+        type === filters.type.toLowerCase();
 
       const createdDate = tender?.createdAt
         ? tender.createdAt.split("T")[0]
@@ -283,10 +241,6 @@ export default function TenderTable({ filters = {} }) {
       const matchesDate =
         !filters?.date ||
         createdDate === filters.date;
-
-      /* =====================================================
-         Minimum Budget
-      ===================================================== */
 
       const estimatedValue = Number(
         tender?.estimated_value || 0,
@@ -297,18 +251,10 @@ export default function TenderTable({ filters = {} }) {
         estimatedValue >=
           Number(filters.minBudget);
 
-      /* =====================================================
-         Maximum Budget
-      ===================================================== */
-
       const matchesMaxBudget =
         !filters?.maxBudget ||
         estimatedValue <=
           Number(filters.maxBudget);
-
-      /* =====================================================
-         Final Filter Result
-      ===================================================== */
 
       return (
         matchesSearch &&
@@ -321,6 +267,36 @@ export default function TenderTable({ filters = {} }) {
       );
     });
   }, [tenders, filters]);
+
+  /* =========================================================
+     Update Tender In Local Table
+  ========================================================= */
+
+  const handleTenderUpdated = (updatedTender) => {
+    if (!updatedTender?._id) {
+      return;
+    }
+
+    setTenders((currentTenders) =>
+      currentTenders.map((tender) =>
+        tender?._id === updatedTender?._id
+          ? {
+              ...tender,
+              ...updatedTender,
+            }
+          : tender,
+      ),
+    );
+
+    setSelectedTender((currentTender) =>
+      currentTender?._id === updatedTender?._id
+        ? {
+            ...currentTender,
+            ...updatedTender,
+          }
+        : currentTender,
+    );
+  };
 
   /* =========================================================
      Loading State
@@ -400,10 +376,6 @@ export default function TenderTable({ filters = {} }) {
             </p>
           </div>
 
-          {/* =================================================
-              Refresh
-          ================================================= */}
-
           <button
             className="tender-refresh-icon-btn"
             onClick={() =>
@@ -447,10 +419,6 @@ export default function TenderTable({ filters = {} }) {
 
             <table className="tender-table">
 
-              {/* =================================================
-                  THEAD
-              ================================================= */}
-
               <thead>
                 <tr>
                   <th>TENDER</th>
@@ -466,10 +434,6 @@ export default function TenderTable({ filters = {} }) {
                   <th>ACTIONS</th>
                 </tr>
               </thead>
-
-              {/* =================================================
-                  TBODY
-              ================================================= */}
 
               <tbody>
                 {filteredTenders.map(
@@ -661,6 +625,7 @@ export default function TenderTable({ filters = {} }) {
         onClose={() =>
           setSelectedTender(null)
         }
+        onTenderUpdated={handleTenderUpdated}
       />
     </>
   );

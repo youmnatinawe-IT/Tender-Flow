@@ -5,6 +5,7 @@ import {
   Building2,
   FileCheck,
   Users,
+  Shield,
 Settings,
   ChevronLeft,
   ChevronRight,
@@ -45,7 +46,7 @@ const Sidebar = () => {
     },
     { id: "users", text: "Users", icon: <Users size={18} />, path: "/users" },
   
-    //   { id: 'analytics', text: 'Analytics', icon: <BarChart3 size={18} />, path: '/analytics' },
+      { id: 'RolesPermissions', text: 'Roles&Permissions', icon: <Shield size={18} />, path: '/RolesPermissions' },
       { id: 'settings', text: 'Settings', icon: <Settings size={18} />, path: '/settings' },
   ];
 
