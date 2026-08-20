@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Eye, Pencil, Trash2, UserX, UserCheck, Loader2 } from "lucide-react";
+
+import {
+  Eye,
+  Pencil,
+  UserX,
+  UserCheck,
+  Loader2,
+  ShieldPlus,
+} from "lucide-react";
 
 import { getUsers } from "../../services/userService";
 
@@ -7,32 +15,103 @@ import {
   getPublisherOrgs,
   getExecutorOrgs,
 } from "../../services/organizationService";
+
 import UserDetails from "./UserDatails";
 import UserModal from "./UserModal";
-import DeleteUserModal from "./DeleteUserModal";
+import AssignRoleModal from "./AssignRoleModal";
 import SuspendUserModal from "./SuspendUserModal";
 
-const normalizeStatus = (status) => String(status || "active").toLowerCase();
+/* =========================================================
+   Helpers
+========================================================= */
+
+const normalizeStatus = (status) =>
+  String(status || "active").toLowerCase();
 
 const capitalizeStatus = (status) => {
   const normalized = normalizeStatus(status);
 
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  return (
+    normalized.charAt(0).toUpperCase() +
+    normalized.slice(1)
+  );
 };
+
+/* =========================================================
+   Get User Role
+========================================================= */
+
 const getUserRole = (user) => {
-  return user?.role || user?.type || "N/A";
+  if (!user) return "N/A";
+
+  /*
+    If role is object:
+    {
+      id,
+      name,
+      code
+    }
+  */
+
+  if (
+    user.role &&
+    typeof user.role === "object"
+  ) {
+    return (
+      user.role.name ||
+      user.role.code ||
+      user.role.role_name ||
+      "N/A"
+    );
+  }
+
+  /*
+    If roles array exists
+  */
+
+  if (
+    Array.isArray(user.roles) &&
+    user.roles.length > 0
+  ) {
+    const role = user.roles[0];
+
+    if (typeof role === "object") {
+      return (
+        role.name ||
+        role.code ||
+        role.role_name ||
+        "N/A"
+      );
+    }
+
+    return role;
+  }
+
+  return (
+    user.role ||
+    user.type ||
+    "N/A"
+  );
 };
+
+/* =========================================================
+   Get Organization Name
+========================================================= */
 
 const getOrganizationName = (user) => {
   if (!user) return "N/A";
 
-  // في حال كان الحقل نصاً مباشراً
-  if (typeof user.organization === "string" && user.organization.trim()) {
+  if (
+    typeof user.organization === "string" &&
+    user.organization.trim()
+  ) {
     return user.organization;
   }
 
-  // في حال كانت المنظمة Object
-  if (user.organization && typeof user.organization === "object") {
+  if (
+    user.organization &&
+    typeof user.organization === "object"
+  ) {
     return (
       user.organization.org_name ||
       user.organization.name ||
@@ -41,7 +120,6 @@ const getOrganizationName = (user) => {
     );
   }
 
-  // مفاتيح بديلة شائعة من الباك إند
   return (
     user.org_name ||
     user.organization_name ||
@@ -52,17 +130,26 @@ const getOrganizationName = (user) => {
     "N/A"
   );
 };
+
+/* =========================================================
+   Format Last Login
+========================================================= */
+
 const formatLastLogin = (user) => {
-  // البحث عن الحقل بأكثر من مسمى محتمل من الباك إند
   const loginDate =
-    user?.lastLogin || user?.last_login || user?.lastLoginAt || user?.updatedAt;
+    user?.lastLogin ||
+    user?.last_login ||
+    user?.lastLoginAt ||
+    user?.updatedAt;
 
   if (!loginDate) return "N/A";
 
   const date = new Date(loginDate);
-  if (isNaN(date.getTime())) return String(loginDate);
 
-  // تنسيق التاريخ والوقت بشكل لطيف (مثل: Aug 16, 2026, 07:50 PM)
+  if (isNaN(date.getTime())) {
+    return String(loginDate);
+  }
+
   return date.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -71,21 +158,39 @@ const formatLastLogin = (user) => {
     minute: "2-digit",
   });
 };
+
+/* =========================================================
+   Component
+========================================================= */
+
 export default function UserTable({ filters }) {
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] =
+    useState(null);
 
-  const [showDrawer, setShowDrawer] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
-  const [showSuspend, setShowSuspend] = useState(false);
+  const [showDrawer, setShowDrawer] =
+    useState(false);
 
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [showModal, setShowModal] =
+    useState(false);
 
-  // ============================================================
-  // Fetch Users & Organizations (الدالة الجديدة)
-  // ============================================================
+  const [showAssignRole, setShowAssignRole] =
+    useState(false);
+
+  const [showSuspend, setShowSuspend] =
+    useState(false);
+
+  const [users, setUsers] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState(null);
+
+  /* =========================================================
+     Fetch Users + Organizations
+  ========================================================= */
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,48 +198,105 @@ export default function UserTable({ filters }) {
         setLoading(true);
         setError(null);
 
-        const [usersRes, pubRes, execRes] = await Promise.all([
+        const [
+          usersRes,
+          pubRes,
+          execRes,
+        ] = await Promise.all([
           getUsers(),
           getPublisherOrgs(),
           getExecutorOrgs(),
         ]);
 
-        const rawUsers = usersRes?.success ? usersRes.data : usersRes;
+        /* =====================================================
+           Users
+        ===================================================== */
+
+        const rawUsers = usersRes?.success
+          ? usersRes.data
+          : usersRes;
+
         const userList = Array.isArray(rawUsers)
           ? rawUsers
-          : rawUsers?.users || rawUsers?.data || [];
+          : rawUsers?.users ||
+            rawUsers?.data ||
+            [];
 
-        // دمج قوائم المنظمات
+        /* =====================================================
+           Publishers
+        ===================================================== */
+
         const publishers = pubRes?.success
-          ? pubRes.data?.data || pubRes.data?.publishers || pubRes.data || []
+          ? pubRes.data?.data ||
+            pubRes.data?.publishers ||
+            pubRes.data ||
+            []
           : [];
+
+        /* =====================================================
+           Executors
+        ===================================================== */
+
         const executors = execRes?.success
-          ? execRes.data?.data || execRes.data?.executors || execRes.data || []
+          ? execRes.data?.data ||
+            execRes.data?.executors ||
+            execRes.data ||
+            []
           : [];
+
+        /* =====================================================
+           All Organizations
+        ===================================================== */
+
         const allOrgs =
-          Array.isArray(publishers) && Array.isArray(executors)
-            ? [...publishers, ...executors]
+          Array.isArray(publishers) &&
+          Array.isArray(executors)
+            ? [
+                ...publishers,
+                ...executors,
+              ]
             : [];
 
-        // خريطة لسهولة البحث بواسطة ID المنظمة
+        /* =====================================================
+           Organization Map
+        ===================================================== */
+
         const orgMap = new Map(
           allOrgs.map((org) => [
-            String(org._id || org.id),
-            org.org_name || org.name || "N/A",
-          ]),
+            String(
+              org?._id || org?.id
+            ),
+            org?.org_name ||
+              org?.name ||
+              "N/A",
+          ])
         );
 
-        // ربط اسم المنظمة بكل مستخدم عبر org_id
-        const enrichedUsers = userList.map((u) => ({
-          ...u,
-          organization: orgMap.get(String(u.org_id)) || u.organization || "N/A",
-        }));
+        /* =====================================================
+           Enrich Users
+        ===================================================== */
+
+        const enrichedUsers =
+          userList.map((u) => ({
+            ...u,
+
+            organization:
+              orgMap.get(
+                String(u?.org_id)
+              ) ||
+              u?.organization ||
+              "N/A",
+          }));
 
         setUsers(enrichedUsers);
       } catch (err) {
-        console.error("Failed to fetch data:", err);
+        console.error(
+          "Failed to fetch data:",
+          err
+        );
+
         setError(
-          "Failed to fetch user list. Please ensure you are logged in again.",
+          "Failed to fetch user list. Please ensure you are logged in again."
         );
       } finally {
         setLoading(false);
@@ -143,70 +305,89 @@ export default function UserTable({ filters }) {
 
     fetchData();
   }, []);
-  // ============================================================
-  // Filters
-  // ============================================================
 
-  const safeFilters = filters || {
-    search: "",
-    role: "All",
-    organization: "All",
-    status: "All",
-  };
+  /* =========================================================
+     Filters
+  ========================================================= */
 
-  const filteredUsers = users.filter((user) => {
-    const search = String(safeFilters.search || "").toLowerCase();
+  const safeFilters =
+    filters || {
+      search: "",
+      role: "All",
+      organization: "All",
+      status: "All",
+    };
 
-    const userName = [user.f_name, user.l_name, user.name, user.fullName]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+  const filteredUsers = users.filter(
+    (user) => {
+      const search = String(
+        safeFilters.search || ""
+      ).toLowerCase();
 
-    const matchesSearch =
-      userName.includes(search) ||
-      String(user.email || "")
-        .toLowerCase()
-        .includes(search);
+      const userName = [
+        user?.f_name,
+        user?.l_name,
+        user?.name,
+        user?.fullName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-    const userRole = getUserRole(user);
+      const matchesSearch =
+        userName.includes(search) ||
+        String(user?.email || "")
+          .toLowerCase()
+          .includes(search);
 
-    const matchesRole =
-      safeFilters.role === "All" || userRole === safeFilters.role;
+      const userRole =
+        getUserRole(user);
 
-    const userOrg = getOrganizationName(user);
+      const matchesRole =
+        safeFilters.role === "All" ||
+        userRole === safeFilters.role;
 
-    const matchesOrg =
-      safeFilters.organization === "All" ||
-      userOrg === safeFilters.organization;
-    const matchesStatus =
-      safeFilters.status === "All" ||
-      normalizeStatus(user.status) === String(safeFilters.status).toLowerCase();
+      const userOrg =
+        getOrganizationName(user);
 
-    return matchesSearch && matchesRole && matchesOrg && matchesStatus;
-  });
+      const matchesOrg =
+        safeFilters.organization ===
+          "All" ||
+        userOrg ===
+          safeFilters.organization;
 
-  // ============================================================
-  // Delete User
-  // ============================================================
+      const matchesStatus =
+        safeFilters.status === "All" ||
+        normalizeStatus(
+          user?.status
+        ) ===
+          String(
+            safeFilters.status
+          ).toLowerCase();
 
-  const handleDeleteUser = (userToDelete) => {
-    const id = userToDelete?.id || userToDelete?._id;
+      return (
+        matchesSearch &&
+        matchesRole &&
+        matchesOrg &&
+        matchesStatus
+      );
+    }
+  );
 
-    setUsers((prevUsers) => prevUsers.filter((u) => (u.id || u._id) !== id));
+  /* =========================================================
+     Update User Status
+  ========================================================= */
 
-    setShowDelete(false);
-  };
-
-  // ============================================================
-  // Update User Status after API success
-  // ============================================================
-
-  const handleStatusChanged = (userId, newStatus) => {
+  const handleStatusChanged = (
+    userId,
+    newStatus
+  ) => {
     setUsers((prevUsers) =>
       prevUsers.map((u) => {
-        const id = u.id || u._id;
+        const id =
+          u?.id || u?._id;
 
-        if (id === userId) {
+        if (String(id) === String(userId)) {
           return {
             ...u,
             status: newStatus,
@@ -214,15 +395,90 @@ export default function UserTable({ filters }) {
         }
 
         return u;
-      }),
+      })
     );
 
     setShowSuspend(false);
   };
 
-  // ============================================================
-  // Loading
-  // ============================================================
+  /* =========================================================
+     Update User Role
+  ========================================================= */
+
+  const handleRoleAssigned = (
+    updatedRole
+  ) => {
+    const userId =
+      selectedUser?.id ||
+      selectedUser?._id;
+
+    if (!userId) return;
+
+    setUsers((prevUsers) =>
+      prevUsers.map((u) => {
+        const currentId =
+          u?.id || u?._id;
+
+        if (
+          String(currentId) ===
+          String(userId)
+        ) {
+          return {
+            ...u,
+
+            /*
+              Store role object
+              because backend may
+              return role object.
+            */
+
+            role:
+              updatedRole?.role ||
+              updatedRole,
+
+            /*
+              Also keep roles array
+              if needed elsewhere.
+            */
+
+            roles: [
+              updatedRole?.role ||
+                updatedRole,
+            ],
+          };
+        }
+
+        return u;
+      })
+    );
+
+    /*
+      Update selected user as well
+    */
+
+    setSelectedUser((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+
+        role:
+          updatedRole?.role ||
+          updatedRole,
+
+        roles: [
+          updatedRole?.role ||
+            updatedRole,
+        ],
+      };
+    });
+
+    setShowAssignRole(false);
+  };
+
+  /* =========================================================
+     Loading
+  ========================================================= */
 
   if (loading) {
     return (
@@ -236,17 +492,25 @@ export default function UserTable({ filters }) {
         <Loader2
           className="animate-spin"
           size={32}
-          style={{ margin: "0 auto" }}
+          style={{
+            margin: "0 auto",
+          }}
         />
 
-        <p style={{ marginTop: "10px" }}>Loading users...</p>
+        <p
+          style={{
+            marginTop: "10px",
+          }}
+        >
+          Loading users...
+        </p>
       </div>
     );
   }
 
-  // ============================================================
-  // Error
-  // ============================================================
+  /* =========================================================
+     Error
+  ========================================================= */
 
   if (error) {
     return (
@@ -263,12 +527,16 @@ export default function UserTable({ filters }) {
     );
   }
 
-  // ============================================================
-  // Table
-  // ============================================================
+  /* =========================================================
+     Render
+  ========================================================= */
 
   return (
     <>
+      {/* =====================================================
+          TABLE
+      ===================================================== */}
+
       <div className="table-container">
         <table className="users-table">
           <thead>
@@ -279,203 +547,319 @@ export default function UserTable({ filters }) {
               <th>Role</th>
               <th>Status</th>
               <th>Last Login</th>
-              <th className="text-center">Actions</th>
+              <th className="text-center">
+                Actions
+              </th>
             </tr>
           </thead>
 
           <tbody>
             {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => {
-                // ==================================================
-                // IMPORTANT:
-                // Normalize status only once
-                // ==================================================
+              filteredUsers.map(
+                (user) => {
+                  const status =
+                    normalizeStatus(
+                      user?.status
+                    );
 
-                const status = normalizeStatus(user.status);
+                  const isPending =
+                    status ===
+                    "pending";
 
-                const isPending = status === "pending";
+                  const isActive =
+                    status ===
+                    "active";
 
-                const isActive = status === "active";
+                  const isRejected =
+                    status ===
+                    "rejected";
 
-                const isRejected = status === "rejected";
+                  const isBanned =
+                    status ===
+                    "banned";
 
-                const isBanned = status === "banned";
+                  const userId =
+                    user?.id ||
+                    user?._id;
 
-                return (
-                  <tr key={user.id || user._id}>
-                    {/* ================= USER ================= */}
+                  const displayName =
+                    user?.name ||
+                    user?.fullName ||
+                    `${user?.f_name || ""} ${
+                      user?.l_name || ""
+                    }`.trim() ||
+                    "Unknown User";
 
-                    <td>
-                      <div className="user-info">
-                        <div className="avatar">
-                          {(
-                            user.name ||
-                            user.fullName ||
-                            user.f_name ||
-                            "U"
-                          ).charAt(0)}
+                  return (
+                    <tr
+                      key={userId}
+                    >
+                      {/* =================================================
+                          USER
+                      ================================================= */}
+
+                      <td>
+                        <div className="user-info">
+                          <div className="avatar">
+                            {displayName
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+
+                          <div>
+                            <strong>
+                              {
+                                displayName
+                              }
+                            </strong>
+
+                            <p>
+                              {user?.phone ||
+                                "N/A"}
+                            </p>
+                          </div>
                         </div>
+                      </td>
 
-                        <div>
-                          <strong>
-                            {user.name ||
-                              user.fullName ||
-                              `${user.f_name || ""} ${
-                                user.l_name || ""
-                              }`.trim()}
-                          </strong>
+                      {/* =================================================
+                          EMAIL
+                      ================================================= */}
 
-                          <p>{user.phone || "N/A"}</p>
+                      <td>
+                        {user?.email ||
+                          "N/A"}
+                      </td>
+
+                      {/* =================================================
+                          ORGANIZATION
+                      ================================================= */}
+
+                      <td>
+                        {getOrganizationName(
+                          user
+                        )}
+                      </td>
+
+                      {/* =================================================
+                          ROLE
+                      ================================================= */}
+
+                      <td>
+                        <span className="role-badge">
+                          {getUserRole(
+                            user
+                          )}
+                        </span>
+                      </td>
+
+                      {/* =================================================
+                          STATUS
+                      ================================================= */}
+
+                      <td>
+                        <span
+                          className={`status-badge ${status}`}
+                        >
+                          {capitalizeStatus(
+                            user?.status
+                          )}
+                        </span>
+                      </td>
+
+                      {/* =================================================
+                          LAST LOGIN
+                      ================================================= */}
+
+                      <td>
+                        {formatLastLogin(
+                          user
+                        )}
+                      </td>
+
+                      {/* =================================================
+                          ACTIONS
+                      ================================================= */}
+
+                      <td>
+                        <div className="actions">
+
+                          {/* ============================================
+                              1. VIEW
+                          ============================================ */}
+
+                          <button
+                            className="action-btn view"
+                            title="View Details"
+                            onClick={() => {
+                              setSelectedUser(
+                                user
+                              );
+
+                              setShowDrawer(
+                                true
+                              );
+                            }}
+                          >
+                            <Eye
+                              size={16}
+                            />
+                          </button>
+
+                          {/* ============================================
+                              2. EDIT
+                          ============================================ */}
+
+                          <button
+                            className="action-btn edit"
+                            title="Edit User"
+                            onClick={() => {
+                              setSelectedUser(
+                                user
+                              );
+
+                              setShowModal(
+                                true
+                              );
+                            }}
+                          >
+                            <Pencil
+                              size={16}
+                            />
+                          </button>
+
+                          {/* ============================================
+                              3. ASSIGN ROLE
+                          ============================================ */}
+
+                          <button
+                            className="action-btn assign-role"
+                            title="Assign Role"
+                            onClick={() => {
+                              setSelectedUser(
+                                user
+                              );
+
+                              setShowAssignRole(
+                                true
+                              );
+                            }}
+                          >
+                            <ShieldPlus
+                              size={16}
+                            />
+                          </button>
+
+                          {/* ============================================
+                              4. PENDING
+                              Accept / Reject
+                          ============================================ */}
+
+                          {isPending && (
+                            <button
+                              className="action-btn activate"
+                              title="Review User"
+                              onClick={() => {
+                                setSelectedUser(
+                                  user
+                                );
+
+                                setShowSuspend(
+                                  true
+                                );
+                              }}
+                            >
+                              <UserCheck
+                                size={16}
+                              />
+                            </button>
+                          )}
+
+                          {/* ============================================
+                              5. ACTIVE
+                              Ban
+                          ============================================ */}
+
+                          {isActive && (
+                            <button
+                              className="action-btn suspend"
+                              title="Ban User"
+                              onClick={() => {
+                                setSelectedUser(
+                                  user
+                                );
+
+                                setShowSuspend(
+                                  true
+                                );
+                              }}
+                            >
+                              <UserX
+                                size={16}
+                              />
+                            </button>
+                          )}
+
+                          {/* ============================================
+                              6. REJECTED
+                              Resend
+                          ============================================ */}
+
+                          {isRejected && (
+                            <button
+                              className="action-btn activate"
+                              title="Send for Review Again"
+                              onClick={() => {
+                                setSelectedUser(
+                                  user
+                                );
+
+                                setShowSuspend(
+                                  true
+                                );
+                              }}
+                            >
+                              <UserCheck
+                                size={16}
+                              />
+                            </button>
+                          )}
+
+                          {/* ============================================
+                              7. BANNED
+                          ============================================ */}
+
+                          {isBanned && (
+                            <button
+                              className="action-btn"
+                              title="Banned Account"
+                              disabled
+                              style={{
+                                opacity:
+                                  0.45,
+                                cursor:
+                                  "not-allowed",
+                              }}
+                            >
+                              <UserX
+                                size={16}
+                              />
+                            </button>
+                          )}
                         </div>
-                      </div>
-                    </td>
-
-                    {/* ================= EMAIL ================= */}
-
-                    <td>{user.email || "N/A"}</td>
-
-                    {/* ================= ORGANIZATION ================= */}
-                    <td>{getOrganizationName(user)}</td>
-                    {/* ================= ROLE ================= */}
-                    <td>
-                      <span className="role-badge">{getUserRole(user)}</span>
-                    </td>
-                    {/* ================= STATUS ================= */}
-
-                    <td>
-                      <span className={`status-badge ${status}`}>
-                        {capitalizeStatus(user.status)}
-                      </span>
-                    </td>
-
-                    {/* ================= LAST LOGIN ================= */}
-                    <td>{formatLastLogin(user)}</td>
-
-                    {/* ================= ACTIONS ================= */}
-
-                    <td>
-                      <div className="actions">
-                        {/* --------------------------------------
-                            1. VIEW
-                        --------------------------------------- */}
-
-                        <button
-                          className="action-btn view"
-                          title="View Details"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowDrawer(true);
-                          }}
-                        >
-                          <Eye size={16} />
-                        </button>
-
-                        {/* --------------------------------------
-                            2. EDIT
-                        --------------------------------------- */}
-
-                        <button
-                          className="action-btn edit"
-                          title="Edit User"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowModal(true);
-                          }}
-                        >
-                          <Pencil size={16} />
-                        </button>
-
-                        {/* --------------------------------------
-                            3. STATUS ACTION
-                        --------------------------------------- */}
-
-                        {/* PENDING → Accept / Reject */}
-
-                        {isPending && (
-                          <button
-                            className="action-btn activate"
-                            title="Review User"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowSuspend(true);
-                            }}
-                          >
-                            <UserCheck size={16} />
-                          </button>
-                        )}
-
-                        {/* ACTIVE → Ban */}
-
-                        {isActive && (
-                          <button
-                            className="action-btn suspend"
-                            title="Ban User"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowSuspend(true);
-                            }}
-                          >
-                            <UserX size={16} />
-                          </button>
-                        )}
-
-                        {/* REJECTED → Resend */}
-
-                        {isRejected && (
-                          <button
-                            className="action-btn activate"
-                            title="Send for Review Again"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowSuspend(true);
-                            }}
-                          >
-                            <UserCheck size={16} />
-                          </button>
-                        )}
-
-                        {/* BANNED
-                            No action because
-                            backend has no unban API
-                        */}
-
-                        {isBanned && (
-                          <button
-                            className="action-btn"
-                            title="Banned Account"
-                            disabled
-                            style={{
-                              opacity: 0.45,
-                              cursor: "not-allowed",
-                            }}
-                          >
-                            <UserX size={16} />
-                          </button>
-                        )}
-
-                        {/* --------------------------------------
-                            4. DELETE
-                        --------------------------------------- */}
-
-                        <button
-                          className="action-btn delete"
-                          title="Delete User"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowDelete(true);
-                          }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+                      </td>
+                    </tr>
+                  );
+                }
+              )
             ) : (
               <tr>
-                <td colSpan="7" className="no-data">
-                  No users found matching your filters.
+                <td
+                  colSpan="7"
+                  className="no-data"
+                >
+                  No users found
+                  matching your
+                  filters.
                 </td>
               </tr>
             )}
@@ -483,65 +867,98 @@ export default function UserTable({ filters }) {
         </table>
       </div>
 
-      {/* ========================================================
+      {/* =========================================================
           USER DETAILS
-      ======================================================== */}
+      ========================================================= */}
 
       {showDrawer && (
-        <UserDetails user={selectedUser} onClose={() => setShowDrawer(false)} />
+        <UserDetails
+          user={selectedUser}
+          onClose={() =>
+            setShowDrawer(false)
+          }
+        />
       )}
 
-      {/* ========================================================
+      {/* =========================================================
           EDIT USER
-      ======================================================== */}
+      ========================================================= */}
 
       {showModal && (
         <UserModal
-          key={selectedUser?.id || selectedUser?._id}
+          key={
+            selectedUser?.id ||
+            selectedUser?._id
+          }
           user={selectedUser}
-          onClose={() => setShowModal(false)}
+          onClose={() =>
+            setShowModal(false)
+          }
           onSave={(updatedUser) => {
-            setUsers((prevUsers) =>
-              prevUsers.map((u) => {
-                const updatedId = updatedUser?.id || updatedUser?._id;
+            setUsers(
+              (prevUsers) =>
+                prevUsers.map(
+                  (u) => {
+                    const updatedId =
+                      updatedUser?.id ||
+                      updatedUser?._id;
 
-                const currentId = u.id || u._id;
+                    const currentId =
+                      u?.id ||
+                      u?._id;
 
-                if (updatedId && currentId === updatedId) {
-                  return {
-                    ...u,
-                    ...updatedUser,
-                  };
-                }
+                    if (
+                      updatedId &&
+                      String(
+                        currentId
+                      ) ===
+                        String(
+                          updatedId
+                        )
+                    ) {
+                      return {
+                        ...u,
+                        ...updatedUser,
+                      };
+                    }
 
-                return u;
-              }),
+                    return u;
+                  }
+                )
             );
           }}
         />
       )}
 
-      {/* ========================================================
-          DELETE USER
-      ======================================================== */}
+      {/* =========================================================
+          ASSIGN ROLE
+      ========================================================= */}
 
-      {showDelete && (
-        <DeleteUserModal
+      {showAssignRole && (
+        <AssignRoleModal
           user={selectedUser}
-          onClose={() => setShowDelete(false)}
-          onDelete={handleDeleteUser}
+          onClose={() =>
+            setShowAssignRole(false)
+          }
+          onRoleAssigned={
+            handleRoleAssigned
+          }
         />
       )}
 
-      {/* ========================================================
+      {/* =========================================================
           USER STATUS MODAL
-      ======================================================== */}
+      ========================================================= */}
 
       {showSuspend && (
         <SuspendUserModal
           user={selectedUser}
-          onClose={() => setShowSuspend(false)}
-          onStatusChanged={handleStatusChanged}
+          onClose={() =>
+            setShowSuspend(false)
+          }
+          onStatusChanged={
+            handleStatusChanged
+          }
         />
       )}
     </>

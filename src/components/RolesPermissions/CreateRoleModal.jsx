@@ -1,76 +1,150 @@
-import { useMemo, useState } from "react";
+import {
+  useState,
+} from "react";
+
 import {
   X,
   ShieldCheck,
-  Search,
-  Check,
+  AlertCircle,
 } from "lucide-react";
 
 export default function CreateRoleModal({
-  permissions,
   onClose,
   onCreate,
+  creating = false,
 }) {
-  const [name, setName] = useState("");
+  const [code, setCode] =
+    useState("");
+
+  const [name, setName] =
+    useState("");
+
+  const [nameAr, setNameAr] =
+    useState("");
+
   const [description, setDescription] =
     useState("");
 
-  const [selectedPermissions, setSelectedPermissions] =
-    useState([]);
+  const [error, setError] =
+    useState("");
 
-  const [search, setSearch] = useState("");
+  /* =========================================================
+     Normalize Role Code
 
-  const filteredPermissions = useMemo(() => {
-    const value = search
-      .trim()
-      .toLowerCase();
+     Example:
+     Tender Manager
+     =>
+     TENDER_MANAGER
+  ========================================================= */
 
-    if (!value) return permissions;
-
-    return permissions.filter(
-      (permission) =>
-        permission.name
-          .toLowerCase()
-          .includes(value) ||
-        permission.module
-          .toLowerCase()
-          .includes(value),
-    );
-  }, [permissions, search]);
-
-  const togglePermission = (id) => {
-    setSelectedPermissions((current) =>
-      current.includes(id)
-        ? current.filter(
-            (permissionId) =>
-              permissionId !== id,
-          )
-        : [...current, id],
-    );
+  const normalizeRoleCode = (
+    value
+  ) => {
+    return value
+      .toUpperCase()
+      .replace(/[^A-Z0-9_ ]/g, "")
+      .replace(/\s+/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
   };
 
-  const handleSubmit = (event) => {
+  /* =========================================================
+     Code Change
+  ========================================================= */
+
+  const handleCodeChange = (
+    event
+  ) => {
+    const normalized =
+      normalizeRoleCode(
+        event.target.value
+      );
+
+    setCode(normalized);
+  };
+
+  /* =========================================================
+     Submit
+  ========================================================= */
+
+  const handleSubmit = async (
+    event
+  ) => {
     event.preventDefault();
 
-    if (!name.trim()) {
+    setError("");
+
+    const trimmedCode =
+      code.trim();
+
+    const trimmedName =
+      name.trim();
+
+    const trimmedNameAr =
+      nameAr.trim();
+
+    const trimmedDescription =
+      description.trim();
+
+    /* =======================================================
+       Validation
+    ======================================================= */
+
+    if (!trimmedCode) {
+      setError(
+        "Role code is required."
+      );
       return;
     }
 
-    onCreate({
-      name: name.trim(),
-      description:
-        description.trim() ||
-        "Custom system role.",
-      permissions: selectedPermissions,
-    });
+    if (!/^[A-Z0-9_]+$/.test(trimmedCode)) {
+      setError(
+        "Role code must contain only uppercase English letters, numbers, and underscores."
+      );
+      return;
+    }
+
+    if (!trimmedName) {
+      setError(
+        "Role name is required."
+      );
+      return;
+    }
+
+    if (!trimmedNameAr) {
+      setError(
+        "Arabic role name is required."
+      );
+      return;
+    }
+
+    try {
+      await onCreate({
+        code: trimmedCode,
+        name: trimmedName,
+        name_ar: trimmedNameAr,
+        description:
+          trimmedDescription ||
+          "Custom system role.",
+      });
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to create role."
+      );
+    }
   };
 
   return (
     <div
       className="rp-modal-overlay"
-      onClick={onClose}
+      onClick={() => {
+        if (!creating) {
+          onClose();
+        }
+      }}
     >
-
       <div
         className="rp-create-modal"
         onClick={(event) =>
@@ -78,7 +152,9 @@ export default function CreateRoleModal({
         }
       >
 
-        {/* Header */}
+        {/* ===================================================
+            Header
+        =================================================== */}
 
         <div className="rp-modal-header">
 
@@ -89,8 +165,13 @@ export default function CreateRoleModal({
             </div>
 
             <div>
-              <span>ACCESS CONTROL</span>
-              <h2>Create New Role</h2>
+              <span>
+                ACCESS CONTROL
+              </span>
+
+              <h2>
+                Create New Role
+              </h2>
             </div>
 
           </div>
@@ -99,20 +180,81 @@ export default function CreateRoleModal({
             type="button"
             className="rp-modal-close"
             onClick={onClose}
+            disabled={creating}
           >
             <X size={19} />
           </button>
 
         </div>
 
-        {/* Body */}
+        {/* ===================================================
+            Body
+        =================================================== */}
 
         <form
           className="rp-modal-body"
           onSubmit={handleSubmit}
         >
 
-          {/* Role Name */}
+          {/* =================================================
+              Error
+          ================================================= */}
+
+          {error && (
+            <div
+              className="rp-error-message"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "16px",
+              }}
+            >
+              <AlertCircle size={17} />
+
+              <span>
+                {error}
+              </span>
+            </div>
+          )}
+
+          {/* =================================================
+              Role Code
+          ================================================= */}
+
+          <div className="rp-form-field">
+
+            <label>
+              Role Code
+              <span>*</span>
+            </label>
+
+            <input
+              type="text"
+              placeholder="e.g. TENDER_MANAGER"
+              value={code}
+              onChange={handleCodeChange}
+              disabled={creating}
+              maxLength={50}
+            />
+
+            <small
+              style={{
+                display: "block",
+                marginTop: "6px",
+                opacity: 0.6,
+                fontSize: "12px",
+              }}
+            >
+              Use uppercase English letters,
+              numbers, and underscores only.
+            </small>
+
+          </div>
+
+          {/* =================================================
+              Role Name
+          ================================================= */}
 
           <div className="rp-form-field">
 
@@ -126,124 +268,102 @@ export default function CreateRoleModal({
               placeholder="e.g. Tender Manager"
               value={name}
               onChange={(event) =>
-                setName(event.target.value)
+                setName(
+                  event.target.value
+                )
               }
+              disabled={creating}
             />
 
           </div>
 
-          {/* Description */}
+          {/* =================================================
+              Arabic Name
+          ================================================= */}
 
           <div className="rp-form-field">
 
-            <label>Description</label>
+            <label>
+              Arabic Role Name
+              <span>*</span>
+            </label>
+
+            <input
+              type="text"
+              placeholder="مثال: مدير المناقصات"
+              value={nameAr}
+              onChange={(event) =>
+                setNameAr(
+                  event.target.value
+                )
+              }
+              disabled={creating}
+              dir="rtl"
+            />
+
+          </div>
+
+          {/* =================================================
+              Description
+          ================================================= */}
+
+          <div className="rp-form-field">
+
+            <label>
+              Description
+            </label>
 
             <textarea
               placeholder="Describe what this role is responsible for..."
               value={description}
               onChange={(event) =>
                 setDescription(
-                  event.target.value,
+                  event.target.value
                 )
               }
-              rows={3}
+              rows={4}
+              disabled={creating}
             />
 
           </div>
 
-          {/* Permissions */}
+          {/* =================================================
+              Permissions Information
+          ================================================= */}
 
-          <div className="rp-permission-selector">
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: "10px",
+              background:
+                "rgba(99, 102, 241, 0.07)",
+              border:
+                "1px solid rgba(99, 102, 241, 0.15)",
+              fontSize: "13px",
+              lineHeight: "1.6",
+            }}
+          >
+            <strong>
+              Permissions
+            </strong>
 
-            <div className="rp-selector-header">
-
-              <div>
-                <label>
-                  Permissions
-                </label>
-
-                <span>
-                  {selectedPermissions.length}{" "}
-                  selected
-                </span>
-              </div>
-
-              <div className="rp-selector-search">
-
-                <Search size={15} />
-
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(event) =>
-                    setSearch(
-                      event.target.value,
-                    )
-                  }
-                />
-
-              </div>
-
-            </div>
-
-            <div className="rp-selector-list">
-
-              {filteredPermissions.map(
-                (permission) => {
-                  const selected =
-                    selectedPermissions.includes(
-                      permission.id,
-                    );
-
-                  return (
-                    <button
-                      type="button"
-                      key={permission.id}
-                      className={`rp-selector-item ${
-                        selected
-                          ? "selected"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        togglePermission(
-                          permission.id,
-                        )
-                      }
-                    >
-
-                      <div
-                        className={`rp-selector-check ${
-                          selected
-                            ? "checked"
-                            : ""
-                        }`}
-                      >
-                        {selected && (
-                          <Check size={13} />
-                        )}
-                      </div>
-
-                      <div>
-                        <strong>
-                          {permission.name}
-                        </strong>
-
-                        <span>
-                          {permission.module}
-                        </span>
-                      </div>
-
-                    </button>
-                  );
-                },
-              )}
-
-            </div>
-
+            <p
+              style={{
+                margin:
+                  "4px 0 0",
+                opacity: 0.7,
+              }}
+            >
+              Permissions are not assigned
+              when creating a role. You can
+              assign them after the role is
+              created.
+            </p>
           </div>
 
-          {/* Footer */}
+          {/* =================================================
+              Footer
+          ================================================= */}
 
           <div className="rp-modal-footer">
 
@@ -251,6 +371,7 @@ export default function CreateRoleModal({
               type="button"
               className="rp-secondary-btn"
               onClick={onClose}
+              disabled={creating}
             >
               Cancel
             </button>
@@ -258,10 +379,37 @@ export default function CreateRoleModal({
             <button
               type="submit"
               className="rp-primary-btn"
-              disabled={!name.trim()}
+              disabled={
+                creating ||
+                !code.trim() ||
+                !name.trim() ||
+                !nameAr.trim()
+              }
             >
-              <ShieldCheck size={17} />
-              Create Role
+              {creating ? (
+                <>
+                  <span
+                    className="rp-spin"
+                    style={{
+                      display: "inline-flex",
+                    }}
+                  >
+                    <ShieldCheck
+                      size={17}
+                    />
+                  </span>
+
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck
+                    size={17}
+                  />
+
+                  Create Role
+                </>
+              )}
             </button>
 
           </div>
@@ -269,7 +417,6 @@ export default function CreateRoleModal({
         </form>
 
       </div>
-
     </div>
   );
 }

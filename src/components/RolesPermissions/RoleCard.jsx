@@ -20,42 +20,67 @@ export default function RoleCard({
   selected,
   onClick,
 }) {
-  const Icon = iconMap[role.icon] || Shield;
+  const Icon =
+    iconMap[role.icon] || Shield;
+
+  const permissionsCount =
+    Array.isArray(
+      role.permissions
+    )
+      ? role.permissions.length
+      : 0;
 
   return (
     <button
       type="button"
       className={`rp-role-card ${
-        selected ? "selected" : ""
+        selected
+          ? "selected"
+          : ""
       }`}
       onClick={onClick}
     >
 
+      {/* Role Icon */}
+
       <div
-        className={`rp-role-icon ${role.color}`}
+        className={`rp-role-icon ${
+          role.color ||
+          "purple"
+        }`}
       >
         <Icon size={19} />
       </div>
 
+      {/* Content */}
+
       <div className="rp-role-card-content">
 
         <div className="rp-role-card-title">
-          <strong>{role.name}</strong>
+
+          <strong>
+            {role.name}
+          </strong>
 
           {selected && (
             <span className="rp-selected-dot" />
           )}
+
         </div>
 
-        <p>{role.description}</p>
+        <p>
+          {role.description}
+        </p>
 
         <div className="rp-role-card-bottom">
 
           <span>
-            {role.permissions.length} Permissions
+            {permissionsCount} Permissions
           </span>
 
-          <ChevronRight size={15} />
+          <ChevronRight
+            size={15}
+          />
 
         </div>
 

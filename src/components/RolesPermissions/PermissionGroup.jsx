@@ -8,42 +8,76 @@ import {
   BarChart3,
   Settings,
   Check,
+  Loader2,
 } from "lucide-react";
 
+/* =========================================================
+   Module Icons
+========================================================= */
+
 const moduleIcons = {
-  Organizations: Building2,
-  Users: Users,
   Tenders: FileText,
   Bids: Gavel,
+  Users: Users,
+  Organizations: Building2,
   Committees: UserRoundCog,
   Contracts: FileSignature,
   Reports: BarChart3,
   System: Settings,
+
+  TENDER: FileText,
+  BID: Gavel,
+  USER: Users,
+  ORG: Building2,
+  COMMITTEE: UserRoundCog,
+  CONTRACT: FileSignature,
+  REPORT: BarChart3,
+  SYSTEM: Settings,
 };
+
+/* =========================================================
+   Component
+========================================================= */
 
 export default function PermissionGroup({
   module,
   permissions,
   assignedPermissions,
   onToggle,
+  updatingPermissionId = null,
 }) {
   const Icon =
     moduleIcons[module] || Settings;
 
-  const enabledCount = permissions.filter(
-    (permission) =>
-      assignedPermissions.includes(permission.id),
-  ).length;
+  /* =======================================================
+     Count Enabled
+  ======================================================= */
+
+  const enabledCount =
+    permissions.filter((permission) =>
+      assignedPermissions.includes(
+        permission.code
+      )
+    ).length;
+
+  /* =======================================================
+     Progress
+  ======================================================= */
+
+  const progress = permissions.length
+    ? (enabledCount /
+        permissions.length) *
+      100
+    : 0;
 
   return (
     <section className="rp-permission-group">
-
-      {/* Header */}
+      {/* ===================================================
+          Header
+      =================================================== */}
 
       <div className="rp-permission-group-header">
-
         <div className="rp-module-title">
-
           <div className="rp-module-icon">
             <Icon size={17} />
           </div>
@@ -52,94 +86,208 @@ export default function PermissionGroup({
             <h4>{module}</h4>
 
             <span>
-              {enabledCount} of {permissions.length}{" "}
-              enabled
+              {enabledCount} of{" "}
+              {permissions.length} enabled
             </span>
           </div>
-
         </div>
 
-        <div className="rp-module-progress">
+        {/* Progress */}
 
+        <div className="rp-module-progress">
           <div>
             <span
               style={{
-                width: `${
-                  permissions.length
-                    ? (enabledCount /
-                        permissions.length) *
-                      100
-                    : 0
-                }%`,
+                width: `${progress}%`,
               }}
             />
           </div>
-
         </div>
-
       </div>
 
-      {/* Permissions */}
+      {/* ===================================================
+          Permissions
+      =================================================== */}
 
       <div className="rp-permission-items">
+        {permissions.map(
+          (permission) => {
+            /* =================================================
+               Get Real Permission ID
 
-        {permissions.map((permission) => {
-          const enabled =
-            assignedPermissions.includes(
-              permission.id,
-            );
+               Backend permission may return:
 
-          return (
-            <div
-              className={`rp-permission-item ${
-                enabled ? "enabled" : ""
-              }`}
-              key={permission.id}
-            >
+               {
+                 "_id": "...",
+                 "code": "TENDER_CREATE"
+               }
 
-              <div className="rp-permission-info">
+               or:
 
-                <div
-                  className={`rp-permission-check ${
-                    enabled ? "checked" : ""
-                  }`}
-                >
-                  {enabled && <Check size={14} />}
-                </div>
+               {
+                 "id": "...",
+                 "code": "TENDER_CREATE"
+               }
+            ================================================= */
 
-                <div>
+            const permissionId =
+              permission?.id ||
+              permission?._id ||
+              permission?.permission_id;
 
-                  <strong>
-                    {permission.name}
-                  </strong>
+            /* =================================================
+               Is Permission Assigned?
+            ================================================= */
 
-                  <span>
-                    {permission.description}
-                  </span>
+            const enabled =
+              assignedPermissions.includes(
+                permission.code
+              );
 
-                </div>
+            /* =================================================
+               Is This Permission Currently Loading?
+            ================================================= */
 
-              </div>
+            const isUpdating =
+              updatingPermissionId &&
+              String(
+                updatingPermissionId
+              ) ===
+                String(permissionId);
 
-              <button
-                type="button"
-                className={`rp-toggle ${
-                  enabled ? "on" : ""
+            return (
+              <div
+                className={`rp-permission-item ${
+                  enabled
+                    ? "enabled"
+                    : ""
                 }`}
-                onClick={() =>
-                  onToggle(permission.id)
+                key={
+                  permissionId ||
+                  permission.code
                 }
-                aria-label={`Toggle ${permission.name}`}
               >
-                <span />
-              </button>
+                {/* =================================================
+                    Permission Info
+                ================================================= */}
 
-            </div>
-          );
-        })}
+                <div className="rp-permission-info">
+                  <div
+                    className={`rp-permission-check ${
+                      enabled
+                        ? "checked"
+                        : ""
+                    }`}
+                  >
+                    {enabled && (
+                      <Check size={14} />
+                    )}
+                  </div>
 
+                  <div>
+                    <strong>
+                      {permission.name}
+                    </strong>
+
+                    <span>
+                      {
+                        permission.description
+                      }
+                    </span>
+
+                    {/* Permission Code */}
+
+                    <small
+                      style={{
+                        display:
+                          "block",
+                        marginTop:
+                          "3px",
+                        opacity:
+                          0.55,
+                        fontSize:
+                          "11px",
+                      }}
+                    >
+                      {
+                        permission.code
+                      }
+                    </small>
+                  </div>
+                </div>
+
+                {/* =================================================
+                    Toggle
+                ================================================= */}
+
+                <button
+                  type="button"
+                  className={`rp-toggle ${
+                    enabled
+                      ? "on"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    if (
+                      isUpdating
+                    ) {
+                      return;
+                    }
+
+                    if (
+                      !permissionId
+                    ) {
+                      console.error(
+                        "Permission ID is missing:",
+                        permission
+                      );
+
+                      return;
+                    }
+
+                    /*
+                      Send the COMPLETE permission object.
+
+                      Parent decides:
+
+                      enabled === false
+                      -> POST
+
+                      enabled === true
+                      -> DELETE
+                    */
+
+                    onToggle(
+                      permission
+                    );
+                  }}
+                  disabled={
+                    isUpdating ||
+                    !permissionId
+                  }
+                  aria-label={`Toggle ${permission.name}`}
+                  title={
+                    !permissionId
+                      ? "Permission ID is missing"
+                      : enabled
+                      ? "Remove permission"
+                      : "Assign permission"
+                  }
+                >
+                  {isUpdating ? (
+                    <Loader2
+                      size={13}
+                      className="rp-spin"
+                    />
+                  ) : (
+                    <span />
+                  )}
+                </button>
+              </div>
+            );
+          }
+        )}
       </div>
-
     </section>
   );
 }

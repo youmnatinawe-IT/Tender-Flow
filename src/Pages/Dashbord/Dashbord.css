@@ -3,6 +3,7 @@
   min-height: 100vh;
   background: #f8fafc;
   overflow-x: hidden;
+   background-color: var(--bg-main);
 }
 .main {
   flex: 1;
@@ -25,6 +26,39 @@
   margin-top: 20px;
     margin-bottom: 20px;
   width: 100%;
+}
+
+/* Dashbord.css */
+.layout {
+  display: flex;
+  background-color: var(--bg-main);
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  background-color: var(--bg-main);
+  transition: background-color 0.25s ease;
+}
+
+/* البطاقات الإحصائية والأنشطة والجداول */
+.stat-card,
+.activity-section,
+.table-section,
+.dashboard-wrapper > div {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-sm);
+  border-radius: 12px;
+}
+
+.card-title {
+  color: var(--text-secondary) !important;
+}
+
+.card-value {
+  color: var(--text-primary) !important;
 }
 
 .activity-section {

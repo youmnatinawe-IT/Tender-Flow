@@ -1,7 +1,16 @@
-
 import "./Navbar.css";
-import { Bell, Languages, ArrowLeft, Settings } from "lucide-react";
+
+import {
+  Bell,
+  Languages,
+  ArrowLeft,
+  Settings,
+  Moon,
+  Sun,
+} from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 
 function Navbar({
   title,
@@ -15,25 +24,32 @@ function Navbar({
 }) {
   const navigate = useNavigate();
 
-  // جلب بيانات الأدمن المخزنة (مع قيم افتراضية)
+  const { theme, toggleTheme } = useTheme();
+
+  // جلب بيانات الأدمن المخزنة
   const storedUser = JSON.parse(localStorage.getItem("user")) || {
     name: "System Administrator",
     email: "admin@admin.com",
     role: "ADMIN",
-    avatar: null, // يمكن وضع رابط الصورة هنا عند توفرها
+    avatar: null,
   };
 
-  // استخراج الأحرف الأولى للأدمن في حال عدم وجود صورة (مثل SA)
+  // استخراج الأحرف الأولى
   const getInitials = (name) => {
     if (!name) return "SA";
+
     const parts = name.split(" ");
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+
     return name.slice(0, 2).toUpperCase();
   };
 
   return (
     <nav className="navbar">
-      {/* القسم الأيسر: زر الرجوع، العنوان، حقل البحث */}
+      {/* القسم الأيسر */}
       <div className="navbar-left">
         <div className="title-container">
           {showBackButton && (
@@ -45,36 +61,78 @@ function Navbar({
               <ArrowLeft size={18} />
             </button>
           )}
-          {title && <h1 className="navbar-page-title">{title}</h1>}
+
+          {title && (
+            <h1 className="navbar-page-title">
+              {title}
+            </h1>
+          )}
         </div>
 
         {showSearch && (
           <div className="search-box">
-            <input type="text" placeholder="Search..." />
+            <input
+              type="text"
+              placeholder="Search..."
+            />
           </div>
         )}
 
         {children}
       </div>
 
-      {/* القسم الأيمن: أزرار التحكم وأيقونة البروفايل */}
+      {/* القسم الأيمن */}
       <div className="navbar-right">
+
+        {/* Theme Toggle */}
+        <button
+          className="navbar-icon-btn theme-toggle-btn"
+          onClick={toggleTheme}
+          title={
+            theme === "light"
+              ? "Switch to dark mode"
+              : "Switch to light mode"
+          }
+          aria-label={
+            theme === "light"
+              ? "Switch to dark mode"
+              : "Switch to light mode"
+          }
+        >
+          {theme === "light" ? (
+            <Moon size={20} />
+          ) : (
+            <Sun size={20} />
+          )}
+        </button>
+
+        {/* Language */}
         {showLanguage && (
-          <button className="navbar-lan" title="Change Language">
+          <button
+            className="navbar-lan"
+            title="Change Language"
+          >
             <Languages size={20} />
           </button>
         )}
 
+        {/* Notifications */}
         {showNotifications && (
-          <button className="notification-btn" title="Notifications">
+          <button
+            className="notification-btn"
+            title="Notifications"
+          >
             <Bell size={20} />
+
             {notificationCount > 0 && (
-              <span className="badge">{notificationCount}</span>
+              <span className="badge">
+                {notificationCount}
+              </span>
             )}
           </button>
         )}
 
-        {/* أيقونة/زر البروفايل: نقرة واحدة تنقل لصفحة الإعدادات والبروفايل */}
+        {/* Profile */}
         {showProfile && (
           <button
             className="profile-btn"
@@ -95,7 +153,9 @@ function Navbar({
 
             <div className="profile-info">
               <h4>{storedUser.name}</h4>
-              <p>{storedUser.role || "Administrator"}</p>
+              <p>
+                {storedUser.role || "Administrator"}
+              </p>
             </div>
 
             <div className="settings-badge-icon">

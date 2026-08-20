@@ -1,429 +1,846 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import {
   Plus,
   ShieldCheck,
   Search,
   KeyRound,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 
 import RoleCard from "../../components/RolesPermissions/RoleCard";
 import RoleDetails from "../../components/RolesPermissions/RoleDetails";
 import CreateRoleModal from "../../components/RolesPermissions/CreateRoleModal";
 
+import {
+  getAllRoles,
+  createRole,
+  updateRole,
+} from "../../services/rolesService";
+
+import {
+  getAllPermissions,
+  addPermissionToRole,
+  removePermissionFromRole,
+} from "../../services/permissionsService";
+
 import "../../components/RolesPermissions/style/rolePermission.css";
 
 /* =========================================================
-   Permissions
+   Normalize Permission
 ========================================================= */
 
-const initialPermissions = [
-  /* =========================
-     Organizations
-  ========================= */
+const normalizePermission = (
+  permission,
+  index
+) => {
+  const code =
+    permission?.code ||
+    permission?.permission ||
+    permission?.name ||
+    `permission-${index}`;
 
-  {
-    id: "organizations.view",
-    name: "View Organizations",
-    description: "View organization information and profiles.",
-    module: "Organizations",
-  },
-  {
-    id: "organizations.create",
-    name: "Create Organizations",
-    description: "Create new organizations.",
-    module: "Organizations",
-  },
-  {
-    id: "organizations.edit",
-    name: "Edit Organizations",
-    description: "Modify organization information.",
-    module: "Organizations",
-  },
-  {
-    id: "organizations.approve",
-    name: "Approve Organizations",
-    description: "Approve pending organization registrations.",
-    module: "Organizations",
-  },
-  {
-    id: "organizations.reject",
-    name: "Reject Organizations",
-    description: "Reject organization registration requests.",
-    module: "Organizations",
-  },
-  {
-    id: "organizations.suspend",
-    name: "Suspend Organizations",
-    description: "Suspend or block organizations.",
-    module: "Organizations",
-  },
+  const module =
+    permission?.module ||
+    "SYSTEM";
 
-  /* =========================
-     Users
-  ========================= */
+  return {
+    ...permission,
 
-  {
-    id: "users.view",
-    name: "View Users",
-    description: "View users and their information.",
-    module: "Users",
-  },
-  {
-    id: "users.create",
-    name: "Create Users",
-    description: "Create new platform users.",
-    module: "Users",
-  },
-  {
-    id: "users.edit",
-    name: "Edit Users",
-    description: "Modify user information.",
-    module: "Users",
-  },
-  {
-    id: "users.suspend",
-    name: "Suspend Users",
-    description: "Suspend or activate user accounts.",
-    module: "Users",
-  },
-  {
-    id: "users.delete",
-    name: "Delete Users",
-    description: "Delete user accounts.",
-    module: "Users",
-  },
+    id:
+      permission?._id ||
+      permission?.id ||
+      permission?.permission_id ||
+      code,
 
-  /* =========================
-     Tenders
-  ========================= */
+    code,
 
-  {
-    id: "tenders.view",
-    name: "View Tenders",
-    description: "View tender information.",
-    module: "Tenders",
-  },
-  {
-    id: "tenders.create",
-    name: "Create Tenders",
-    description: "Create new tenders.",
-    module: "Tenders",
-  },
-  {
-    id: "tenders.edit",
-    name: "Edit Tenders",
-    description: "Edit draft tender information.",
-    module: "Tenders",
-  },
-  {
-    id: "tenders.delete",
-    name: "Delete Tenders",
-    description: "Delete tenders from the system.",
-    module: "Tenders",
-  },
-  {
-    id: "tenders.publish",
-    name: "Publish Tenders",
-    description: "Publish tenders to bidders.",
-    module: "Tenders",
-  },
-  {
-    id: "tenders.close",
-    name: "Close Tenders",
-    description: "Close tender submission periods.",
-    module: "Tenders",
-  },
+    name:
+      permission?.name ||
+      permission?.name_ar ||
+      code,
 
-  /* =========================
-     Bids
-  ========================= */
+    name_ar:
+      permission?.name_ar ||
+      permission?.name ||
+      code,
 
-  {
-    id: "bids.view",
-    name: "View Bids",
-    description: "View submitted bids.",
-    module: "Bids",
-  },
-  {
-    id: "bids.submit",
-    name: "Submit Bids",
-    description: "Submit bids to tenders.",
-    module: "Bids",
-  },
-  {
-    id: "bids.evaluate",
-    name: "Evaluate Bids",
-    description: "Evaluate submitted bids.",
-    module: "Bids",
-  },
-  {
-    id: "bids.manage",
-    name: "Manage Bids",
-    description: "Manage bid information and status.",
-    module: "Bids",
-  },
+    description:
+      permission?.description ||
+      "No description available.",
 
-  /* =========================
-     Evaluations
-  ========================= */
+    module: String(module)
+      .trim()
+      .toUpperCase(),
 
-  {
-    id: "evaluations.view",
-    name: "View Evaluations",
-    description: "View evaluation results.",
-    module: "Evaluations",
-  },
-  {
-    id: "evaluations.create",
-    name: "Create Evaluations",
-    description: "Create evaluation records.",
-    module: "Evaluations",
-  },
-  {
-    id: "evaluations.edit",
-    name: "Edit Evaluations",
-    description: "Modify evaluation information.",
-    module: "Evaluations",
-  },
-  {
-    id: "evaluations.approve",
-    name: "Approve Evaluations",
-    description: "Approve completed evaluations.",
-    module: "Evaluations",
-  },
-
-  /* =========================
-     Committees
-  ========================= */
-
-  {
-    id: "committees.view",
-    name: "View Committees",
-    description: "View evaluation committees.",
-    module: "Committees",
-  },
-  {
-    id: "committees.create",
-    name: "Create Committees",
-    description: "Create new committees.",
-    module: "Committees",
-  },
-  {
-    id: "committees.manage",
-    name: "Manage Committees",
-    description: "Manage committee members and settings.",
-    module: "Committees",
-  },
-
-  /* =========================
-     Contracts
-  ========================= */
-
-  {
-    id: "contracts.view",
-    name: "View Contracts",
-    description: "View contracts.",
-    module: "Contracts",
-  },
-  {
-    id: "contracts.create",
-    name: "Create Contracts",
-    description: "Create new contracts.",
-    module: "Contracts",
-  },
-  {
-    id: "contracts.edit",
-    name: "Edit Contracts",
-    description: "Modify contract information.",
-    module: "Contracts",
-  },
-  {
-    id: "contracts.approve",
-    name: "Approve Contracts",
-    description: "Approve contracts.",
-    module: "Contracts",
-  },
-
-  /* =========================
-     Reports
-  ========================= */
-
-  {
-    id: "reports.view",
-    name: "View Reports",
-    description: "View system reports.",
-    module: "Reports",
-  },
-  {
-    id: "reports.export",
-    name: "Export Reports",
-    description: "Export reports and analytics.",
-    module: "Reports",
-  },
-
-  /* =========================
-     System
-  ========================= */
-
-  {
-    id: "system.settings",
-    name: "Manage System Settings",
-    description: "Manage system configuration.",
-    module: "System",
-  },
-  {
-    id: "system.audit",
-    name: "View Audit Logs",
-    description: "View system activity and audit logs.",
-    module: "System",
-  },
-  {
-    id: "system.permissions",
-    name: "Manage Permissions",
-    description: "Manage roles and permissions.",
-    module: "System",
-  },
-];
+    is_active:
+      permission?.is_active !== false,
+  };
+};
 
 /* =========================================================
-   Initial Roles
+   Normalize Role
 ========================================================= */
 
-const initialRoles = [
-  {
-    id: "system-admin",
-    name: "System Admin",
-    description: "Full access to the Tender Flow platform.",
-    icon: "shield",
-    color: "purple",
-    permissions: initialPermissions.map((permission) => permission.id),
-  },
+const normalizeRole = (
+  role,
+  index
+) => {
+  const roleName =
+    role?.name ||
+    role?.role_name ||
+    role?.title ||
+    role?.code ||
+    `Role ${index + 1}`;
 
-  {
-    id: "publisher",
-    name: "Publisher",
-    description: "Manage organization tenders and submissions.",
-    icon: "building",
-    color: "blue",
-    permissions: [
-      "organizations.view",
-      "organizations.edit",
-      "tenders.view",
-      "tenders.create",
-      "tenders.edit",
-      "tenders.publish",
-      "tenders.close",
-      "bids.view",
-      "reports.view",
-    ],
-  },
+  const normalizedName =
+    String(roleName).trim();
 
-  {
-    id: "Exectuore",
-    name: "Exectuore",
-    description: "Participate in tenders and manage submitted bids.",
-    icon: "users",
-    color: "green",
-    permissions: [
-      "organizations.view",
-      "tenders.view",
-      "bids.view",
-      "bids.submit",
-    ],
-  },
+  const lowerName =
+    normalizedName.toLowerCase();
 
-];
+  /* =======================================================
+     Role Icon + Color
+  ======================================================= */
+
+  let icon = "shield";
+  let color = "purple";
+
+  if (
+    lowerName.includes(
+      "publisher"
+    )
+  ) {
+    icon = "building";
+    color = "blue";
+  } else if (
+    lowerName.includes(
+      "executor"
+    ) ||
+    lowerName.includes(
+      "exectuore"
+    ) ||
+    lowerName.includes(
+      "bidder"
+    )
+  ) {
+    icon = "users";
+    color = "green";
+  } else if (
+    lowerName.includes(
+      "admin"
+    ) ||
+    lowerName.includes(
+      "super"
+    )
+  ) {
+    icon = "shield";
+    color = "purple";
+  }
+
+  /* =======================================================
+     Role Permissions
+  ======================================================= */
+
+  const backendPermissions =
+    Array.isArray(
+      role?.permissions
+    )
+      ? role.permissions
+      : [];
+
+  const assignedPermissions =
+    backendPermissions
+      .map((permission) => {
+        if (
+          typeof permission ===
+          "string"
+        ) {
+          return permission;
+        }
+
+        return (
+          permission?.code ||
+          permission?.permission ||
+          permission?.permission_code ||
+          permission?.id ||
+          permission?._id ||
+          permission?.permission_id ||
+          null
+        );
+      })
+      .filter(Boolean);
+
+  return {
+    ...role,
+
+    id:
+      role?._id ||
+      role?.id ||
+      role?.role_id ||
+      role?.code ||
+      `role-${index}`,
+
+    code:
+      role?.code ||
+      normalizedName,
+
+    name: normalizedName,
+
+    name_ar:
+      role?.name_ar ||
+      normalizedName,
+
+    description:
+      role?.description ||
+      role?.details ||
+      role?.desc ||
+      "No description available.",
+
+    icon,
+    color,
+
+    is_active:
+      role?.is_active !== false,
+
+    permissions:
+      assignedPermissions,
+  };
+};
 
 /* =========================================================
    Component
 ========================================================= */
 
 export default function RolesPermissions() {
-  const [roles, setRoles] = useState(initialRoles);
+  /* =========================================================
+     State
+  ========================================================= */
 
-  const [permissions] = useState(initialPermissions);
+  const [roles, setRoles] =
+    useState([]);
 
-  const [selectedRoleId, setSelectedRoleId] = useState(
-    initialRoles[0]?.id,
-  );
+  const [permissions, setPermissions] =
+    useState([]);
 
-  const [search, setSearch] = useState("");
+  const [
+    selectedRoleId,
+    setSelectedRoleId,
+  ] = useState(null);
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [search, setSearch] =
+    useState("");
 
-  const selectedRole = roles.find(
-    (role) => role.id === selectedRoleId,
-  );
+  const [
+    showCreateModal,
+    setShowCreateModal,
+  ] = useState(false);
 
+  const [loading, setLoading] =
+    useState(true);
 
+  const [
+    creatingRole,
+    setCreatingRole,
+  ] = useState(false);
+
+  const [
+    updatingRole,
+    setUpdatingRole,
+  ] = useState(false);
+
+  /* =========================================================
+     Permission Updating State
+
+     Contains the permission ID currently being added/removed.
+  ========================================================= */
+
+  const [
+    updatingPermissionId,
+    setUpdatingPermissionId,
+  ] = useState(null);
+
+  const [error, setError] =
+    useState("");
+
+  /* =========================================================
+     Fetch Roles + Permissions
+  ========================================================= */
+
+  const fetchData = async (
+    keepSelectedRole = true
+  ) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [
+        rolesResponse,
+        permissionsResponse,
+      ] = await Promise.all([
+        getAllRoles(),
+        getAllPermissions(),
+      ]);
+
+      /* =====================================================
+         Normalize Roles
+      ===================================================== */
+
+      const normalizedRoles =
+        Array.isArray(
+          rolesResponse
+        )
+          ? rolesResponse.map(
+              normalizeRole
+            )
+          : [];
+
+      /* =====================================================
+         Normalize Permissions
+      ===================================================== */
+
+      const normalizedPermissions =
+        Array.isArray(
+          permissionsResponse
+        )
+          ? permissionsResponse
+              .map(
+                normalizePermission
+              )
+              .filter(
+                (permission) =>
+                  permission.is_active
+              )
+          : [];
+
+      setRoles(
+        normalizedRoles
+      );
+
+      setPermissions(
+        normalizedPermissions
+      );
+
+      /* =====================================================
+         Selection
+      ===================================================== */
+
+      if (
+        normalizedRoles.length ===
+        0
+      ) {
+        setSelectedRoleId(null);
+        return;
+      }
+
+      if (keepSelectedRole) {
+        const selectedStillExists =
+          normalizedRoles.some(
+            (role) =>
+              role.id ===
+              selectedRoleId
+          );
+
+        if (
+          selectedStillExists
+        ) {
+          return;
+        }
+      }
+
+      setSelectedRoleId(
+        normalizedRoles[0].id
+      );
+    } catch (err) {
+      console.error(
+        "Get roles and permissions error:",
+        err
+      );
+
+      setError(
+        err?.response?.data
+          ?.message ||
+          err?.response?.data
+            ?.error ||
+          err?.message ||
+          "Failed to load roles and permissions."
+      );
+
+      setRoles([]);
+      setPermissions([]);
+      setSelectedRoleId(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =========================================================
+     Load Data On Mount
+  ========================================================= */
+
+  useEffect(() => {
+    fetchData(false);
+  }, []);
+
+  /* =========================================================
+     Selected Role
+  ========================================================= */
+
+  const selectedRole =
+    roles.find(
+      (role) =>
+        role.id ===
+        selectedRoleId
+    );
 
   /* =========================================================
      Filter Roles
   ========================================================= */
 
-  const filteredRoles = useMemo(() => {
-    const value = search.trim().toLowerCase();
+  const filteredRoles =
+    useMemo(() => {
+      const value =
+        search
+          .trim()
+          .toLowerCase();
 
-    if (!value) return roles;
+      if (!value) {
+        return roles;
+      }
 
-    return roles.filter(
-      (role) =>
-        role.name.toLowerCase().includes(value) ||
-        role.description.toLowerCase().includes(value),
-    );
-  }, [roles, search]);
+      return roles.filter(
+        (role) =>
+          role.name
+            .toLowerCase()
+            .includes(value) ||
+          role.description
+            .toLowerCase()
+            .includes(value) ||
+          role.code
+            ?.toLowerCase()
+            .includes(value)
+      );
+    }, [roles, search]);
 
   /* =========================================================
      Toggle Permission
+
+     If permission exists:
+       DELETE
+
+     If permission does not exist:
+       POST
   ========================================================= */
 
-  const handleTogglePermission = (permissionId) => {
-    if (!selectedRole) return;
+  const handleTogglePermission =
+    async (permission) => {
+      if (!selectedRole) {
+        return;
+      }
 
-    setRoles((currentRoles) =>
-      currentRoles.map((role) => {
-        if (role.id !== selectedRole.id) {
-          return role;
+      const permissionId =
+        permission?.id ||
+        permission?._id ||
+        permission?.permission_id;
+
+      if (!permissionId) {
+        setError(
+          "Permission ID is missing. Cannot update permission."
+        );
+
+        return;
+      }
+
+      const roleId =
+        selectedRole.id;
+
+      if (!roleId) {
+        setError(
+          "Role ID is missing. Cannot update permission."
+        );
+
+        return;
+      }
+
+      /* =====================================================
+         Check Current State
+      ===================================================== */
+
+      const isCurrentlyAssigned =
+        selectedRole.permissions.includes(
+          permission.code
+        );
+
+      try {
+        setUpdatingPermissionId(
+          permissionId
+        );
+
+        setError("");
+
+        /* ===================================================
+           REMOVE PERMISSION
+        =================================================== */
+
+        if (
+          isCurrentlyAssigned
+        ) {
+          console.log(
+            "Removing permission:",
+            {
+              roleId,
+              permissionId,
+              permissionCode:
+                permission.code,
+            }
+          );
+
+          await removePermissionFromRole(
+            roleId,
+            permissionId
+          );
         }
 
-        const hasPermission =
-          role.permissions.includes(permissionId);
+        /* ===================================================
+           ADD PERMISSION
+        =================================================== */
 
-        return {
-          ...role,
-          permissions: hasPermission
-            ? role.permissions.filter(
-                (id) => id !== permissionId,
+        else {
+          console.log(
+            "Adding permission:",
+            {
+              roleId,
+              permissionId,
+              permissionCode:
+                permission.code,
+            }
+          );
+
+          await addPermissionToRole(
+            roleId,
+            permissionId
+          );
+        }
+
+        /* ===================================================
+           Reload From Backend
+
+           This is important because the Backend remains
+           the source of truth.
+        =================================================== */
+
+        const rolesResponse =
+          await getAllRoles();
+
+        const normalizedRoles =
+          Array.isArray(
+            rolesResponse
+          )
+            ? rolesResponse.map(
+                normalizeRole
               )
-            : [...role.permissions, permissionId],
-        };
-      }),
-    );
-  };
+            : [];
+
+        setRoles(
+          normalizedRoles
+        );
+
+        /* ===================================================
+           Keep Same Role Selected
+        =================================================== */
+
+        const updatedRole =
+          normalizedRoles.find(
+            (role) =>
+              role.id ===
+              roleId
+          );
+
+        if (updatedRole) {
+          setSelectedRoleId(
+            updatedRole.id
+          );
+        }
+
+        console.log(
+          isCurrentlyAssigned
+            ? "Permission removed successfully."
+            : "Permission added successfully."
+        );
+      } catch (err) {
+        console.error(
+          "Toggle permission error:",
+          err
+        );
+
+        const message =
+          err?.response?.data
+            ?.message ||
+          err?.response?.data
+            ?.error ||
+          err?.message ||
+          (isCurrentlyAssigned
+            ? "Failed to remove permission."
+            : "Failed to add permission.");
+
+        setError(message);
+      } finally {
+        setUpdatingPermissionId(
+          null
+        );
+      }
+    };
 
   /* =========================================================
      Create Role
   ========================================================= */
 
-  const handleCreateRole = (roleData) => {
-    const newRole = {
-      id: `role-${Date.now()}`,
-      name: roleData.name,
-      description: roleData.description,
-      icon: "shield",
-      color: "blue",
-      permissions: roleData.permissions || [],
+  const handleCreateRole =
+    async (roleData) => {
+      try {
+        setCreatingRole(true);
+        setError("");
+
+        const createdRole =
+          await createRole({
+            code:
+              roleData.code,
+            name:
+              roleData.name,
+            name_ar:
+              roleData.name_ar,
+            description:
+              roleData.description,
+          });
+
+        console.log(
+          "Role created successfully:",
+          createdRole
+        );
+
+        setShowCreateModal(
+          false
+        );
+
+        /* ===================================================
+           Reload Roles
+        =================================================== */
+
+        const rolesResponse =
+          await getAllRoles();
+
+        const normalizedRoles =
+          Array.isArray(
+            rolesResponse
+          )
+            ? rolesResponse.map(
+                normalizeRole
+              )
+            : [];
+
+        setRoles(
+          normalizedRoles
+        );
+
+        /* ===================================================
+           Select Created Role
+        =================================================== */
+
+        const createdRoleCode =
+          createdRole?.code ||
+          roleData.code;
+
+        const newlyCreatedRole =
+          normalizedRoles.find(
+            (role) =>
+              role.code ===
+              createdRoleCode
+          );
+
+        if (
+          newlyCreatedRole
+        ) {
+          setSelectedRoleId(
+            newlyCreatedRole.id
+          );
+        } else if (
+          normalizedRoles.length >
+          0
+        ) {
+          setSelectedRoleId(
+            normalizedRoles[0].id
+          );
+        } else {
+          setSelectedRoleId(
+            null
+          );
+        }
+      } catch (err) {
+        console.error(
+          "Create role error:",
+          err
+        );
+
+        const message =
+          err?.response?.data
+            ?.message ||
+          err?.response?.data
+            ?.error ||
+          err?.message ||
+          "Failed to create role.";
+
+        setError(message);
+
+        throw err;
+      } finally {
+        setCreatingRole(
+          false
+        );
+      }
     };
 
-    setRoles((currentRoles) => [
-      ...currentRoles,
-      newRole,
-    ]);
+  /* =========================================================
+     Update Role
+  ========================================================= */
 
-    setSelectedRoleId(newRole.id);
+  const handleUpdateRole =
+    async (
+      roleId,
+      changes
+    ) => {
+      try {
+        if (!roleId) {
+          throw new Error(
+            "Role ID is missing."
+          );
+        }
 
-    setShowCreateModal(false);
-  };
+        setUpdatingRole(true);
+        setError("");
+
+        console.log(
+          "Updating role:",
+          roleId,
+          changes
+        );
+
+        const updatedRole =
+          await updateRole(
+            roleId,
+            changes
+          );
+
+        console.log(
+          "Role updated successfully:",
+          updatedRole
+        );
+
+        /* ===================================================
+           Reload Roles
+        =================================================== */
+
+        const rolesResponse =
+          await getAllRoles();
+
+        const normalizedRoles =
+          Array.isArray(
+            rolesResponse
+          )
+            ? rolesResponse.map(
+                normalizeRole
+              )
+            : [];
+
+        setRoles(
+          normalizedRoles
+        );
+
+        /* ===================================================
+           Keep Same Role Selected
+        =================================================== */
+
+        const updatedRoleFromList =
+          normalizedRoles.find(
+            (role) =>
+              role.id ===
+              roleId
+          );
+
+        if (
+          updatedRoleFromList
+        ) {
+          setSelectedRoleId(
+            updatedRoleFromList.id
+          );
+        }
+
+        return updatedRoleFromList;
+      } catch (err) {
+        console.error(
+          "Update role error:",
+          err
+        );
+
+        const message =
+          err?.response?.data
+            ?.message ||
+          err?.response?.data
+            ?.error ||
+          err?.message ||
+          "Failed to update role.";
+
+        setError(message);
+
+        throw err;
+      } finally {
+        setUpdatingRole(
+          false
+        );
+      }
+    };
+
+  /* =========================================================
+     Loading
+  ========================================================= */
+
+  if (loading) {
+    return (
+      <div className="roles-permissions-page">
+        <div
+          className="rp-loading-state"
+          style={{
+            minHeight:
+              "500px",
+            display:
+              "flex",
+            alignItems:
+              "center",
+            justifyContent:
+              "center",
+            flexDirection:
+              "column",
+            gap: "12px",
+          }}
+        >
+          <Loader2
+            size={32}
+            className="rp-spin"
+          />
+
+          <p>
+            Loading roles and
+            permissions...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   /* =========================================================
      Render
@@ -431,114 +848,221 @@ export default function RolesPermissions() {
 
   return (
     <div className="roles-permissions-page">
-
       {/* =====================================================
           Header
       ===================================================== */}
 
       <div className="rp-page-header">
-
         <div className="rp-header-content">
-
           <div className="rp-header-icon">
-            <ShieldCheck size={25} />
+            <ShieldCheck
+              size={25}
+            />
           </div>
 
           <div>
             <div className="rp-breadcrumb">
               Administration
+
               <span>/</span>
-              Roles & Permissions
+
+              Roles &
+              Permissions
             </div>
 
-            <h1>Roles & Permissions</h1>
+            <h1>
+              Roles &
+              Permissions
+            </h1>
 
             <p>
-              Manage system roles and control access
-              to Tender Flow resources.
+              Manage system
+              roles and
+              control access
+              to Tender Flow
+              resources.
             </p>
           </div>
-
         </div>
 
         <button
           className="rp-primary-btn"
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            setError("");
+            setShowCreateModal(
+              true
+            );
+          }}
+          disabled={
+            creatingRole ||
+            updatingRole ||
+            updatingPermissionId !==
+              null
+          }
         >
           <Plus size={18} />
+
           Create Role
         </button>
-
       </div>
 
-     
+      {/* =====================================================
+          Error
+      ===================================================== */}
+
+      {error && (
+        <div
+          className="rp-error-message"
+          style={{
+            marginBottom:
+              "18px",
+            padding:
+              "14px 16px",
+            borderRadius:
+              "10px",
+            display:
+              "flex",
+            alignItems:
+              "center",
+            justifyContent:
+              "space-between",
+            gap: "12px",
+          }}
+        >
+          <div
+            style={{
+              display:
+                "flex",
+              alignItems:
+                "center",
+              gap: "10px",
+            }}
+          >
+            <AlertCircle
+              size={18}
+            />
+
+            <span>
+              {error}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              fetchData(true)
+            }
+            style={{
+              border:
+                "none",
+              background:
+                "transparent",
+              cursor:
+                "pointer",
+              display:
+                "flex",
+              alignItems:
+                "center",
+              gap: "6px",
+            }}
+          >
+            <RefreshCw
+              size={16}
+            />
+
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* =====================================================
           Main Workspace
       ===================================================== */}
 
       <div className="rp-workspace">
-
         {/* ===================================================
             Roles Sidebar
         =================================================== */}
 
         <aside className="rp-roles-panel">
-
           <div className="rp-panel-header">
-
             <div>
-              <span>ACCESS CONTROL</span>
-              <h2>Roles</h2>
+              <span>
+                ACCESS CONTROL
+              </span>
+
+              <h2>
+                Roles
+              </h2>
             </div>
 
             <span className="rp-count-badge">
               {roles.length}
             </span>
-
           </div>
 
           {/* Search */}
 
           <div className="rp-search">
-
-            <Search size={17} />
+            <Search
+              size={17}
+            />
 
             <input
               type="text"
               placeholder="Search roles..."
               value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
+              onChange={(
+                event
+              ) =>
+                setSearch(
+                  event.target
+                    .value
+                )
               }
             />
-
           </div>
 
           {/* Role List */}
 
           <div className="rp-role-list">
-
-            {filteredRoles.length === 0 ? (
+            {filteredRoles.length ===
+            0 ? (
               <div className="rp-no-roles">
-                <Search size={28} />
-                <p>No roles found.</p>
+                <Search
+                  size={28}
+                />
+
+                <p>
+                  {search
+                    ? "No roles found."
+                    : "No roles available."}
+                </p>
               </div>
             ) : (
-              filteredRoles.map((role) => (
-                <RoleCard
-                  key={role.id}
-                  role={role}
-                  selected={role.id === selectedRoleId}
-                  onClick={() =>
-                    setSelectedRoleId(role.id)
-                  }
-                />
-              ))
+              filteredRoles.map(
+                (role) => (
+                  <RoleCard
+                    key={
+                      role.id
+                    }
+                    role={
+                      role
+                    }
+                    selected={
+                      role.id ===
+                      selectedRoleId
+                    }
+                    onClick={() =>
+                      setSelectedRoleId(
+                        role.id
+                      )
+                    }
+                  />
+                )
+              )
             )}
-
           </div>
-
         </aside>
 
         {/* ===================================================
@@ -546,34 +1070,48 @@ export default function RolesPermissions() {
         =================================================== */}
 
         <main className="rp-details-panel">
-
           {selectedRole ? (
             <RoleDetails
-              role={selectedRole}
-              permissions={permissions}
+              role={
+                selectedRole
+              }
+              permissions={
+                permissions
+              }
               onTogglePermission={
                 handleTogglePermission
+              }
+              updatingPermissionId={
+                updatingPermissionId
+              }
+              onUpdateRole={
+                handleUpdateRole
+              }
+              updatingRole={
+                updatingRole
               }
             />
           ) : (
             <div className="rp-empty-details">
-
               <div>
-                <KeyRound size={35} />
+                <KeyRound
+                  size={35}
+                />
               </div>
 
-              <h3>Select a role</h3>
+              <h3>
+                Select a role
+              </h3>
 
               <p>
-                Select a role from the left to manage
-                its permissions.
+                Select a role
+                from the left
+                to manage its
+                permissions.
               </p>
-
             </div>
           )}
-
         </main>
-
       </div>
 
       {/* =====================================================
@@ -582,14 +1120,23 @@ export default function RolesPermissions() {
 
       {showCreateModal && (
         <CreateRoleModal
-          permissions={permissions}
-          onClose={() =>
-            setShowCreateModal(false)
+          onClose={() => {
+            if (
+              !creatingRole
+            ) {
+              setShowCreateModal(
+                false
+              );
+            }
+          }}
+          onCreate={
+            handleCreateRole
           }
-          onCreate={handleCreateRole}
+          creating={
+            creatingRole
+          }
         />
       )}
-
     </div>
   );
 }

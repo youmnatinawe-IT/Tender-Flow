@@ -5,7 +5,7 @@ import Dashboard from "./Pages/Dashbord/Dashbord";
 import Organizations from "./Pages/Dashbord/Organizations";
 import Tenders from "./Pages/Dashbord/Tenders";
 import Users from "./Pages/Dashbord/Users"
-import Vendors from "./Pages/Dashbord/vendors"
+import Vendors from "./Pages/Dashbord/Bids"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import OrganizationDetails from "./components/organaizations/organizationdetails";
 import SessionExpiryWatcher from "./components/SessionExpiryWatcher";
