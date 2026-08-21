@@ -16,6 +16,8 @@ import {
   getExecutorOrgs,
 } from "../../services/organizationService";
 
+import { getAllRoles } from "../../services/rolesService";
+
 import UserDetails from "./UserDatails";
 import UserModal from "./UserModal";
 import AssignRoleModal from "./AssignRoleModal";
@@ -39,39 +41,69 @@ const capitalizeStatus = (status) => {
 
 /* =========================================================
    Get User Role
+   يعتمد بشكل أساسي على:
+   user.role_id === role._id
 ========================================================= */
 
-const getUserRole = (user) => {
+const getUserRole = (user, roles = []) => {
   if (!user) return "N/A";
 
-  /*
-    If role is object:
-    {
-      id,
-      name,
-      code
-    }
-  */
+  /* -------------------------------------------------------
+     1. إذا كان الـ API يرجع role كـ object
+  ------------------------------------------------------- */
 
-  if (user.role && typeof user.role === "object") {
+  if (
+    user.role &&
+    typeof user.role === "object"
+  ) {
     return (
       user.role.name ||
+      user.role.name_ar ||
       user.role.code ||
       user.role.role_name ||
       "N/A"
     );
   }
 
-  /*
-    If roles array exists
-  */
+  /* -------------------------------------------------------
+     2. البحث عن الـ Role بواسطة role_id
+  ------------------------------------------------------- */
 
-  if (Array.isArray(user.roles) && user.roles.length > 0) {
+  if (
+    user.role_id &&
+    Array.isArray(roles)
+  ) {
+    const matchedRole = roles.find(
+      (role) =>
+        String(role?._id || role?.id) ===
+        String(user.role_id)
+    );
+
+    if (matchedRole) {
+      return (
+        matchedRole.name ||
+        matchedRole.name_ar ||
+        matchedRole.code ||
+        matchedRole.role_name ||
+        "N/A"
+      );
+    }
+  }
+
+  /* -------------------------------------------------------
+     3. fallback إذا كان عندنا roles array
+  ------------------------------------------------------- */
+
+  if (
+    Array.isArray(user.roles) &&
+    user.roles.length > 0
+  ) {
     const role = user.roles[0];
 
     if (typeof role === "object") {
       return (
         role.name ||
+        role.name_ar ||
         role.code ||
         role.role_name ||
         "N/A"
@@ -81,7 +113,11 @@ const getUserRole = (user) => {
     return role;
   }
 
-  return user.role || user.type || "N/A";
+  /* -------------------------------------------------------
+     4. آخر fallback
+  ------------------------------------------------------- */
+
+  return user.type || "N/A";
 };
 
 /* =========================================================
@@ -157,21 +193,18 @@ export default function UserTable({ filters }) {
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [showDrawer, setShowDrawer] = useState(false);
-
   const [showModal, setShowModal] = useState(false);
-
   const [showAssignRole, setShowAssignRole] = useState(false);
-
   const [showSuspend, setShowSuspend] = useState(false);
 
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
 
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState(null);
 
   /* =========================================================
-     Fetch Users + Organizations
+     Fetch Users + Organizations + Roles
   ========================================================= */
 
   useEffect(() => {
@@ -184,14 +217,16 @@ export default function UserTable({ filters }) {
           usersRes,
           pubRes,
           execRes,
+          rolesRes,
         ] = await Promise.all([
           getUsers(),
           getPublisherOrgs(),
           getExecutorOrgs(),
+          getAllRoles(),
         ]);
 
         /* =====================================================
-           Users
+           USERS
         ===================================================== */
 
         const rawUsers = usersRes?.success
@@ -205,7 +240,17 @@ export default function UserTable({ filters }) {
             [];
 
         /* =====================================================
-           Publishers
+           ROLES
+        ===================================================== */
+
+        const roleList = Array.isArray(rolesRes)
+          ? rolesRes
+          : [];
+
+        setRoles(roleList);
+
+        /* =====================================================
+           PUBLISHERS
         ===================================================== */
 
         const publishers = pubRes?.success
@@ -216,7 +261,7 @@ export default function UserTable({ filters }) {
           : [];
 
         /* =====================================================
-           Executors
+           EXECUTORS
         ===================================================== */
 
         const executors = execRes?.success
@@ -227,7 +272,7 @@ export default function UserTable({ filters }) {
           : [];
 
         /* =====================================================
-           All Organizations
+           ALL ORGANIZATIONS
         ===================================================== */
 
         const allOrgs =
@@ -240,7 +285,7 @@ export default function UserTable({ filters }) {
             : [];
 
         /* =====================================================
-           Organization Map
+           ORGANIZATION MAP
         ===================================================== */
 
         const orgMap = new Map(
@@ -255,21 +300,131 @@ export default function UserTable({ filters }) {
         );
 
         /* =====================================================
-           Enrich Users
+           ENRICH USERS
         ===================================================== */
 
-        const enrichedUsers = userList.map((u) => ({
-          ...u,
+        const enrichedUsers = userList.map((user) => ({
+          ...user,
 
           organization:
             orgMap.get(
-              String(u?.org_id)
+              String(user?.org_id)
             ) ||
-            u?.organization ||
+            user?.organization ||
             "N/A",
         }));
 
         setUsers(enrichedUsers);
+
+        /* =====================================================
+           TEMP DEBUG
+           User -> Role
+        ===================================================== */
+
+        console.log(
+          "========== USERS =========="
+        );
+
+        console.table(userList);
+
+        console.log(
+          "========== ROLES =========="
+        );
+
+        console.table(roleList);
+
+        console.log(
+          "========== USER → ROLE DEBUG =========="
+        );
+
+        enrichedUsers.forEach((user) => {
+          const matchedRole = roleList.find(
+            (role) =>
+              String(
+                role?._id || role?.id
+              ) ===
+              String(user?.role_id)
+          );
+
+          console.log({
+            userId:
+              user?._id ||
+              user?.id,
+
+            name:
+              `${user?.f_name || ""} ${
+                user?.l_name || ""
+              }`.trim(),
+
+            type: user?.type,
+
+            role_id:
+              user?.role_id,
+
+            role_name:
+              matchedRole?.name,
+
+            role_name_ar:
+              matchedRole?.name_ar,
+
+            role_code:
+              matchedRole?.code,
+
+            fullRole:
+              matchedRole || null,
+          });
+        });
+
+        /* =====================================================
+           USERS WITHOUT ROLE
+        ===================================================== */
+
+        const usersWithoutRole =
+          enrichedUsers.filter(
+            (user) => {
+              if (!user?.role_id) {
+                return true;
+              }
+
+              const exists = roleList.some(
+                (role) =>
+                  String(
+                    role?._id ||
+                      role?.id
+                  ) ===
+                  String(
+                    user.role_id
+                  )
+              );
+
+              return !exists;
+            }
+          );
+
+        console.log(
+          "========== USERS WITHOUT VALID ROLE =========="
+        );
+
+        console.table(
+          usersWithoutRole.map(
+            (user) => ({
+              id:
+                user?._id ||
+                user?.id,
+
+              name:
+                `${user?.f_name || ""} ${
+                  user?.l_name || ""
+                }`.trim(),
+
+              type:
+                user?.type,
+
+              role_id:
+                user?.role_id,
+            })
+          )
+        );
       } catch (err) {
         console.error(
           "Failed to fetch data:",
@@ -299,54 +454,61 @@ export default function UserTable({ filters }) {
       status: "All",
     };
 
-  const filteredUsers = users.filter((user) => {
-    const search = String(
-      safeFilters.search || ""
-    ).toLowerCase();
+  const filteredUsers = users.filter(
+    (user) => {
+      const search = String(
+        safeFilters.search || ""
+      ).toLowerCase();
 
-    const userName = [
-      user?.f_name,
-      user?.l_name,
-      user?.name,
-      user?.fullName,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+      const userName = [
+        user?.f_name,
+        user?.l_name,
+        user?.name,
+        user?.fullName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-    const matchesSearch =
-      userName.includes(search) ||
-      String(user?.email || "")
-        .toLowerCase()
-        .includes(search);
+      const matchesSearch =
+        userName.includes(search) ||
+        String(user?.email || "")
+          .toLowerCase()
+          .includes(search);
 
-    const userRole = getUserRole(user);
+      const userRole =
+        getUserRole(user, roles);
 
-    const matchesRole =
-      safeFilters.role === "All" ||
-      userRole === safeFilters.role;
+      const matchesRole =
+        safeFilters.role === "All" ||
+        userRole === safeFilters.role;
 
-    const userOrg =
-      getOrganizationName(user);
+      const userOrg =
+        getOrganizationName(user);
 
-    const matchesOrg =
-      safeFilters.organization === "All" ||
-      userOrg === safeFilters.organization;
+      const matchesOrg =
+        safeFilters.organization ===
+          "All" ||
+        userOrg ===
+          safeFilters.organization;
 
-    const matchesStatus =
-      safeFilters.status === "All" ||
-      normalizeStatus(user?.status) ===
-        String(
-          safeFilters.status
-        ).toLowerCase();
+      const matchesStatus =
+        safeFilters.status === "All" ||
+        normalizeStatus(
+          user?.status
+        ) ===
+          String(
+            safeFilters.status
+          ).toLowerCase();
 
-    return (
-      matchesSearch &&
-      matchesRole &&
-      matchesOrg &&
-      matchesStatus
-    );
-  });
+      return (
+        matchesSearch &&
+        matchesRole &&
+        matchesOrg &&
+        matchesStatus
+      );
+    }
+  );
 
   /* =========================================================
      Update User Status
@@ -357,17 +519,22 @@ export default function UserTable({ filters }) {
     newStatus
   ) => {
     setUsers((prevUsers) =>
-      prevUsers.map((u) => {
-        const id = u?.id || u?._id;
+      prevUsers.map((user) => {
+        const id =
+          user?.id ||
+          user?._id;
 
-        if (String(id) === String(userId)) {
+        if (
+          String(id) ===
+          String(userId)
+        ) {
           return {
-            ...u,
+            ...user,
             status: newStatus,
           };
         }
 
-        return u;
+        return user;
       })
     );
 
@@ -387,30 +554,35 @@ export default function UserTable({ filters }) {
 
     if (!userId) return;
 
+    const role =
+      updatedRole?.role ||
+      updatedRole;
+
     setUsers((prevUsers) =>
-      prevUsers.map((u) => {
+      prevUsers.map((user) => {
         const currentId =
-          u?.id || u?._id;
+          user?.id ||
+          user?._id;
 
         if (
           String(currentId) ===
           String(userId)
         ) {
           return {
-            ...u,
+            ...user,
 
-            role:
-              updatedRole?.role ||
-              updatedRole,
+            role,
 
-            roles: [
-              updatedRole?.role ||
-                updatedRole,
-            ],
+            roles: [role],
+
+            role_id:
+              role?._id ||
+              role?.id ||
+              user?.role_id,
           };
         }
 
-        return u;
+        return user;
       })
     );
 
@@ -420,14 +592,14 @@ export default function UserTable({ filters }) {
       return {
         ...prev,
 
-        role:
-          updatedRole?.role ||
-          updatedRole,
+        role,
 
-        roles: [
-          updatedRole?.role ||
-            updatedRole,
-        ],
+        roles: [role],
+
+        role_id:
+          role?._id ||
+          role?.id ||
+          prev?.role_id,
       };
     });
 
@@ -500,11 +672,20 @@ export default function UserTable({ filters }) {
           <thead>
             <tr>
               <th>User</th>
+
               <th>Email</th>
+
               <th>Organization</th>
+
               <th>Role</th>
+
+              {/* TEMP DEBUG COLUMN */}
+              <th>Role ID</th>
+
               <th>Status</th>
+
               <th>Last Login</th>
+
               <th className="text-center">
                 Actions
               </th>
@@ -513,310 +694,350 @@ export default function UserTable({ filters }) {
 
           <tbody>
             {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => {
-                /* =================================================
-                   IMPORTANT:
-                   Normalize status once.
-                   Assign Role will ONLY appear when this is active.
-                ================================================= */
+              filteredUsers.map(
+                (user) => {
+                  /* =================================================
+                     STATUS
+                  ================================================= */
 
-                const status =
-                  normalizeStatus(
-                    user?.status
-                  );
+                  const status =
+                    normalizeStatus(
+                      user?.status
+                    );
 
-                const isPending =
-                  status === "pending";
+                  const isPending =
+                    status ===
+                    "pending";
 
-                const isActive =
-                  status === "active";
+                  const isActive =
+                    status ===
+                    "active";
 
-                const isRejected =
-                  status === "rejected";
+                  const isRejected =
+                    status ===
+                    "rejected";
 
-                const isBanned =
-                  status === "banned";
+                  const isBanned =
+                    status ===
+                    "banned";
 
-                const userId =
-                  user?.id ||
-                  user?._id;
+                  /* =================================================
+                     USER ID
+                  ================================================= */
 
-                const displayName =
-                  user?.name ||
-                  user?.fullName ||
-                  `${user?.f_name || ""} ${
-                    user?.l_name || ""
-                  }`.trim() ||
-                  "Unknown User";
+                  const userId =
+                    user?.id ||
+                    user?._id;
 
-                return (
-                  <tr key={userId}>
+                  /* =================================================
+                     DISPLAY NAME
+                  ================================================= */
 
-                    {/* =================================================
-                        USER
-                    ================================================= */}
+                  const displayName =
+                    user?.name ||
+                    user?.fullName ||
+                    `${user?.f_name || ""} ${
+                      user?.l_name || ""
+                    }`.trim() ||
+                    "Unknown User";
 
-                    <td>
-                      <div className="user-info">
-                        <div className="avatar">
-                          {displayName
-                            .charAt(0)
-                            .toUpperCase()}
+                  /* =================================================
+                     REAL ROLE
+                  ================================================= */
+
+                  const userRole =
+                    getUserRole(
+                      user,
+                      roles
+                    );
+
+                  return (
+                    <tr
+                      key={userId}
+                    >
+                      {/* =================================================
+                          USER
+                      ================================================= */}
+
+                      <td>
+                        <div className="user-info">
+                          <div className="avatar">
+                            {displayName
+                              .charAt(
+                                0
+                              )
+                              .toUpperCase()}
+                          </div>
+
+                          <div>
+                            <strong>
+                              {
+                                displayName
+                              }
+                            </strong>
+
+                            <p>
+                              {user?.phone ||
+                                "N/A"}
+                            </p>
+                          </div>
                         </div>
+                      </td>
 
-                        <div>
-                          <strong>
-                            {displayName}
-                          </strong>
+                      {/* =================================================
+                          EMAIL
+                      ================================================= */}
 
-                          <p>
-                            {user?.phone ||
-                              "N/A"}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
+                      <td>
+                        {user?.email ||
+                          "N/A"}
+                      </td>
 
-                    {/* =================================================
-                        EMAIL
-                    ================================================= */}
+                      {/* =================================================
+                          ORGANIZATION
+                      ================================================= */}
 
-                    <td>
-                      {user?.email ||
-                        "N/A"}
-                    </td>
-
-                    {/* =================================================
-                        ORGANIZATION
-                    ================================================= */}
-
-                    <td>
-                      {getOrganizationName(
-                        user
-                      )}
-                    </td>
-
-                    {/* =================================================
-                        ROLE
-                    ================================================= */}
-
-                    <td>
-                      <span className="role-badge">
-                        {getUserRole(
+                      <td>
+                        {getOrganizationName(
                           user
                         )}
-                      </span>
-                    </td>
+                      </td>
 
-                    {/* =================================================
-                        STATUS
-                    ================================================= */}
+                      {/* =================================================
+                          ROLE
+                      ================================================= */}
 
-                    <td>
-                      <span
-                        className={`status-badge ${status}`}
-                      >
-                        {capitalizeStatus(
-                          user?.status
-                        )}
-                      </span>
-                    </td>
+                      <td>
+                        <span className="role-badge">
+                          {userRole}
+                        </span>
+                      </td>
 
-                    {/* =================================================
-                        LAST LOGIN
-                    ================================================= */}
+                      {/* =================================================
+                          ROLE ID
+                          TEMPORARY DEBUG
+                      ================================================= */}
 
-                    <td>
-                      {formatLastLogin(
-                        user
-                      )}
-                    </td>
-
-                    {/* =================================================
-                        ACTIONS
-                    ================================================= */}
-
-                    <td>
-                      <div className="actions">
-
-                        {/* ============================================
-                            1. VIEW
-                        ============================================ */}
-
-                        <button
-                          className="action-btn view"
-                          title="View Details"
-                          onClick={() => {
-                            setSelectedUser(
-                              user
-                            );
-
-                            setShowDrawer(
-                              true
-                            );
+                      <td>
+                        <code
+                          style={{
+                            fontSize:
+                              "11px",
+                            opacity: 0.8,
+                            wordBreak:
+                              "break-all",
                           }}
                         >
-                          <Eye size={16} />
-                        </button>
+                          {user?.role_id ||
+                            "NO ROLE"}
+                        </code>
+                      </td>
 
-                        {/* ============================================
-                            2. EDIT
-                        ============================================ */}
+                      {/* =================================================
+                          STATUS
+                      ================================================= */}
 
-                        <button
-                          className="action-btn edit"
-                          title="Edit User"
-                          onClick={() => {
-                            setSelectedUser(
-                              user
-                            );
-
-                            setShowModal(
-                              true
-                            );
-                          }}
+                      <td>
+                        <span
+                          className={`status-badge ${status}`}
                         >
-                          <Pencil size={16} />
-                        </button>
+                          {capitalizeStatus(
+                            user?.status
+                          )}
+                        </span>
+                      </td>
 
-                        {/* ============================================
-                            3. ASSIGN ROLE
-                            
-                            IMPORTANT:
-                            هذا الزر يظهر فقط إذا كان
-                            status = ACTIVE
-                            
-                            PENDING  -> لا يظهر
-                            REJECTED -> لا يظهر
-                            BANNED   -> لا يظهر
-                            ACTIVE   -> يظهر
-                        ============================================ */}
+                      {/* =================================================
+                          LAST LOGIN
+                      ================================================= */}
 
-                        {isActive && (
+                      <td>
+                        {formatLastLogin(
+                          user
+                        )}
+                      </td>
+
+                      {/* =================================================
+                          ACTIONS
+                      ================================================= */}
+
+                      <td>
+                        <div className="actions">
+                          {/* =================================================
+                              VIEW
+                          ================================================= */}
+
                           <button
-                            className="action-btn assign-role"
-                            title="Assign Role"
+                            className="action-btn view"
+                            title="View Details"
                             onClick={() => {
                               setSelectedUser(
                                 user
                               );
 
-                              setShowAssignRole(
+                              setShowDrawer(
                                 true
                               );
                             }}
                           >
-                            <ShieldPlus
+                            <Eye
                               size={16}
                             />
                           </button>
-                        )}
 
-                        {/* ============================================
-                            4. PENDING
-                            Accept / Reject
-                        ============================================ */}
+                          {/* =================================================
+                              EDIT
+                          ================================================= */}
 
-                        {isPending && (
                           <button
-                            className="action-btn activate"
-                            title="Review User"
+                            className="action-btn edit"
+                            title="Edit User"
                             onClick={() => {
                               setSelectedUser(
                                 user
                               );
 
-                              setShowSuspend(
+                              setShowModal(
                                 true
                               );
                             }}
                           >
-                            <UserCheck
+                            <Pencil
                               size={16}
                             />
                           </button>
-                        )}
 
-                        {/* ============================================
-                            5. ACTIVE
-                            Ban
-                        ============================================ */}
+                          {/* =================================================
+                              ASSIGN ROLE
+                              ACTIVE ONLY
+                          ================================================= */}
 
-                        {isActive && (
-                          <button
-                            className="action-btn suspend"
-                            title="Ban User"
-                            onClick={() => {
-                              setSelectedUser(
-                                user
-                              );
+                          {isActive && (
+                            <button
+                              className="action-btn assign-role"
+                              title="Assign Role"
+                              onClick={() => {
+                                setSelectedUser(
+                                  user
+                                );
 
-                              setShowSuspend(
-                                true
-                              );
-                            }}
-                          >
-                            <UserX
-                              size={16}
-                            />
-                          </button>
-                        )}
+                                setShowAssignRole(
+                                  true
+                                );
+                              }}
+                            >
+                              <ShieldPlus
+                                size={16}
+                              />
+                            </button>
+                          )}
 
-                        {/* ============================================
-                            6. REJECTED
-                            Resend
-                        ============================================ */}
+                          {/* =================================================
+                              PENDING
+                              ACCEPT / REJECT
+                          ================================================= */}
 
-                        {isRejected && (
-                          <button
-                            className="action-btn activate"
-                            title="Send for Review Again"
-                            onClick={() => {
-                              setSelectedUser(
-                                user
-                              );
+                          {isPending && (
+                            <button
+                              className="action-btn activate"
+                              title="Review User"
+                              onClick={() => {
+                                setSelectedUser(
+                                  user
+                                );
 
-                              setShowSuspend(
-                                true
-                              );
-                            }}
-                          >
-                            <UserCheck
-                              size={16}
-                            />
-                          </button>
-                        )}
+                                setShowSuspend(
+                                  true
+                                );
+                              }}
+                            >
+                              <UserCheck
+                                size={16}
+                              />
+                            </button>
+                          )}
 
-                        {/* ============================================
-                            7. BANNED
-                        ============================================ */}
+                          {/* =================================================
+                              ACTIVE
+                              BAN
+                          ================================================= */}
 
-                        {isBanned && (
-                          <button
-                            className="action-btn"
-                            title="Banned Account"
-                            disabled
-                            style={{
-                              opacity: 0.45,
-                              cursor:
-                                "not-allowed",
-                            }}
-                          >
-                            <UserX
-                              size={16}
-                            />
-                          </button>
-                        )}
+                          {isActive && (
+                            <button
+                              className="action-btn suspend"
+                              title="Ban User"
+                              onClick={() => {
+                                setSelectedUser(
+                                  user
+                                );
 
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+                                setShowSuspend(
+                                  true
+                                );
+                              }}
+                            >
+                              <UserX
+                                size={16}
+                              />
+                            </button>
+                          )}
+
+                          {/* =================================================
+                              REJECTED
+                              RESEND
+                          ================================================= */}
+
+                          {isRejected && (
+                            <button
+                              className="action-btn activate"
+                              title="Send for Review Again"
+                              onClick={() => {
+                                setSelectedUser(
+                                  user
+                                );
+
+                                setShowSuspend(
+                                  true
+                                );
+                              }}
+                            >
+                              <UserCheck
+                                size={16}
+                              />
+                            </button>
+                          )}
+
+                          {/* =================================================
+                              BANNED
+                          ================================================= */}
+
+                          {isBanned && (
+                            <button
+                              className="action-btn"
+                              title="Banned Account"
+                              disabled
+                              style={{
+                                opacity:
+                                  0.45,
+                                cursor:
+                                  "not-allowed",
+                              }}
+                            >
+                              <UserX
+                                size={16}
+                              />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
+              )
             ) : (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   className="no-data"
                 >
                   No users found
@@ -857,33 +1078,36 @@ export default function UserTable({ filters }) {
             setShowModal(false)
           }
           onSave={(updatedUser) => {
-            setUsers((prevUsers) =>
-              prevUsers.map((u) => {
-                const updatedId =
-                  updatedUser?.id ||
-                  updatedUser?._id;
+            setUsers(
+              (prevUsers) =>
+                prevUsers.map(
+                  (user) => {
+                    const updatedId =
+                      updatedUser?.id ||
+                      updatedUser?._id;
 
-                const currentId =
-                  u?.id ||
-                  u?._id;
+                    const currentId =
+                      user?.id ||
+                      user?._id;
 
-                if (
-                  updatedId &&
-                  String(
-                    currentId
-                  ) ===
-                    String(
-                      updatedId
-                    )
-                ) {
-                  return {
-                    ...u,
-                    ...updatedUser,
-                  };
-                }
+                    if (
+                      updatedId &&
+                      String(
+                        currentId
+                      ) ===
+                        String(
+                          updatedId
+                        )
+                    ) {
+                      return {
+                        ...user,
+                        ...updatedUser,
+                      };
+                    }
 
-                return u;
-              })
+                    return user;
+                  }
+                )
             );
           }}
         />

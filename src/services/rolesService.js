@@ -1,4 +1,5 @@
 import API from "./api";
+
 import { normalizeError } from "./errorHandler";
 
 /* =========================================================
@@ -12,39 +13,52 @@ import { normalizeError } from "./errorHandler";
 
 export const getAllRoles = async () => {
   try {
-    const response = await API.get("/api/roles");
+    const response = await API.get(
+      "/api/roles"
+    );
 
-    const responseData = response.data;
+    const responseData =
+      response.data;
 
-    /*
-      Support:
+    /* -------------------------------------------------------
+       Support:
 
-      [
-        {...}
-      ]
+       [
+         {...}
+       ]
 
-      OR
+       OR
 
-      {
-        data: [...]
-      }
+       {
+         data: [...]
+       }
 
-      OR
+       OR
 
-      {
-        roles: [...]
-      }
-    */
+       {
+         roles: [...]
+       }
+    ------------------------------------------------------- */
 
-    if (Array.isArray(responseData)) {
+    if (
+      Array.isArray(responseData)
+    ) {
       return responseData;
     }
 
-    if (Array.isArray(responseData?.data)) {
+    if (
+      Array.isArray(
+        responseData?.data
+      )
+    ) {
       return responseData.data;
     }
 
-    if (Array.isArray(responseData?.roles)) {
+    if (
+      Array.isArray(
+        responseData?.roles
+      )
+    ) {
       return responseData.roles;
     }
 
@@ -59,7 +73,6 @@ export const getAllRoles = async () => {
   }
 };
 
-
 /* =========================================================
    CREATE ROLE
 
@@ -67,18 +80,6 @@ export const getAllRoles = async () => {
 
    Required:
    SUPER_ADMIN
-
-   Body:
-
-   {
-     code: "TENDER_MANAGER",
-     name: "Tender Manager",
-     name_ar: "مدير المناقصات",
-     description: "...",
-     is_active: true
-   }
-
-   Permissions are NOT added here.
 ========================================================= */
 
 export const createRole = async ({
@@ -96,10 +97,11 @@ export const createRole = async ({
       is_active: true,
     };
 
-    const response = await API.post(
-      "/api/roles",
-      payload
-    );
+    const response =
+      await API.post(
+        "/api/roles",
+        payload
+      );
 
     return (
       response.data?.data ||
@@ -115,7 +117,6 @@ export const createRole = async ({
     throw error;
   }
 };
-
 
 /* =========================================================
    UPDATE ROLE
@@ -139,7 +140,9 @@ export const updateRole = async (
 
     const payload =
       Object.fromEntries(
-        Object.entries(roleData || {}).filter(
+        Object.entries(
+          roleData || {}
+        ).filter(
           ([, value]) =>
             value !== undefined
         )
@@ -165,7 +168,6 @@ export const updateRole = async (
     throw error;
   }
 };
-
 
 /* =========================================================
    ASSIGN ROLE TO USER
