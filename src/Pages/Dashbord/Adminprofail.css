@@ -1,5 +1,5 @@
-.admin-profile-header {
-  background-color: #1e293b; /* لون الخلفية الكحلي الداكن */
+﻿.admin-profile-header {
+  background-color: #1e293b; /* ظ„ظˆظ† ط§ظ„ط®ظ„ظپظٹط© ط§ظ„ظƒط­ظ„ظٹ ط§ظ„ط¯ط§ظƒظ† */
   color: #ffffff;
   padding: 24px 32px;
   border-radius: 12px;
@@ -15,7 +15,7 @@
 
 .admin-profile-header p {
   font-size: 14px;
-  color: #94a3b8; /* لون النص الفرعي الرمادي الفاتح */
+  color: var(--text-muted); /* ظ„ظˆظ† ط§ظ„ظ†طµ ط§ظ„ظپط±ط¹ظٹ ط§ظ„ط±ظ…ط§ط¯ظٹ ط§ظ„ظپط§طھط­ */
   margin: 0;
 }
 /* Alert Messages */
@@ -27,15 +27,15 @@
 }
 
 .alert-message.success {
-  background-color: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background-color: var(--success-bg-soft);
+  color: var(--success-strong);
+  border: 1px solid var(--success-border);
 }
 
 .alert-message.error {
-  background-color: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background-color: var(--danger-bg);
+  color: var(--danger-strong);
+  border: 1px solid var(--danger-border);
 }
 
 /* Layout Grid */
@@ -54,8 +54,8 @@
 /* Cards */
 .profile-card,
 .form-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -73,7 +73,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background-color: #0F1F38;
+  background-color: var(--brand-navy);
   color: #ffffff;
   font-size: 28px;
   font-weight: 700;
@@ -87,13 +87,13 @@
 .profile-card h2 {
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 6px 0;
 }
 
 .role-badge {
-  background-color: #eef2ff;
-  color: #0F1F38;
+  background-color: var(--indigo-bg);
+  color: var(--text-value);
   font-size: 11px;
   font-weight: 600;
   padding: 4px 10px;
@@ -104,7 +104,7 @@
 
 .admin-email {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-secondary);
   margin-top: 12px;
 }
 
@@ -118,10 +118,10 @@
 .form-card h3 {
   font-size: 15px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 16px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .form-row {
@@ -146,12 +146,12 @@
 .form-group label {
   font-size: 12px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-label);
 }
 
 .form-group input {
   padding: 9px 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 14px;
   outline: none;
@@ -164,8 +164,8 @@
 }
 
 .disabled-input {
-  background-color: #f1f5f9;
-  color: #94a3b8;
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
@@ -188,12 +188,12 @@
 }
 
 .btn-primary {
-  background-color: #0F1F38;
+  background-color: var(--brand-navy);
   color: #ffffff;
 }
 
 .btn-primary:hover {
-  background-color: #0F1F38;
+  background-color: var(--brand-navy);
 }
 
 .btn-dark {

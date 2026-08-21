@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './Adminprofail.css';
+import { getInitials } from '../../utils/format';
 
 const AdminProfile = () => {
   const [adminData, setAdminData] = useState(() => {
@@ -26,13 +27,6 @@ const AdminProfile = () => {
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
-
-  const getInitials = (name) => {
-    if (!name) return 'SA';
-    const parts = name.split(' ');
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  };
 
   const handleProfileSubmit = (e) => {
     e.preventDefault();
