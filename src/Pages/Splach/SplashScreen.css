@@ -1,5 +1,5 @@
-.splash-bg {
-  background-color: #0f1f38;
+﻿.splash-bg {
+  background-color: var(--brand-navy);
   height: 100vh;
   display: flex;
   justify-content: center;

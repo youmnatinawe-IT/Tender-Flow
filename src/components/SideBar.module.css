@@ -1,122 +1,327 @@
-/* الكود الأساسي للـ sidebar مع إضافة transition للحركة السلسة */
+/* =========================================================
+   Sidebar
+========================================================= */
+
 .sidebar {
-  width: 260px; /* العرض الطبيعي للسايد بار */
+  width: 260px;
+
+  min-width: 260px;
+
+  flex: 0 0 260px;
+
   height: 100vh;
+
   position: sticky;
+
   top: 0;
-  transition: width 0.3s ease-in-out; /* حركة أنيميشن ناعمة */
-  background-color: #ffffff;
-  border-right: 1px solid #e2e8f0;
+
+  z-index: 1100;
+
   display: flex;
+
   flex-direction: column;
+
+  box-sizing: border-box;
+
+  background-color: var(--bg-surface);
+
+  border-right: 1px solid var(--border-color);
+
+  overflow: hidden;
+
+  transition:
+    width 0.3s ease,
+    min-width 0.3s ease,
+    flex-basis 0.3s ease,
+    background-color 0.25s ease;
 }
 
-/* الكلاس الذي سيتم تطبيقه ديناميكياً عند الإغلاق */
+
+/* =========================================================
+   Collapsed Sidebar
+========================================================= */
+
 .sidebar.collapsed {
-  width: 70px; /* العرض المصغر ليظهر الأيقونات فقط */
+  width: 70px;
+
+  min-width: 70px;
+
+  flex: 0 0 70px;
 }
+
+
+/* =========================================================
+   RTL Border
+========================================================= */
+
+[dir="rtl"] .sidebar {
+  border-right: none;
+
+  border-left: 1px solid var(--border-color);
+}
+
+
+/* =========================================================
+   Brand
+========================================================= */
 
 .brandSection {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px;
   width: 100%;
-}
 
-.brandTitleContainer {
-  display: flex;  
+  min-height: 76px;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
   align-items: center;
+
+  justify-content: space-between;
+
   gap: 10px;
 }
 
-/* ستايل زر التبديل */
-.toggleBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #64748b;
-  padding: 5px;
-  border-radius: 6px;
+.brandTitleContainer {
   display: flex;
+
   align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
+
+  gap: 10px;
+
+  min-width: 0;
 }
 
-.toggleBtn:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
-}
-
-/* توسيط الأيقونات في حالة التصغير */
-.collapsedItem {
-  justify-content: center;
-  padding: 12px 0 !important;
+.logoWrapper {
+  flex: 0 0 auto;
 }
 
 .blueLogoIcon {
   width: 28px;
+
   height: 28px;
-  background-color: #0f1f38;
-  color: white;
-  border-radius: 6px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
+  background-color: var(--brand-navy);
+
+  color: #ffffff;
+
+  border-radius: 6px;
+
   font-size: 0.9rem;
 }
 
 .brandName {
+  color: var(--text-heading);
+
   font-size: 1.05rem;
+
   font-weight: 700;
-  color: #1e293b;
+
   letter-spacing: -0.3px;
+
+  white-space: nowrap;
 }
+
+
+/* =========================================================
+   Toggle Button
+========================================================= */
+
+.toggleBtn {
+  width: 30px;
+
+  height: 30px;
+
+  flex: 0 0 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 5px;
+
+  background: transparent;
+
+  border: none;
+
+  border-radius: 6px;
+
+  color: var(--text-secondary);
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.toggleBtn:hover {
+  background-color: var(--bg-input);
+
+  color: var(--text-primary);
+}
+
+
+/* =========================================================
+   Navigation
+========================================================= */
 
 .navMenu {
   flex: 1;
+
+  width: 100%;
+
+  padding: 8px 10px;
+
+  box-sizing: border-box;
+
+  overflow-y: auto;
+
+  overflow-x: hidden;
 }
 
 .list {
   list-style: none;
+
   padding: 0;
+
   margin: 0;
+
   display: flex;
+
   flex-direction: column;
-  gap: 6px; 
+
+  gap: 6px;
 }
 
+
+/* =========================================================
+   Navigation Item
+========================================================= */
+
 .item {
+  width: 100%;
+
+  min-height: 42px;
+
+  box-sizing: border-box;
+
   display: flex;
+
   align-items: center;
+
   gap: 12px;
+
   padding: 10px 14px;
-  color: #64748b; 
-  border-radius: 8px; 
+
+  color: var(--text-secondary);
+
+  border-radius: 8px;
+
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+
+  white-space: nowrap;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .item:hover {
-  background-color: #f8fafc;
-  color: #334155;
+  background-color: var(--bg-primary);
+
+  color: var(--text-strong);
 }
 
+
+/* =========================================================
+   Active Item
+========================================================= */
 
 .item.active {
-  background-color: #0f1f38; 
-  color: #ffffff; 
+  background-color: var(--brand-navy);
+
+  color: #ffffff;
+
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); 
+
+  box-shadow:
+    0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
+
+/* =========================================================
+   Icon
+========================================================= */
+
 .icon {
+  width: 20px;
+
+  height: 20px;
+
+  flex: 0 0 20px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 }
 
+
+/* =========================================================
+   Text
+========================================================= */
+
 .text {
+  min-width: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
   font-size: 0.88rem;
+}
+
+
+/* =========================================================
+   Collapsed Items
+========================================================= */
+
+.collapsedItem {
+  justify-content: center;
+
+  padding: 10px 0 !important;
+
+  gap: 0;
+}
+
+
+/* =========================================================
+   Collapsed Brand
+========================================================= */
+
+.sidebar.collapsed .brandSection {
+  justify-content: center;
+
+  padding: 20px 10px;
+}
+
+.sidebar.collapsed .toggleBtn {
+  margin: 0;
+}
+
+.sidebar.collapsed .navMenu {
+  padding-left: 8px;
+  padding-right: 8px;
 }

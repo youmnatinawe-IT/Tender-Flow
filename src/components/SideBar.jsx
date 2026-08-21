@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   LayoutDashboard,
   FileText,
@@ -6,95 +7,350 @@ import {
   FileCheck,
   Users,
   Shield,
-Settings,
+  Settings,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
 } from "lucide-react";
+
 import styles from "./SideBar.module.css";
-import { useNavigate, useLocation } from "react-router-dom";
+
+import {
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+
+import { useTranslation } from "react-i18next";
+
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // حالة التحكم بالسايد بار (مفتوح أم مغلق)
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { t } = useTranslation();
+
+  const [isCollapsed, setIsCollapsed] =
+    useState(false);
+
+  /* =========================================================
+     Get Current User
+  ========================================================= */
+
+  const getCurrentUser = () => {
+    try {
+      const storedUser =
+        localStorage.getItem("user");
+
+      if (!storedUser) {
+        return null;
+      }
+
+      return JSON.parse(storedUser);
+    } catch (error) {
+      console.error(
+        "Failed to read user:",
+        error
+      );
+
+      return null;
+    }
+  };
+
+  const currentUser = getCurrentUser();
+
+  /* =========================================================
+     Get User Type
+  ========================================================= */
+
+  let userType =
+    currentUser?.type ||
+    currentUser?.data?.type ||
+    currentUser?.user_type ||
+    currentUser?.data?.user_type ||
+    currentUser?.role?.type ||
+    currentUser?.role?.name ||
+    currentUser?.data?.role?.type ||
+    currentUser?.data?.role?.name ||
+    "";
+
+  /* =========================================================
+     Fallback To JWT
+  ========================================================= */
+
+  if (!userType) {
+    try {
+      const token =
+        localStorage.getItem("token");
+
+      if (token) {
+        const payload =
+          token.split(".")[1];
+
+        if (payload) {
+          const decodedPayload =
+            JSON.parse(
+              atob(
+                payload
+                  .replace(/-/g, "+")
+                  .replace(/_/g, "/")
+              )
+            );
+
+          userType =
+            decodedPayload?.type ||
+            "";
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Failed to decode token:",
+        error
+      );
+    }
+  }
+
+  /* =========================================================
+     Normalize User Type
+  ========================================================= */
+
+  userType = String(userType)
+    .trim()
+    .toUpperCase();
+
+  /* =========================================================
+     Admin Check
+  ========================================================= */
+
+  const isAdmin =
+    userType === "ADMIN" ||
+    userType === "SYSTEM_ADMIN" ||
+    userType === "SUPER_ADMIN";
+
+  /* =========================================================
+     Menu Items
+  ========================================================= */
 
   const menuItems = [
     {
       id: "dashboard",
-      text: "Dashboard",
+      text: t("sidebar.dashboard"),
       icon: <LayoutDashboard size={18} />,
       path: "/dashboard",
     },
+
     {
       id: "tenders",
-      text: "Tenders",
+      text: t("sidebar.tenders"),
       icon: <FileText size={18} />,
       path: "/tenders",
     },
+
     {
       id: "organizations",
-      text: "Organizations",
+      text: t("sidebar.organizations"),
       icon: <Building2 size={18} />,
       path: "/organizations",
     },
+
     {
       id: "vendors",
-      text: "vendors",
+      text: t("sidebar.vendors"),
       icon: <FileCheck size={18} />,
       path: "/vendors",
     },
-    { id: "users", text: "Users", icon: <Users size={18} />, path: "/users" },
-  
-      { id: 'RolesPermissions', text: 'Roles&Permissions', icon: <Shield size={18} />, path: '/RolesPermissions' },
-      { id: 'settings', text: 'Settings', icon: <Settings size={18} />, path: '/settings' },
+
+    {
+      id: "users",
+      text: t("sidebar.users"),
+      icon: <Users size={18} />,
+      path: "/users",
+    },
+
+    {
+      id: "registrationRequests",
+      text: "Registration Requests",
+      icon: <ClipboardCheck size={18} />,
+      path: "/registration-requests",
+    },
+
+    {
+      id: "RolesPermissions",
+      text: t(
+        "sidebar.rolesPermissions"
+      ),
+      icon: <Shield size={18} />,
+      path: "/RolesPermissions",
+      adminOnly: true,
+    },
+
+    {
+      id: "settings",
+      text: t("sidebar.settings"),
+      icon: <Settings size={18} />,
+      path: "/settings",
+    },
   ];
 
+  /* =========================================================
+     Show Admin Items Only For Admin
+  ========================================================= */
+
+  const visibleMenuItems =
+    menuItems.filter((item) => {
+      if (item.adminOnly) {
+        return isAdmin;
+      }
+
+      return true;
+    });
+
+  /* =========================================================
+     Render
+  ========================================================= */
+
   return (
-    // نمرر كلاس collapsed ديناميكياً إذا كانت القيمة true لتصغير العرض
     <aside
-      className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
+      className={`${styles.sidebar} ${
+        isCollapsed
+          ? styles.collapsed
+          : ""
+      }`}
     >
-      <div className={styles.brandSection}>
+      {/* Brand */}
+      <div
+        className={
+          styles.brandSection
+        }
+      >
         {!isCollapsed && (
-          <div className={styles.brandTitleContainer}>
-            <div className={styles.logoWrapper}>
-              <div className={styles.blueLogoIcon}>⚡</div>
+          <div
+            className={
+              styles.brandTitleContainer
+            }
+          >
+            <div
+              className={
+                styles.logoWrapper
+              }
+            >
+              <div
+                className={
+                  styles.blueLogoIcon
+                }
+              >
+                ⚡
+              </div>
             </div>
-            <span className={styles.brandName}>Tender Flow</span>
+
+            <span
+              className={
+                styles.brandName
+              }
+            >
+              {t("sidebar.brand")}
+            </span>
           </div>
         )}
 
-        {/* زر الإخفاء والإظهار */}
         <button
-          className={styles.toggleBtn}
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Show Sidebar" : "Hide Sidebar"}
+          type="button"
+          className={
+            styles.toggleBtn
+          }
+          onClick={() =>
+            setIsCollapsed(
+              (prev) => !prev
+            )
+          }
+          title={
+            isCollapsed
+              ? t(
+                  "sidebar.showSidebar"
+                )
+              : t(
+                  "sidebar.hideSidebar"
+                )
+          }
+          aria-label={
+            isCollapsed
+              ? t(
+                  "sidebar.showSidebar"
+                )
+              : t(
+                  "sidebar.hideSidebar"
+                )
+          }
         >
-          {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          {isCollapsed ? (
+            <ChevronRight size={20} />
+          ) : (
+            <ChevronLeft size={20} />
+          )}
         </button>
       </div>
 
-      <nav className={styles.navMenu}>
-        <ul className={styles.list}>
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
+      {/* Navigation */}
+      <nav
+        className={
+          styles.navMenu
+        }
+      >
+        <ul
+          className={styles.list}
+        >
+          {visibleMenuItems.map(
+            (item) => {
+              const isActive =
+                location.pathname ===
+                  item.path ||
+                (item.path ===
+                  "/registration-requests" &&
+                  location.pathname.startsWith(
+                    "/registration-requests"
+                  ));
 
-            return (
-              <li
-                key={item.id}
-                className={`${styles.item} ${isActive ? styles.active : ""} ${isCollapsed ? styles.collapsedItem : ""}`}
-                onClick={() => navigate(item.path)}
-                style={{ cursor: "pointer" }}
-              >
-                <span className={styles.icon}>{item.icon}</span>
-                {/* إخفاء النص عند تصغير السايد بار ليظهر الأيقونات فقط */}
-                {!isCollapsed && (
-                  <span className={styles.text}>{item.text}</span>
-                )}
-              </li>
-            );
-          })}
+              return (
+                <li
+                  key={item.id}
+                  className={`
+                    ${styles.item}
+                    ${
+                      isActive
+                        ? styles.active
+                        : ""
+                    }
+                    ${
+                      isCollapsed
+                        ? styles.collapsedItem
+                        : ""
+                    }
+                  `}
+                  onClick={() =>
+                    navigate(
+                      item.path
+                    )
+                  }
+                >
+                  <span
+                    className={
+                      styles.icon
+                    }
+                  >
+                    {item.icon}
+                  </span>
+
+                  {!isCollapsed && (
+                    <span
+                      className={
+                        styles.text
+                      }
+                    >
+                      {item.text}
+                    </span>
+                  )}
+                </li>
+              );
+            }
+          )}
         </ul>
       </nav>
     </aside>

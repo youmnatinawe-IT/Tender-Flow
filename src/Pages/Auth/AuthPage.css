@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
 
 * {
   margin: 0;
@@ -8,7 +8,7 @@
 
 .auth-container {
   min-height: 100vh;
-  /* تعديل التدرج اللوني ليعطي عمق وفخامة أكبر للخلفية بدل اللون المصمت */
+  /* طھط¹ط¯ظٹظ„ ط§ظ„طھط¯ط±ط¬ ط§ظ„ظ„ظˆظ†ظٹ ظ„ظٹط¹ط·ظٹ ط¹ظ…ظ‚ ظˆظپط®ط§ظ…ط© ط£ظƒط¨ط± ظ„ظ„ط®ظ„ظپظٹط© ط¨ط¯ظ„ ط§ظ„ظ„ظˆظ† ط§ظ„ظ…طµظ…طھ */
   background: linear-gradient(135deg, #0b1524, #122543);
   display: flex;
   justify-content: center;
@@ -20,10 +20,10 @@
 .auth-card {
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
-  padding: 40px 35px; /* زيادة الـ padding العمودي ليتنفس التصميم */
-  border-radius: 16px; /* تناسق أفضل مع حواف العناصر الداخلية */
-  box-shadow: 0 20px 40px rgba(11, 21, 36, 0.2); /* تظليل ناعم واحترافي متناسق مع لون الخلفية */
+  background: var(--bg-surface);
+  padding: 40px 35px; /* ط²ظٹط§ط¯ط© ط§ظ„ظ€ padding ط§ظ„ط¹ظ…ظˆط¯ظٹ ظ„ظٹطھظ†ظپط³ ط§ظ„طھطµظ…ظٹظ… */
+  border-radius: 16px; /* طھظ†ط§ط³ظ‚ ط£ظپط¶ظ„ ظ…ط¹ ط­ظˆط§ظپ ط§ظ„ط¹ظ†ط§طµط± ط§ظ„ط¯ط§ط®ظ„ظٹط© */
+  box-shadow: 0 20px 40px rgba(11, 21, 36, 0.2); /* طھط¸ظ„ظٹظ„ ظ†ط§ط¹ظ… ظˆط§ط­طھط±ط§ظپظٹ ظ…طھظ†ط§ط³ظ‚ ظ…ط¹ ظ„ظˆظ† ط§ظ„ط®ظ„ظپظٹط© */
   transition: transform 0.3s ease;
 }
 
@@ -31,15 +31,15 @@
   width: 75px; 
   height: auto;
   display: block;
-  margin: 0 auto 12px; /* زيادة المسافة تحت اللوجو */
+  margin: 0 auto 12px; /* ط²ظٹط§ط¯ط© ط§ظ„ظ…ط³ط§ظپط© طھط­طھ ط§ظ„ظ„ظˆط¬ظˆ */
   object-fit: contain; 
 }
 
 .auth-card h2 {
   text-align: center;
-  color: #0F1F38;
-  font-size: 1.75rem; /* تصغير طفيف ليتماشى مع معايير الـ UI الحديثة */
-  margin-bottom: 28px; /* مسافة مريحة تفصل العنوان عن أول حقل */
+  color: var(--text-value);
+  font-size: 1.75rem; /* طھطµط؛ظٹط± ط·ظپظٹظپ ظ„ظٹطھظ…ط§ط´ظ‰ ظ…ط¹ ظ…ط¹ط§ظٹظٹط± ط§ظ„ظ€ UI ط§ظ„ط­ط¯ظٹط«ط© */
+  margin-bottom: 28px; /* ظ…ط³ط§ظپط© ظ…ط±ظٹط­ط© طھظپطµظ„ ط§ظ„ط¹ظ†ظˆط§ظ† ط¹ظ† ط£ظˆظ„ ط­ظ‚ظ„ */
   font-weight: 700;
 }
 
@@ -50,8 +50,8 @@
 .input-group label {
   display: block;
   margin-bottom: 6px;
-  color: #334155; /* تغيير اللون لرمادي داكن مريح للعين بدلاً من الكحلي الغامق */
-  font-size: 0.88rem; /* تصغير حجم الخط لخلق تدرج بصري (Visual Hierarchy) */
+  color: var(--text-strong); /* طھط؛ظٹظٹط± ط§ظ„ظ„ظˆظ† ظ„ط±ظ…ط§ط¯ظٹ ط¯ط§ظƒظ† ظ…ط±ظٹط­ ظ„ظ„ط¹ظٹظ† ط¨ط¯ظ„ط§ظ‹ ظ…ظ† ط§ظ„ظƒط­ظ„ظٹ ط§ظ„ط؛ط§ظ…ظ‚ */
+  font-size: 0.88rem; /* طھطµط؛ظٹط± ط­ط¬ظ… ط§ظ„ط®ط· ظ„ط®ظ„ظ‚ طھط¯ط±ط¬ ط¨طµط±ظٹ (Visual Hierarchy) */
   font-weight: 600;
 }
 
@@ -59,26 +59,26 @@
   width: 100%;
   height: 48px;
   padding: 0 16px;
-  border: 1.5px solid #e2e8f0; /* حدود أوضح وأنحف */
-  border-radius: 10px; /* متناسق مع حواف الكارد والزر */
+  border: 1.5px solid var(--border-color); /* ط­ط¯ظˆط¯ ط£ظˆط¶ط­ ظˆط£ظ†ط­ظپ */
+  border-radius: 10px; /* ظ…طھظ†ط§ط³ظ‚ ظ…ط¹ ط­ظˆط§ظپ ط§ظ„ظƒط§ط±ط¯ ظˆط§ظ„ط²ط± */
   font-size: 0.95rem;
-  color: #0F1F38;
-  background-color: #f8fafc; /* خلفية باهتة جداً داخل الحقل تعطي شعوراً بالعمق */
+  color: var(--text-value);
+  background-color: var(--bg-primary); /* ط®ظ„ظپظٹط© ط¨ط§ظ‡طھط© ط¬ط¯ط§ظ‹ ط¯ط§ط®ظ„ ط§ظ„ط­ظ‚ظ„ طھط¹ط·ظٹ ط´ط¹ظˆط±ط§ظ‹ ط¨ط§ظ„ط¹ظ…ظ‚ */
   transition: all 0.25s ease;
 }
 
 .input-group input::placeholder {
-  color: #94a3b8; /* لون رمادي ناعم للـ placeholder */
+  color: var(--text-muted); /* ظ„ظˆظ† ط±ظ…ط§ط¯ظٹ ظ†ط§ط¹ظ… ظ„ظ„ظ€ placeholder */
 }
 
 .input-group input:focus {
   border-color: #0F1F38;
-  background-color: #fff; /* تحويل الخلفية للأبيض عند التركيز */
-  box-shadow: 0 0 0 4px rgba(15, 31, 56, 0.08); /* تأثير توهج ناعم جداً وغير مزعج */
+  background-color: var(--bg-surface); /* طھط­ظˆظٹظ„ ط§ظ„ط®ظ„ظپظٹط© ظ„ظ„ط£ط¨ظٹط¶ ط¹ظ†ط¯ ط§ظ„طھط±ظƒظٹط² */
+  box-shadow: 0 0 0 4px rgba(15, 31, 56, 0.08); /* طھط£ط«ظٹط± طھظˆظ‡ط¬ ظ†ط§ط¹ظ… ط¬ط¯ط§ظ‹ ظˆط؛ظٹط± ظ…ط²ط¹ط¬ */
   outline: none;
 }
 
-/* إضافة كلاسات مساعدة للخيارات الإضافية (Remember me & Forgot password) */
+/* ط¥ط¶ط§ظپط© ظƒظ„ط§ط³ط§طھ ظ…ط³ط§ط¹ط¯ط© ظ„ظ„ط®ظٹط§ط±ط§طھ ط§ظ„ط¥ط¶ط§ظپظٹط© (Remember me & Forgot password) */
 .auth-options {
   display: flex;
   justify-content: space-between;
@@ -91,17 +91,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #64748b;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 .remember-me input {
   cursor: pointer;
-  accent-color: #0F1F38; /* تلوين الـ checkbox بلون الهوية */
+  accent-color: #0F1F38; /* طھظ„ظˆظٹظ† ط§ظ„ظ€ checkbox ط¨ظ„ظˆظ† ط§ظ„ظ‡ظˆظٹط© */
 }
 
 .forgot-password {
-  color: #0F1F38;
+  color: var(--text-value);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
@@ -115,38 +115,38 @@
   width: 100%;
   height: 48px;
   border: none;
-  border-radius: 10px; /* جعل انحناء الزر متناسق تماماً مع الحقول */
-  background: #0F1F38; /* البدء بلون الهوية الأساسي مباشرة */
+  border-radius: 10px; /* ط¬ط¹ظ„ ط§ظ†ط­ظ†ط§ط، ط§ظ„ط²ط± ظ…طھظ†ط§ط³ظ‚ طھظ…ط§ظ…ط§ظ‹ ظ…ط¹ ط§ظ„ط­ظ‚ظˆظ„ */
+  background: var(--brand-navy); /* ط§ظ„ط¨ط¯ط، ط¨ظ„ظˆظ† ط§ظ„ظ‡ظˆظٹط© ط§ظ„ط£ط³ط§ط³ظٹ ظ…ط¨ط§ط´ط±ط© */
   color: white;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(15, 31, 56, 0.15); /* إضافة ظل خفيف للزر ليعطيه أبعاد */
+  box-shadow: 0 4px 12px rgba(15, 31, 56, 0.15); /* ط¥ط¶ط§ظپط© ط¸ظ„ ط®ظپظٹظپ ظ„ظ„ط²ط± ظ„ظٹط¹ط·ظٹظ‡ ط£ط¨ط¹ط§ط¯ */
 }
 
 .btn-primary:hover {
-  background: #1a3154; /* لون أفتح تكة عند الـ hover */
+  background: #1a3154; /* ظ„ظˆظ† ط£ظپطھط­ طھظƒط© ط¹ظ†ط¯ ط§ظ„ظ€ hover */
   box-shadow: 0 6px 16px rgba(15, 31, 56, 0.25);
-  transform: translateY(-1px); /* تقليل الرفع ليكون الحركة طبيعية وانسيابية */
+  transform: translateY(-1px); /* طھظ‚ظ„ظٹظ„ ط§ظ„ط±ظپط¹ ظ„ظٹظƒظˆظ† ط§ظ„ط­ط±ظƒط© ط·ط¨ظٹط¹ظٹط© ظˆط§ظ†ط³ظٹط§ط¨ظٹط© */
 }
 
 .btn-primary:active {
-  transform: translateY(0); /* تأثير الضغط لأسفل عند النقر */
+  transform: translateY(0); /* طھط£ط«ظٹط± ط§ظ„ط¶ط؛ط· ظ„ط£ط³ظپظ„ ط¹ظ†ط¯ ط§ظ„ظ†ظ‚ط± */
 }
 
 .toggle-text {
   text-align: center;
   margin-top: 24px;
-  color: #64748b;
-  font-size: 0.88rem; /* تكبير الخط قليلاً ليصبح مقروءاً ومريحاً (14px تقريباً) */
+  color: var(--text-secondary);
+  font-size: 0.88rem; /* طھظƒط¨ظٹط± ط§ظ„ط®ط· ظ‚ظ„ظٹظ„ط§ظ‹ ظ„ظٹطµط¨ط­ ظ…ظ‚ط±ظˆط،ط§ظ‹ ظˆظ…ط±ظٹط­ط§ظ‹ (14px طھظ‚ط±ظٹط¨ط§ظ‹) */
 }
 
 .toggle-text span {
-  color: #0F1F38;
-  font-weight: 700; /* تعديل الخطأ الإملائي من 70 إلى 700 */
+  color: var(--text-value);
+  font-weight: 700; /* طھط¹ط¯ظٹظ„ ط§ظ„ط®ط·ط£ ط§ظ„ط¥ظ…ظ„ط§ط¦ظٹ ظ…ظ† 70 ط¥ظ„ظ‰ 700 */
   cursor: pointer;
-  margin-left: 4px; /* إضافة مسافة مناسبة تفصل النصين */
+  margin-left: 4px; /* ط¥ط¶ط§ظپط© ظ…ط³ط§ظپط© ظ…ظ†ط§ط³ط¨ط© طھظپطµظ„ ط§ظ„ظ†طµظٹظ† */
 }
 
 .toggle-text span:hover {
@@ -172,7 +172,7 @@
 }
 
 .password-input-wrapper input {
-  padding-right: 42px; /* ترك مسافة داخلية للأيقونة لكي لا يتداخل النص معها */
+  padding-right: 42px; /* طھط±ظƒ ظ…ط³ط§ظپط© ط¯ط§ط®ظ„ظٹط© ظ„ظ„ط£ظٹظ‚ظˆظ†ط© ظ„ظƒظٹ ظ„ط§ ظٹطھط¯ط§ط®ظ„ ط§ظ„ظ†طµ ظ…ط¹ظ‡ط§ */
 }
 
 .password-toggle-btn {
@@ -180,7 +180,7 @@
   right: 12px;
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -191,8 +191,8 @@
 }
 
 .password-toggle-btn:hover {
-  color: #0f1f38;
-  background-color: #f1f5f9;
+  color: var(--text-value);
+  background-color: var(--bg-secondary);
 }
 
 .password-toggle-btn:focus {

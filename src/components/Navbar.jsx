@@ -2,7 +2,6 @@ import "./Navbar.css";
 
 import {
   Bell,
-  Languages,
   ArrowLeft,
   Settings,
   Moon,
@@ -10,53 +9,79 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
+
+import { useTranslation } from "react-i18next";
+
 import { useTheme } from "../context/ThemeContext";
+
+import { getInitials } from "../utils/format";
+
 
 function Navbar({
   title,
   showBackButton = false,
   showSearch = false,
   showProfile = true,
-  showLanguage = true,
   showNotifications = true,
   notificationCount = 3,
   children,
 }) {
   const navigate = useNavigate();
 
-  const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
 
-  // جلب بيانات الأدمن المخزنة
-  const storedUser = JSON.parse(localStorage.getItem("user")) || {
+  const {
+    theme,
+    toggleTheme,
+  } = useTheme();
+
+
+  /* =========================================================
+     Current User
+  ========================================================= */
+
+  let storedUser = null;
+
+  try {
+    storedUser =
+      JSON.parse(
+        localStorage.getItem("user")
+      ) || null;
+  } catch {
+    storedUser = null;
+  }
+
+
+  const user = storedUser || {
     name: "System Administrator",
     email: "admin@admin.com",
     role: "ADMIN",
     avatar: null,
   };
 
-  // استخراج الأحرف الأولى
-  const getInitials = (name) => {
-    if (!name) return "SA";
 
-    const parts = name.split(" ");
-
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-
-    return name.slice(0, 2).toUpperCase();
-  };
+  /* =========================================================
+     Render
+  ========================================================= */
 
   return (
     <nav className="navbar">
-      {/* القسم الأيسر */}
+
+      {/* =====================================================
+          Left
+      ====================================================== */}
+
       <div className="navbar-left">
+
         <div className="title-container">
+
           {showBackButton && (
             <button
+              type="button"
               className="nav-back-icon-btn"
               onClick={() => navigate(-1)}
-              title="Back"
+              title={t("navbar.back")}
+              aria-label={t("navbar.back")}
             >
               <ArrowLeft size={18} />
             </button>
@@ -67,36 +92,50 @@ function Navbar({
               {title}
             </h1>
           )}
+
         </div>
+
 
         {showSearch && (
           <div className="search-box">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={t(
+                "navbar.searchPlaceholder"
+              )}
+              aria-label={t(
+                "navbar.searchPlaceholder"
+              )}
             />
           </div>
         )}
 
+
         {children}
+
       </div>
 
-      {/* القسم الأيمن */}
+
+      {/* =====================================================
+          Right
+      ====================================================== */}
+
       <div className="navbar-right">
 
-        {/* Theme Toggle */}
+        {/* Theme */}
         <button
+          type="button"
           className="navbar-icon-btn theme-toggle-btn"
           onClick={toggleTheme}
           title={
             theme === "light"
-              ? "Switch to dark mode"
-              : "Switch to light mode"
+              ? t("navbar.switchToDark")
+              : t("navbar.switchToLight")
           }
           aria-label={
             theme === "light"
-              ? "Switch to dark mode"
-              : "Switch to light mode"
+              ? t("navbar.switchToDark")
+              : t("navbar.switchToLight")
           }
         >
           {theme === "light" ? (
@@ -106,66 +145,82 @@ function Navbar({
           )}
         </button>
 
-        {/* Language */}
-        {showLanguage && (
-          <button
-            className="navbar-lan"
-            title="Change Language"
-          >
-            <Languages size={20} />
-          </button>
-        )}
 
         {/* Notifications */}
         {showNotifications && (
           <button
+            type="button"
             className="notification-btn"
-            title="Notifications"
+            title={t("navbar.notifications")}
+            aria-label={t("navbar.notifications")}
           >
             <Bell size={20} />
 
             {notificationCount > 0 && (
-              <span className="badge">
+              <span className="notification-badge">
                 {notificationCount}
               </span>
             )}
           </button>
         )}
 
+
         {/* Profile */}
         {showProfile && (
           <button
+            type="button"
             className="profile-btn"
-            onClick={() => navigate("/settings")}
-            title="Admin Profile & Settings"
+            onClick={() =>
+              navigate("/settings")
+            }
+            title={t(
+              "navbar.profileSettings"
+            )}
           >
-            {storedUser.avatar ? (
+
+            {user.avatar ? (
               <img
-                src={storedUser.avatar}
-                alt={storedUser.name}
+                src={user.avatar}
+                alt={user.name}
                 className="profile-img"
               />
             ) : (
               <div className="profile-avatar-placeholder">
-                {getInitials(storedUser.name)}
+                {getInitials(
+                  user.name ||
+                    "System Administrator"
+                )}
               </div>
             )}
 
+
             <div className="profile-info">
-              <h4>{storedUser.name}</h4>
+
+              <h4>
+                {user.name ||
+                  "System Administrator"}
+              </h4>
+
               <p>
-                {storedUser.role || "Administrator"}
+                {user.role ||
+                  t("navbar.administrator")}
               </p>
+
             </div>
+
 
             <div className="settings-badge-icon">
               <Settings size={14} />
             </div>
+
           </button>
         )}
+
       </div>
+
     </nav>
   );
 }
+
 
 export default Navbar;
