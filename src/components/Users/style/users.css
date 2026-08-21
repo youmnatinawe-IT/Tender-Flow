@@ -1,10 +1,10 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    1. Page & Layout Structure
    ========================================================================== */
 .users_page {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: var(--bg-primary);
   width: 100%;
 }
 
@@ -28,8 +28,8 @@
 }
 
 .user-stat-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -54,21 +54,21 @@
   flex-shrink: 0;
 }
 
-.icon-blue { background: #eff6ff; color: #2563eb; }
-.icon-green { background: #f0fdf4; color: #16a34a; }
-.icon-red { background: #fef2f2; color: #dc2626; }
-.icon-amber { background: #fffbeb; color: #d97706; }
+.icon-blue { background: var(--info-bg); color: var(--info); }
+.icon-green { background: var(--success-bg-soft); color: var(--success); }
+.icon-red { background: var(--danger-bg); color: var(--danger); }
+.icon-amber { background: var(--warning-bg-soft); color: #d97706; }
 
 .stat-info h3 {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .stat-info p {
   margin: 2px 0 0 0;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -81,18 +81,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #ffffff;
+  background: var(--bg-surface);
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
 }
 
 .search-box {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-strong);
   padding: 0 12px;
   border-radius: 8px;
   flex: 1;
@@ -113,7 +113,7 @@
   height: 38px;
   width: 100%;
   font-size: 14px;
-  color: #0f172a;
+  color: var(--text-primary);
   padding: 0;
 }
 
@@ -125,12 +125,12 @@
 
 .filter-selects select {
   height: 40px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 0 12px;
-  background: #fff;
+  background: var(--bg-surface);
   font-size: 14px;
-  color: #334155;
+  color: var(--text-strong);
   outline: none;
   cursor: pointer;
   transition: border-color 0.2s;
@@ -164,12 +164,12 @@
 }
 
 .reset-btn {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--bg-secondary);
+  color: var(--text-label);
 }
 
 .reset-btn:hover { 
-  background: #e2e8f0; 
+  background: var(--bg-hover); 
 }
 
 .add-user-btn,
@@ -195,9 +195,9 @@
    4. Table Section
    ========================================================================== */
 .table-container {
-  background: #fff;
+  background: var(--bg-surface);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   overflow-x: auto;
 }
 
@@ -210,13 +210,13 @@
 .users-table th, 
 .users-table td {
   padding: 14px 18px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-light);
   font-size: 14px;
 }
 
 .users-table th {
-  background: #f8fafc;
-  color: #475569;
+  background: var(--bg-primary);
+  color: var(--text-label);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -228,21 +228,21 @@
 }
 
 .user-info strong {
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .user-info p {
   margin: 0;
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #e0e7ff;
-  color: #4338ca;
+  background: var(--indigo-bg);
+  color: var(--primary);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -251,11 +251,11 @@
 }
 
 .role-badge {
-  background: #f1f5f9;
+  background: var(--bg-secondary);
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
-  color: #334155;
+  color: var(--text-strong);
   font-weight: 500;
   display: inline-block;
   white-space: nowrap;
@@ -270,11 +270,11 @@
   text-transform: capitalize;
 }
 
-.status-badge.active { background: #dcfce7; color: #15803d; }
+.status-badge.active { background: var(--success-tint); color: var(--success-strong); }
 .status-badge.suspended,
 .status-badge.banned,
-.status-badge.rejected { background: #fee2e2; color: #b91c1c; }
-.status-badge.pending { background: #fef3c7; color: #b45309; }
+.status-badge.rejected { background: var(--danger-tint); color: var(--danger-strong); }
+.status-badge.pending { background: var(--warning-tint); color: var(--warning-strong); }
 
 .actions {
   display: flex;
@@ -291,21 +291,21 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #f8fafc;
-  color: #64748b;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
   transition: all 0.2s;
 }
 
-.action-btn.view:hover { background: #eff6ff; color: #2563eb; }
-.action-btn.edit:hover { background: #f0fdf4; color: #16a34a; }
-.action-btn.suspend:hover { background: #fffbeb; color: #d97706; }
-.action-btn.activate:hover { background: #f0fdf4; color: #16a34a; }
-.action-btn.delete:hover { background: #fef2f2; color: #dc2626; }
+.action-btn.view:hover { background: var(--info-bg); color: var(--info); }
+.action-btn.edit:hover { background: var(--success-bg-soft); color: var(--success); }
+.action-btn.suspend:hover { background: var(--warning-bg-soft); color: #d97706; }
+.action-btn.activate:hover { background: var(--success-bg-soft); color: var(--success); }
+.action-btn.delete:hover { background: var(--danger-bg); color: var(--danger); }
 
 .no-data {
   text-align: center;
   padding: 40px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 /* ==========================================================================
@@ -327,7 +327,7 @@
 .user-modal, 
 .confirm-modal,
 .user-details-modal {
-  background: #ffffff;
+  background: var(--bg-surface);
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
@@ -353,26 +353,26 @@
 
 .modal-top-bar {
   padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .modal-header h2,
 .title-area h2 {
   margin: 0;
   font-size: 20px;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .modal-header p,
 .sub-id {
   margin: 4px 0 0 0;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
 .close-btn, 
 .close-icon {
-  background: #f1f5f9;
+  background: var(--bg-secondary);
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -381,14 +381,14 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-secondary);
   transition: background 0.2s;
 }
 
 .close-btn:hover, 
 .close-icon:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 /* Form Styles Inside Modals */
@@ -402,19 +402,19 @@
 .form-group label {
   font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-strong);
 }
 
 .form-group input, 
 .form-group select,
 .form-group textarea {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 8px 12px;
   outline: none;
   font-size: 14px;
-  color: #0f172a;
-  background-color: #fff;
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -458,8 +458,8 @@
   transition: background 0.2s;
 }
 
-.cancel-btn { background: #f1f5f9; color: #475569; }
-.cancel-btn:hover { background: #e2e8f0; }
+.cancel-btn { background: var(--bg-secondary); color: var(--text-label); }
+.cancel-btn:hover { background: var(--bg-hover); }
 
 .save-btn { background: #2563eb; color: #fff; }
 .save-btn:hover { background: #1d4ed8; }
@@ -488,8 +488,8 @@
   justify-content: center;
 }
 
-.warning-icon { background: #fef2f2; color: #dc2626; }
-.suspend-icon { background: #fffbeb; color: #d97706; }
+.warning-icon { background: var(--danger-bg); color: var(--danger); }
+.suspend-icon { background: var(--warning-bg-soft); color: #d97706; }
 
 /* ==========================================================================
    6. User Details Drawer & Specific Cards
@@ -497,7 +497,7 @@
 .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-label);
   margin: 0 0 14px 0;
 }
 
@@ -512,8 +512,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
   border-radius: 10px;
 }
 
@@ -521,8 +521,8 @@
   width: 38px;
   height: 38px;
   border-radius: 8px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--info-bg);
+  color: var(--info);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -538,13 +538,13 @@
 
 .card-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .card-value {
   font-size: 13px;
-  color: #0f172a;
+  color: var(--text-primary);
   font-weight: 600;
   word-break: break-word;
 }
@@ -553,11 +553,11 @@
 .loading-state {
   text-align: center;
   padding: 40px 0;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .loading-state svg {
-  color: #2563eb;
+  color: var(--info);
   margin-bottom: 8px;
 }
 

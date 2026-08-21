@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import PermissionGroup from "./PermissionGroup";
+import { normalizeRoleCode } from "../../utils/format";
 
 /* =========================================================
    Module Labels
@@ -31,33 +32,6 @@ const moduleLabels = {
   COMMITTEE: "Committees",
   CONTRACT: "Contracts",
   EVALUATION: "Evaluations",
-};
-
-/* =========================================================
-   Normalize Role Code
-========================================================= */
-
-const normalizeRoleCode = (
-  value
-) => {
-  return value
-    .toUpperCase()
-    .replace(
-      /[^A-Z0-9_ ]/g,
-      ""
-    )
-    .replace(
-      /\s+/g,
-      "_"
-    )
-    .replace(
-      /_+/g,
-      "_"
-    )
-    .replace(
-      /^_+|_+$/g,
-      ""
-    );
 };
 
 /* =========================================================
@@ -886,25 +860,7 @@ export default function RoleDetails({
           </p>
         </div>
 
-        <div className="rp-permission-search">
-          <Search
-            size={16}
-          />
-
-          <input
-            type="text"
-            placeholder="Search permissions..."
-            value={search}
-            onChange={(
-              event
-            ) =>
-              setSearch(
-                event.target
-                  .value
-              )
-            }
-          />
-        </div>
+      
       </div>
 
       {/* ===================================================

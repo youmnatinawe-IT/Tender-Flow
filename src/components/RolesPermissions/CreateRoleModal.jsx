@@ -8,6 +8,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+import { normalizeRoleCode } from "../../utils/format";
+
 export default function CreateRoleModal({
   onClose,
   onCreate,
@@ -27,26 +29,6 @@ export default function CreateRoleModal({
 
   const [error, setError] =
     useState("");
-
-  /* =========================================================
-     Normalize Role Code
-
-     Example:
-     Tender Manager
-     =>
-     TENDER_MANAGER
-  ========================================================= */
-
-  const normalizeRoleCode = (
-    value
-  ) => {
-    return value
-      .toUpperCase()
-      .replace(/[^A-Z0-9_ ]/g, "")
-      .replace(/\s+/g, "_")
-      .replace(/_+/g, "_")
-      .replace(/^_+|_+$/g, "");
-  };
 
   /* =========================================================
      Code Change

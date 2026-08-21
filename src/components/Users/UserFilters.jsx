@@ -35,30 +35,19 @@ export default function UserFilters({ filters, setFilters }) {
         <select name="role" value={filters.role} onChange={handleChange}>
           <option value="All">All Roles</option>
           <option value="Super Admin">Super Admin</option>
-          <option value="Publisher Admin">Publisher Admin</option>
+          <option value="SYSTEM_EMPLOYEE">SYSTEM_EMPLOYEE </option>
           <option value="Publisher Manager">Publisher Manager</option>
-          <option value="Bidder Admin">Bidder Admin</option>
+          <option value="Bidder Admin"> Admin</option>
           <option value="Bidder Manager">Bidder Manager</option>
-          <option value="Support">Support</option>
-          <option value="Auditor">Auditor</option>
-        </select>
-
-        <select
-          name="organization"
-          value={filters.organization}
-          onChange={handleChange}
-        >
-          <option value="All">All Organizations</option>
-          <option value="Ministry of ICT">Ministry of ICT</option>
-          <option value="ABC Company">ABC Company</option>
-          <option value="XYZ Ltd">XYZ Ltd</option>
+         
         </select>
 
         <select name="status" value={filters.status} onChange={handleChange}>
           <option value="All">All Statuses</option>
           <option value="Active">Active</option>
           <option value="Pending">Pending</option>
-          <option value="Suspended">Suspended</option>
+          <option value="Banned">Banned</option>
+          <option value="Rejected">Rejected</option>
         </select>
       </div>
 

@@ -26,7 +26,7 @@ import SuspendUserModal from "./SuspendUserModal";
 ========================================================= */
 
 const normalizeStatus = (status) =>
-  String(status || "active").toLowerCase();
+  String(status || "active").trim().toLowerCase();
 
 const capitalizeStatus = (status) => {
   const normalized = normalizeStatus(status);
@@ -53,10 +53,7 @@ const getUserRole = (user) => {
     }
   */
 
-  if (
-    user.role &&
-    typeof user.role === "object"
-  ) {
+  if (user.role && typeof user.role === "object") {
     return (
       user.role.name ||
       user.role.code ||
@@ -69,10 +66,7 @@ const getUserRole = (user) => {
     If roles array exists
   */
 
-  if (
-    Array.isArray(user.roles) &&
-    user.roles.length > 0
-  ) {
+  if (Array.isArray(user.roles) && user.roles.length > 0) {
     const role = user.roles[0];
 
     if (typeof role === "object") {
@@ -87,11 +81,7 @@ const getUserRole = (user) => {
     return role;
   }
 
-  return (
-    user.role ||
-    user.type ||
-    "N/A"
-  );
+  return user.role || user.type || "N/A";
 };
 
 /* =========================================================
@@ -164,29 +154,21 @@ const formatLastLogin = (user) => {
 ========================================================= */
 
 export default function UserTable({ filters }) {
-  const [selectedUser, setSelectedUser] =
-    useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  const [showDrawer, setShowDrawer] =
-    useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
 
-  const [showModal, setShowModal] =
-    useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  const [showAssignRole, setShowAssignRole] =
-    useState(false);
+  const [showAssignRole, setShowAssignRole] = useState(false);
 
-  const [showSuspend, setShowSuspend] =
-    useState(false);
+  const [showSuspend, setShowSuspend] = useState(false);
 
-  const [users, setUsers] =
-    useState([]);
+  const [users, setUsers] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState(null);
+  const [error, setError] = useState(null);
 
   /* =========================================================
      Fetch Users + Organizations
@@ -276,17 +258,16 @@ export default function UserTable({ filters }) {
            Enrich Users
         ===================================================== */
 
-        const enrichedUsers =
-          userList.map((u) => ({
-            ...u,
+        const enrichedUsers = userList.map((u) => ({
+          ...u,
 
-            organization:
-              orgMap.get(
-                String(u?.org_id)
-              ) ||
-              u?.organization ||
-              "N/A",
-          }));
+          organization:
+            orgMap.get(
+              String(u?.org_id)
+            ) ||
+            u?.organization ||
+            "N/A",
+        }));
 
         setUsers(enrichedUsers);
       } catch (err) {
@@ -318,61 +299,54 @@ export default function UserTable({ filters }) {
       status: "All",
     };
 
-  const filteredUsers = users.filter(
-    (user) => {
-      const search = String(
-        safeFilters.search || ""
-      ).toLowerCase();
+  const filteredUsers = users.filter((user) => {
+    const search = String(
+      safeFilters.search || ""
+    ).toLowerCase();
 
-      const userName = [
-        user?.f_name,
-        user?.l_name,
-        user?.name,
-        user?.fullName,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+    const userName = [
+      user?.f_name,
+      user?.l_name,
+      user?.name,
+      user?.fullName,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
 
-      const matchesSearch =
-        userName.includes(search) ||
-        String(user?.email || "")
-          .toLowerCase()
-          .includes(search);
+    const matchesSearch =
+      userName.includes(search) ||
+      String(user?.email || "")
+        .toLowerCase()
+        .includes(search);
 
-      const userRole =
-        getUserRole(user);
+    const userRole = getUserRole(user);
 
-      const matchesRole =
-        safeFilters.role === "All" ||
-        userRole === safeFilters.role;
+    const matchesRole =
+      safeFilters.role === "All" ||
+      userRole === safeFilters.role;
 
-      const userOrg =
-        getOrganizationName(user);
+    const userOrg =
+      getOrganizationName(user);
 
-      const matchesOrg =
-        safeFilters.organization ===
-          "All" ||
-        userOrg ===
-          safeFilters.organization;
+    const matchesOrg =
+      safeFilters.organization === "All" ||
+      userOrg === safeFilters.organization;
 
-      const matchesStatus =
-        safeFilters.status === "All" ||
-        normalizeStatus(
-          user?.status
-        ) ===
-          String(
-            safeFilters.status
-          ).toLowerCase();
+    const matchesStatus =
+      safeFilters.status === "All" ||
+      normalizeStatus(user?.status) ===
+        String(
+          safeFilters.status
+        ).toLowerCase();
 
-      return (
-        matchesSearch &&
-        matchesRole &&
-        matchesOrg &&
-        matchesStatus
-      );
-    }
-  );
+    return (
+      matchesSearch &&
+      matchesRole &&
+      matchesOrg &&
+      matchesStatus
+    );
+  });
 
   /* =========================================================
      Update User Status
@@ -384,8 +358,7 @@ export default function UserTable({ filters }) {
   ) => {
     setUsers((prevUsers) =>
       prevUsers.map((u) => {
-        const id =
-          u?.id || u?._id;
+        const id = u?.id || u?._id;
 
         if (String(id) === String(userId)) {
           return {
@@ -426,20 +399,9 @@ export default function UserTable({ filters }) {
           return {
             ...u,
 
-            /*
-              Store role object
-              because backend may
-              return role object.
-            */
-
             role:
               updatedRole?.role ||
               updatedRole,
-
-            /*
-              Also keep roles array
-              if needed elsewhere.
-            */
 
             roles: [
               updatedRole?.role ||
@@ -451,10 +413,6 @@ export default function UserTable({ filters }) {
         return u;
       })
     );
-
-    /*
-      Update selected user as well
-    */
 
     setSelectedUser((prev) => {
       if (!prev) return prev;
@@ -555,182 +513,186 @@ export default function UserTable({ filters }) {
 
           <tbody>
             {filteredUsers.length > 0 ? (
-              filteredUsers.map(
-                (user) => {
-                  const status =
-                    normalizeStatus(
-                      user?.status
-                    );
+              filteredUsers.map((user) => {
+                /* =================================================
+                   IMPORTANT:
+                   Normalize status once.
+                   Assign Role will ONLY appear when this is active.
+                ================================================= */
 
-                  const isPending =
-                    status ===
-                    "pending";
+                const status =
+                  normalizeStatus(
+                    user?.status
+                  );
 
-                  const isActive =
-                    status ===
-                    "active";
+                const isPending =
+                  status === "pending";
 
-                  const isRejected =
-                    status ===
-                    "rejected";
+                const isActive =
+                  status === "active";
 
-                  const isBanned =
-                    status ===
-                    "banned";
+                const isRejected =
+                  status === "rejected";
 
-                  const userId =
-                    user?.id ||
-                    user?._id;
+                const isBanned =
+                  status === "banned";
 
-                  const displayName =
-                    user?.name ||
-                    user?.fullName ||
-                    `${user?.f_name || ""} ${
-                      user?.l_name || ""
-                    }`.trim() ||
-                    "Unknown User";
+                const userId =
+                  user?.id ||
+                  user?._id;
 
-                  return (
-                    <tr
-                      key={userId}
-                    >
-                      {/* =================================================
-                          USER
-                      ================================================= */}
+                const displayName =
+                  user?.name ||
+                  user?.fullName ||
+                  `${user?.f_name || ""} ${
+                    user?.l_name || ""
+                  }`.trim() ||
+                  "Unknown User";
 
-                      <td>
-                        <div className="user-info">
-                          <div className="avatar">
-                            {displayName
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
+                return (
+                  <tr key={userId}>
 
-                          <div>
-                            <strong>
-                              {
-                                displayName
-                              }
-                            </strong>
+                    {/* =================================================
+                        USER
+                    ================================================= */}
 
-                            <p>
-                              {user?.phone ||
-                                "N/A"}
-                            </p>
-                          </div>
+                    <td>
+                      <div className="user-info">
+                        <div className="avatar">
+                          {displayName
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
-                      </td>
 
-                      {/* =================================================
-                          EMAIL
-                      ================================================= */}
+                        <div>
+                          <strong>
+                            {displayName}
+                          </strong>
 
-                      <td>
-                        {user?.email ||
-                          "N/A"}
-                      </td>
+                          <p>
+                            {user?.phone ||
+                              "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
 
-                      {/* =================================================
-                          ORGANIZATION
-                      ================================================= */}
+                    {/* =================================================
+                        EMAIL
+                    ================================================= */}
 
-                      <td>
-                        {getOrganizationName(
+                    <td>
+                      {user?.email ||
+                        "N/A"}
+                    </td>
+
+                    {/* =================================================
+                        ORGANIZATION
+                    ================================================= */}
+
+                    <td>
+                      {getOrganizationName(
+                        user
+                      )}
+                    </td>
+
+                    {/* =================================================
+                        ROLE
+                    ================================================= */}
+
+                    <td>
+                      <span className="role-badge">
+                        {getUserRole(
                           user
                         )}
-                      </td>
+                      </span>
+                    </td>
 
-                      {/* =================================================
-                          ROLE
-                      ================================================= */}
+                    {/* =================================================
+                        STATUS
+                    ================================================= */}
 
-                      <td>
-                        <span className="role-badge">
-                          {getUserRole(
-                            user
-                          )}
-                        </span>
-                      </td>
+                    <td>
+                      <span
+                        className={`status-badge ${status}`}
+                      >
+                        {capitalizeStatus(
+                          user?.status
+                        )}
+                      </span>
+                    </td>
 
-                      {/* =================================================
-                          STATUS
-                      ================================================= */}
+                    {/* =================================================
+                        LAST LOGIN
+                    ================================================= */}
 
-                      <td>
-                        <span
-                          className={`status-badge ${status}`}
+                    <td>
+                      {formatLastLogin(
+                        user
+                      )}
+                    </td>
+
+                    {/* =================================================
+                        ACTIONS
+                    ================================================= */}
+
+                    <td>
+                      <div className="actions">
+
+                        {/* ============================================
+                            1. VIEW
+                        ============================================ */}
+
+                        <button
+                          className="action-btn view"
+                          title="View Details"
+                          onClick={() => {
+                            setSelectedUser(
+                              user
+                            );
+
+                            setShowDrawer(
+                              true
+                            );
+                          }}
                         >
-                          {capitalizeStatus(
-                            user?.status
-                          )}
-                        </span>
-                      </td>
+                          <Eye size={16} />
+                        </button>
 
-                      {/* =================================================
-                          LAST LOGIN
-                      ================================================= */}
+                        {/* ============================================
+                            2. EDIT
+                        ============================================ */}
 
-                      <td>
-                        {formatLastLogin(
-                          user
-                        )}
-                      </td>
+                        <button
+                          className="action-btn edit"
+                          title="Edit User"
+                          onClick={() => {
+                            setSelectedUser(
+                              user
+                            );
 
-                      {/* =================================================
-                          ACTIONS
-                      ================================================= */}
+                            setShowModal(
+                              true
+                            );
+                          }}
+                        >
+                          <Pencil size={16} />
+                        </button>
 
-                      <td>
-                        <div className="actions">
+                        {/* ============================================
+                            3. ASSIGN ROLE
+                            
+                            IMPORTANT:
+                            هذا الزر يظهر فقط إذا كان
+                            status = ACTIVE
+                            
+                            PENDING  -> لا يظهر
+                            REJECTED -> لا يظهر
+                            BANNED   -> لا يظهر
+                            ACTIVE   -> يظهر
+                        ============================================ */}
 
-                          {/* ============================================
-                              1. VIEW
-                          ============================================ */}
-
-                          <button
-                            className="action-btn view"
-                            title="View Details"
-                            onClick={() => {
-                              setSelectedUser(
-                                user
-                              );
-
-                              setShowDrawer(
-                                true
-                              );
-                            }}
-                          >
-                            <Eye
-                              size={16}
-                            />
-                          </button>
-
-                          {/* ============================================
-                              2. EDIT
-                          ============================================ */}
-
-                          <button
-                            className="action-btn edit"
-                            title="Edit User"
-                            onClick={() => {
-                              setSelectedUser(
-                                user
-                              );
-
-                              setShowModal(
-                                true
-                              );
-                            }}
-                          >
-                            <Pencil
-                              size={16}
-                            />
-                          </button>
-
-                          {/* ============================================
-                              3. ASSIGN ROLE
-                          ============================================ */}
-
+                        {isActive && (
                           <button
                             className="action-btn assign-role"
                             title="Assign Role"
@@ -748,109 +710,109 @@ export default function UserTable({ filters }) {
                               size={16}
                             />
                           </button>
+                        )}
 
-                          {/* ============================================
-                              4. PENDING
-                              Accept / Reject
-                          ============================================ */}
+                        {/* ============================================
+                            4. PENDING
+                            Accept / Reject
+                        ============================================ */}
 
-                          {isPending && (
-                            <button
-                              className="action-btn activate"
-                              title="Review User"
-                              onClick={() => {
-                                setSelectedUser(
-                                  user
-                                );
+                        {isPending && (
+                          <button
+                            className="action-btn activate"
+                            title="Review User"
+                            onClick={() => {
+                              setSelectedUser(
+                                user
+                              );
 
-                                setShowSuspend(
-                                  true
-                                );
-                              }}
-                            >
-                              <UserCheck
-                                size={16}
-                              />
-                            </button>
-                          )}
+                              setShowSuspend(
+                                true
+                              );
+                            }}
+                          >
+                            <UserCheck
+                              size={16}
+                            />
+                          </button>
+                        )}
 
-                          {/* ============================================
-                              5. ACTIVE
-                              Ban
-                          ============================================ */}
+                        {/* ============================================
+                            5. ACTIVE
+                            Ban
+                        ============================================ */}
 
-                          {isActive && (
-                            <button
-                              className="action-btn suspend"
-                              title="Ban User"
-                              onClick={() => {
-                                setSelectedUser(
-                                  user
-                                );
+                        {isActive && (
+                          <button
+                            className="action-btn suspend"
+                            title="Ban User"
+                            onClick={() => {
+                              setSelectedUser(
+                                user
+                              );
 
-                                setShowSuspend(
-                                  true
-                                );
-                              }}
-                            >
-                              <UserX
-                                size={16}
-                              />
-                            </button>
-                          )}
+                              setShowSuspend(
+                                true
+                              );
+                            }}
+                          >
+                            <UserX
+                              size={16}
+                            />
+                          </button>
+                        )}
 
-                          {/* ============================================
-                              6. REJECTED
-                              Resend
-                          ============================================ */}
+                        {/* ============================================
+                            6. REJECTED
+                            Resend
+                        ============================================ */}
 
-                          {isRejected && (
-                            <button
-                              className="action-btn activate"
-                              title="Send for Review Again"
-                              onClick={() => {
-                                setSelectedUser(
-                                  user
-                                );
+                        {isRejected && (
+                          <button
+                            className="action-btn activate"
+                            title="Send for Review Again"
+                            onClick={() => {
+                              setSelectedUser(
+                                user
+                              );
 
-                                setShowSuspend(
-                                  true
-                                );
-                              }}
-                            >
-                              <UserCheck
-                                size={16}
-                              />
-                            </button>
-                          )}
+                              setShowSuspend(
+                                true
+                              );
+                            }}
+                          >
+                            <UserCheck
+                              size={16}
+                            />
+                          </button>
+                        )}
 
-                          {/* ============================================
-                              7. BANNED
-                          ============================================ */}
+                        {/* ============================================
+                            7. BANNED
+                        ============================================ */}
 
-                          {isBanned && (
-                            <button
-                              className="action-btn"
-                              title="Banned Account"
-                              disabled
-                              style={{
-                                opacity:
-                                  0.45,
-                                cursor:
-                                  "not-allowed",
-                              }}
-                            >
-                              <UserX
-                                size={16}
-                              />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                }
-              )
+                        {isBanned && (
+                          <button
+                            className="action-btn"
+                            title="Banned Account"
+                            disabled
+                            style={{
+                              opacity: 0.45,
+                              cursor:
+                                "not-allowed",
+                            }}
+                          >
+                            <UserX
+                              size={16}
+                            />
+                          </button>
+                        )}
+
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td
@@ -895,36 +857,33 @@ export default function UserTable({ filters }) {
             setShowModal(false)
           }
           onSave={(updatedUser) => {
-            setUsers(
-              (prevUsers) =>
-                prevUsers.map(
-                  (u) => {
-                    const updatedId =
-                      updatedUser?.id ||
-                      updatedUser?._id;
+            setUsers((prevUsers) =>
+              prevUsers.map((u) => {
+                const updatedId =
+                  updatedUser?.id ||
+                  updatedUser?._id;
 
-                    const currentId =
-                      u?.id ||
-                      u?._id;
+                const currentId =
+                  u?.id ||
+                  u?._id;
 
-                    if (
-                      updatedId &&
-                      String(
-                        currentId
-                      ) ===
-                        String(
-                          updatedId
-                        )
-                    ) {
-                      return {
-                        ...u,
-                        ...updatedUser,
-                      };
-                    }
+                if (
+                  updatedId &&
+                  String(
+                    currentId
+                  ) ===
+                    String(
+                      updatedId
+                    )
+                ) {
+                  return {
+                    ...u,
+                    ...updatedUser,
+                  };
+                }
 
-                    return u;
-                  }
-                )
+                return u;
+              })
             );
           }}
         />
