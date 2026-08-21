@@ -141,11 +141,6 @@ export function normalizeError(error) {
   };
 }
 
-export function getFieldError(error, fieldName) {
-  if (!error || !error.fields) return undefined;
-  return error.fields[fieldName];
-}
-
 export function logError(error) {
   const safe = normalizeError(error);
 

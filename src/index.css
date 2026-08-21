@@ -1,28 +1,7 @@
 /* index.css */
-:root,
-[data-theme="light"] {
-  --bg-main: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-input: #f1f5f9;
-  --bg-hover: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --border-color: #e2e8f0;
-  --card-bg: #ffffff;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
 
-[data-theme="dark"] {
-  --bg-main: #0b0f19;        /* خلفية الصفحة الرئيسية */
-  --bg-surface: #111827;     /* خلفية الـ Navbar, Sidebar, Card */
-  --bg-input: #1f2937;       /* حقول الإدخال والأزرار الفرعية */
-  --bg-hover: #374151;       /* خلفيات الـ Hover */
-  --text-primary: #f9fafb;   /* النصوص الرئيسية */
-  --text-secondary: #9ca3af; /* النصوص الفرعية */
-  --border-color: #1f2937;   /* الحدود والفاصل */
-  --card-bg: #111827;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
+/* Theme variables live in src/styles/theme.css
+   (imported in main.jsx before this file). */
 
 /* ضبط خلفية ونصوص التطبيق بالكامل */
 body, #root {

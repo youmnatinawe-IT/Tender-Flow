@@ -19,24 +19,6 @@ export const getAllTenders = async () => {
 };
 
 /* =========================================================
-   Get Tenders - Current User
-========================================================= */
-
-export const getUserTenders = async () => {
-  const response = await API.get("/api/tenders");
-
-  if (Array.isArray(response?.data)) {
-    return response.data;
-  }
-
-  if (Array.isArray(response?.data?.data)) {
-    return response.data.data;
-  }
-
-  return [];
-};
-
-/* =========================================================
    Get Tender Attachments
 ========================================================= */
 
