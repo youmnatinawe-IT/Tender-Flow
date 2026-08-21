@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
+  LogOut,
 } from "lucide-react";
 
 import styles from "./SideBar.module.css";
@@ -124,6 +125,17 @@ const Sidebar = () => {
     userType === "ADMIN" ||
     userType === "SYSTEM_ADMIN" ||
     userType === "SUPER_ADMIN";
+
+  /* =========================================================
+     Logout
+  ========================================================= */
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/login");
+  };
 
   /* =========================================================
      Menu Items
@@ -353,6 +365,29 @@ const Sidebar = () => {
           )}
         </ul>
       </nav>
+
+      {/* Logout */}
+      <button
+        type="button"
+        className={`${styles.logoutBtn} ${
+          isCollapsed
+            ? styles.logoutCollapsed
+            : ""
+        }`}
+        onClick={handleLogout}
+        title="Logout"
+        aria-label="Logout"
+      >
+        <LogOut size={18} />
+
+        {!isCollapsed && (
+          <span
+            className={styles.text}
+          >
+            Logout
+          </span>
+        )}
+      </button>
     </aside>
   );
 };

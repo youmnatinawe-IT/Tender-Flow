@@ -325,3 +325,81 @@
   padding-left: 8px;
   padding-right: 8px;
 }
+
+/* =========================================================
+   Logout Button
+========================================================= */
+
+.logoutBtn {
+  width: calc(100% - 20px);
+  min-height: 42px;
+
+  margin: auto 10px 16px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 10px 14px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: var(--text-secondary);
+
+  font-family: inherit;
+  font-size: 0.88rem;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Logout Hover */
+
+.logoutBtn:hover {
+  background-color: rgba(239, 68, 68, 0.10);
+  color: #ef4444;
+}
+
+/* Logout Icon */
+
+.logoutBtn svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+}
+
+/* =========================================================
+   Collapsed Logout
+========================================================= */
+
+.sidebar.collapsed .logoutBtn {
+  width: calc(100% - 16px);
+
+  margin-left: 8px;
+  margin-right: 8px;
+
+  justify-content: center;
+
+  padding: 10px 0;
+
+  gap: 0;
+}
+
+/* =========================================================
+   RTL Logout
+========================================================= */
+
+[dir="rtl"] .logoutBtn {
+  text-align: right;
+}
