@@ -1,4 +1,4 @@
-/* =========================================================
+﻿/* =========================================================
    ORGANIZATION DETAILS
    Premium / Verification Dashboard UI
    ========================================================= */
@@ -8,38 +8,38 @@
    ========================================================= */
 
 :root {
-  --org-primary: #2563eb;
-  --org-primary-hover: #1d4ed8;
-  --org-primary-soft: #eff6ff;
-  --org-primary-border: #bfdbfe;
+  --org-primary: var(--info);
+  --org-primary-hover: var(--info-strong);
+  --org-primary-soft: var(--info-bg);
+  --org-primary-border: var(--info-border);
 
-  --org-text: #0f172a;
-  --org-text-secondary: #475569;
-  --org-text-muted: #64748b;
-  --org-text-light: #94a3b8;
+  --org-text: var(--text-primary);
+  --org-text-secondary: var(--text-label);
+  --org-text-muted: var(--text-secondary);
+  --org-text-light: var(--text-muted);
 
-  --org-bg: #f6f8fb;
-  --org-white: #ffffff;
+  --org-bg: var(--bg-primary);
+  --org-white: var(--bg-surface);
 
-  --org-border: #e2e8f0;
-  --org-border-light: #eef2f7;
+  --org-border: var(--border-color);
+  --org-border-light: var(--border-soft);
 
-  --org-success: #16a34a;
-  --org-success-dark: #15803d;
-  --org-success-soft: #ecfdf5;
-  --org-success-border: #bbf7d0;
+  --org-success: var(--success);
+  --org-success-dark: var(--success-strong);
+  --org-success-soft: var(--success-bg);
+  --org-success-border: var(--success-border);
 
   --org-warning: #f59e0b;
-  --org-warning-soft: #fffbeb;
-  --org-warning-border: #fde68a;
+  --org-warning-soft: var(--warning-bg-soft);
+  --org-warning-border: var(--warning-border);
 
-  --org-danger: #dc2626;
-  --org-danger-dark: #b91c1c;
-  --org-danger-soft: #fef2f2;
-  --org-danger-border: #fecaca;
+  --org-danger: var(--danger);
+  --org-danger-dark: var(--danger-strong);
+  --org-danger-soft: var(--danger-bg);
+  --org-danger-border: var(--danger-border);
 
-  --org-purple: #7c3aed;
-  --org-purple-soft: #f5f3ff;
+  --org-purple: var(--purple);
+  --org-purple-soft: var(--purple-bg);
   --org-purple-border: #ddd6fe;
 
   --org-cyan: #0284c7;
@@ -62,7 +62,7 @@
 /* =========================================================
    2. BASE
    ========================================================= */
-/* ✅ بديل معزول وآمن */
+/* âœ… ط¨ط¯ظٹظ„ ظ…ط¹ط²ظˆظ„ ظˆط¢ظ…ظ† */
 .organization-details-page {
   box-sizing: border-box;
   width: 100%;
@@ -122,11 +122,11 @@ button:disabled {
 
   background:
     radial-gradient(
-      circle at 95% 10%,
-      rgba(37, 99, 235, 0.08),
-      transparent 28%
-    ),
-    #ffffff;
+circle at 95% 10%,
+rgba(37, 99, 235, 0.08),
+transparent 28%
+),
+var(--bg-surface);
 
   border: 1px solid var(--org-border);
   border-radius: var(--org-radius-xl);
@@ -151,13 +151,13 @@ button:disabled {
 
   overflow: hidden;
 
-  background: linear-gradient(
-    145deg,
-    #eff6ff,
-    #dbeafe
-  );
+background: linear-gradient(
+145deg,
+var(--info-bg),
+var(--info-border-soft)
+);
 
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--info-border);
   border-radius: 20px;
 
   color: var(--org-primary);
@@ -229,7 +229,7 @@ button:disabled {
 
 .status-badge-modern.pending {
   background: var(--org-warning-soft);
-  color: #b45309;
+  color: var(--warning-strong);
   border-color: var(--org-warning-border);
 }
 
@@ -240,9 +240,9 @@ button:disabled {
 }
 
 .status-badge-modern.suspended {
-  background: #fff7ed;
-  color: #c2410c;
-  border-color: #fed7aa;
+  background: var(--orange-bg);
+  color: var(--orange-strong);
+  border-color: var(--orange-border);
 }
 
 .status-badge-modern.banned {
@@ -268,7 +268,7 @@ button:disabled {
 }
 
 .organization-meta-row svg {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .organization-meta-row strong {
@@ -388,7 +388,7 @@ button:disabled {
   width: 100%;
   padding: 25px 27px;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--org-border);
   border-radius: var(--org-radius-xl);
   box-shadow: var(--org-shadow-sm);
@@ -474,7 +474,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
 
-  background: #f8fafc;
+  background: var(--bg-primary);
   border: 1px solid var(--org-border);
   border-radius: 999px;
 
@@ -506,7 +506,7 @@ button:disabled {
   align-items: flex-start;
   gap: 11px;
 
-  background: #f8fafc;
+  background: var(--bg-primary);
   border: 1px solid var(--org-border-light);
   border-radius: 12px;
 
@@ -517,7 +517,7 @@ button:disabled {
 }
 
 .mini-info-card:hover {
-  background: #ffffff;
+  background: var(--bg-surface);
   border-color: var(--org-border);
   box-shadow: var(--org-shadow-sm);
 }
@@ -531,7 +531,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--org-border);
 
   border-radius: 9px;
@@ -607,8 +607,8 @@ button:disabled {
 }
 
 .type-tag.system {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--bg-secondary);
+  color: var(--text-strong);
   border-color: var(--org-border);
 }
 
@@ -627,7 +627,7 @@ button:disabled {
   display: flex;
   align-items: flex-start;
 
-  background: #f8fafc;
+  background: var(--bg-primary);
   border: 1px solid var(--org-border-light);
   border-radius: 12px;
 }
@@ -660,7 +660,7 @@ button:disabled {
 
   overflow: hidden;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--org-border);
   border-radius: 14px;
 
@@ -686,12 +686,12 @@ button:disabled {
   align-items: center;
   justify-content: center;
 
-  background:
-    linear-gradient(
-      135deg,
-      #f8fafc,
-      #eef2f7
-    );
+background:
+linear-gradient(
+135deg,
+var(--bg-secondary),
+var(--border-soft)
+);
 
   overflow: hidden;
 }
@@ -774,7 +774,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--org-border);
   border-radius: 16px;
 
@@ -846,7 +846,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
 
-  background: #f8fafc;
+  background: var(--bg-primary);
   border: 1px solid var(--org-border);
 
   border-radius: 6px;
@@ -872,7 +872,7 @@ button:disabled {
   justify-content: center;
   gap: 4px;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--org-border);
   border-radius: 7px;
 
@@ -904,8 +904,8 @@ button:disabled {
   align-items: center;
   gap: 13px;
 
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-strong);
   border-radius: 12px;
 
   color: var(--org-text-muted);
@@ -920,7 +920,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--org-border);
   border-radius: 10px;
 
@@ -959,7 +959,7 @@ button:disabled {
   align-items: flex-start;
   gap: 12px;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--org-border);
   border-radius: 13px;
 
@@ -1063,13 +1063,13 @@ button:disabled {
 
 .account-status-badge.pending {
   background: var(--org-warning-soft);
-  color: #b45309;
+  color: var(--warning-strong);
 }
 
 .account-status-badge.suspended,
 .account-status-badge.banned {
-  background: #fff7ed;
-  color: #c2410c;
+  background: var(--orange-bg);
+  color: var(--orange-strong);
 }
 
 .details-no-accounts {
@@ -1080,8 +1080,8 @@ button:disabled {
   align-items: center;
   gap: 13px;
 
-  background: #fff7f8;
-  border: 1px solid #fecdd3;
+  background: var(--rose-bg);
+  border: 1px solid var(--rose-border);
   border-radius: 12px;
 }
 
@@ -1094,11 +1094,11 @@ button:disabled {
   align-items: center;
   justify-content: center;
 
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
+  background: var(--rose-bg);
+  border: 1px solid var(--rose-border);
   border-radius: 11px;
 
-  color: #e11d48;
+  color: var(--danger);
 }
 
 .no-account-content {
@@ -1108,14 +1108,14 @@ button:disabled {
 
 .details-no-accounts h4 {
   margin: 0 0 3px;
-  color: #9f1239;
+  color: var(--danger-strong);
   font-size: 13px;
   font-weight: 750;
 }
 
 .details-no-accounts p {
   margin: 0;
-  color: #881337;
+  color: var(--danger-strong);
   font-size: 11px;
 }
 
@@ -1128,11 +1128,11 @@ button:disabled {
   justify-content: center;
   gap: 6px;
 
-  background: #ffffff;
-  border: 1px solid #fecdd3;
+  background: var(--bg-surface);
+  border: 1px solid var(--rose-border);
   border-radius: 9px;
 
-  color: #be123c;
+  color: var(--danger-strong);
   font-size: 11px;
   font-weight: 750;
 
@@ -1144,8 +1144,8 @@ button:disabled {
 }
 
 .create-account-inline:hover {
-  background: #fff1f2;
-  border-color: #fda4af;
+  background: var(--rose-bg);
+  border-color: var(--danger-border-strong);
 }
 
 /* =========================================================
@@ -1228,7 +1228,7 @@ button:disabled {
 
   overflow: hidden;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 18px;
 
@@ -1283,7 +1283,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
 
-  background: #f8fafc;
+  background: var(--bg-primary);
   border: 1px solid var(--org-border);
   border-radius: 9px;
 
@@ -1292,7 +1292,7 @@ button:disabled {
 }
 
 .lightbox-close:hover {
-  background: #f1f5f9;
+  background: var(--bg-secondary);
   color: var(--org-text);
 }
 
@@ -1306,7 +1306,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
 
-  background: #e2e8f0;
+  background: var(--bg-hover);
 
   overflow: auto;
 }
@@ -1343,7 +1343,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
 
-  background: #f8fafc;
+  background: var(--bg-primary);
   border: 1px solid var(--org-border);
   border-radius: 6px;
 
@@ -1366,7 +1366,7 @@ button:disabled {
   align-items: center;
   gap: 6px;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--org-border);
   border-radius: 8px;
 
@@ -1426,13 +1426,13 @@ button:disabled {
 
 .details-error-card h3 {
   margin: 0;
-  color: #991b1b;
+  color: var(--danger-strong);
   font-size: 18px;
 }
 
 .details-error-card p {
   margin: 0 0 8px;
-  color: #7f1d1d;
+  color: var(--danger-strong);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -1444,7 +1444,7 @@ button:disabled {
   border: 1px solid var(--org-border);
   border-radius: 9px;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   color: var(--org-text-secondary);
 
   font-size: 12px;
@@ -1454,7 +1454,7 @@ button:disabled {
 }
 
 .btn-secondary:hover {
-  background: #f8fafc;
+  background: var(--bg-primary);
 }
 
 /* =========================================================
@@ -1486,7 +1486,7 @@ button:disabled {
   max-width: 100%;
   padding: 24px;
 
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 16px;
 
@@ -1539,7 +1539,7 @@ button:disabled {
 }
 
 .close-modal-btn:hover {
-  background: #f1f5f9;
+  background: var(--bg-secondary);
   color: var(--org-text);
 }
 
@@ -1561,7 +1561,7 @@ button:disabled {
 }
 
 .form-group label {
-  color: #334155;
+  color: var(--text-strong);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1573,8 +1573,8 @@ button:disabled {
   min-height: 40px;
   padding: 0 12px;
 
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
 
   color: var(--org-text);
@@ -1603,8 +1603,8 @@ button:disabled {
   align-items: center;
   gap: 8px;
 
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-strong);
   border-radius: 8px;
 }
 
@@ -1658,7 +1658,7 @@ button:disabled {
   padding: 10px 14px;
 
   background: var(--org-danger-soft);
-  color: #991b1b;
+  color: var(--danger-strong);
   border: 1px solid var(--org-danger-border);
   border-radius: 8px;
 
@@ -1893,11 +1893,11 @@ button:disabled {
 
   padding: 0 15px;
 
-  border: 1px solid #d9e2f0 !important;
+  border: 1px solid var(--border-color) !important;
   border-radius: 9px !important;
 
-  background: #ffffff !important;
-  color: #2563eb !important;
+  background: var(--bg-surface) !important;
+  color: var(--info) !important;
 
   font-family: inherit;
   font-size: 13px;
@@ -1918,9 +1918,9 @@ button:disabled {
 }
 
 .account-view-btn:hover:not(:disabled) {
-  background: #eff6ff !important;
+  background: var(--info-bg) !important;
   border-color: #93c5fd !important;
-  color: #1d4ed8 !important;
+  color: var(--info-strong) !important;
 
   box-shadow: 0 5px 14px rgba(37, 99, 235, 0.12);
 
@@ -1942,9 +1942,9 @@ button:disabled {
 .account-view-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: #f8fafc !important;
-  color: #94a3b8 !important;
-  border-color: #e2e8f0 !important;
+  background: var(--bg-primary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
 }
 /* =========================================================
    ACCOUNT ACTION BUTTONS
@@ -1983,15 +1983,15 @@ button:disabled {
 }
 
 .account-view-btn {
-  border: 1px solid #dbe3ef;
-  background: #ffffff;
-  color: #334155;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-strong);
 }
 
 .account-view-btn:hover:not(:disabled) {
-  background: #f8fafc;
+  background: var(--bg-primary);
   border-color: #94a3b8;
-  color: #0f172a;
+  color: var(--text-primary);
   transform: translateY(-1px);
 }
 
@@ -2000,46 +2000,46 @@ button:disabled {
 }
 
 .account-control-btn.approve {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-  color: #047857;
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-strong);
 }
 
 .account-control-btn.approve:hover:not(:disabled) {
-  background: #d1fae5;
-  border-color: #6ee7b7;
+  background: var(--success-tint);
+  border-color: var(--success-border);
 }
 
 .account-control-btn.reject {
-  background: #fff7ed;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background: var(--orange-bg);
+  border-color: var(--danger-border-strong);
+  color: var(--danger-strong);
 }
 
 .account-control-btn.reject:hover:not(:disabled) {
-  background: #fca5a5;
+  background: var(--danger-border-strong);
   border-color: #b91c1c;
 }
 
 .account-control-btn.block {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #b91c1c;
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-strong);
 }
 
 .account-control-btn.block:hover:not(:disabled) {
-  background: #fee2e2;
-  border-color: #fca5a5;
+  background: var(--danger-tint);
+  border-color: var(--danger-border-strong);
 }
 
 .account-control-btn.activate {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-strong);
 }
 
 .account-control-btn.activate:hover:not(:disabled) {
-  background: #dbeafe;
+  background: var(--info-border-soft);
   border-color: #93c5fd;
 }
 

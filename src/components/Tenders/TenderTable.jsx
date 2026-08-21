@@ -14,36 +14,11 @@ import {
 } from "lucide-react";
 
 import { getAllTenders } from "../../services/tenderService";
+import { formatBudget, formatTenderId } from "../../utils/format";
 
 /* =========================================================
    Helpers
 ========================================================= */
-
-const formatTenderId = (id) => {
-  if (!id) return "N/A";
-
-  return `#${id.slice(-6).toUpperCase()}`;
-};
-
-const formatBudget = (value, currency) => {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-    return "N/A";
-  }
-
-  const number = Number(value);
-
-  if (Number.isNaN(number)) {
-    return "N/A";
-  }
-
-  return `${new Intl.NumberFormat("en-US").format(
-    number,
-  )} ${currency || ""}`.trim();
-};
 
 const getStatusClass = (status) => {
   const normalized =

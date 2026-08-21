@@ -34,6 +34,10 @@ import {
   getTenderAttachments,
   updateTender,
 } from "../../services/tenderService";
+import {
+  formatBudget,
+  formatTenderId as getTenderId,
+} from "../../utils/format";
 
 /* =========================================================
    Helpers
@@ -73,26 +77,6 @@ const formatDateTime = (date) => {
   }).format(parsedDate);
 };
 
-const formatBudget = (value, currency) => {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-    return "N/A";
-  }
-
-  const number = Number(value);
-
-  if (Number.isNaN(number)) {
-    return "N/A";
-  }
-
-  return `${new Intl.NumberFormat("en-US").format(
-    number,
-  )} ${currency || ""}`.trim();
-};
-
 const getDaysLeft = (deadline) => {
   if (!deadline) return null;
 
@@ -111,12 +95,6 @@ const getDaysLeft = (deadline) => {
   return Math.ceil(
     diff / (1000 * 60 * 60 * 24),
   );
-};
-
-const getTenderId = (id) => {
-  if (!id) return "N/A";
-
-  return `#${id.slice(-6).toUpperCase()}`;
 };
 
 const getStatusClass = (status) => {

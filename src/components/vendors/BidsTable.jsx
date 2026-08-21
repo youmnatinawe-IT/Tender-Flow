@@ -37,7 +37,7 @@ export default function VendorTable({ tenderId, onSelectVendor }) {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to load tender bids."
+          "Failed to load tender bids.",
       );
       setBids([]);
     } finally {
@@ -84,10 +84,18 @@ export default function VendorTable({ tenderId, onSelectVendor }) {
     if (status === "ACCEPTED" || status === "APPROVED") {
       return "bid-status-success";
     }
-    if (status === "SUBMITTED" || status === "UNDER_REVIEW" || status === "PENDING") {
+    if (
+      status === "SUBMITTED" ||
+      status === "UNDER_REVIEW" ||
+      status === "PENDING"
+    ) {
       return "bid-status-warning";
     }
-    if (status === "REJECTED" || status === "CANCELLED" || status === "WITHDRAWN") {
+    if (
+      status === "REJECTED" ||
+      status === "CANCELLED" ||
+      status === "WITHDRAWN"
+    ) {
       return "bid-status-danger";
     }
     return "bid-status-neutral";
@@ -100,10 +108,18 @@ export default function VendorTable({ tenderId, onSelectVendor }) {
     if (status === "ACCEPTED" || status === "APPROVED") {
       return <CheckCircle2 size={14} />;
     }
-    if (status === "SUBMITTED" || status === "UNDER_REVIEW" || status === "PENDING") {
+    if (
+      status === "SUBMITTED" ||
+      status === "UNDER_REVIEW" ||
+      status === "PENDING"
+    ) {
       return <Clock3 size={14} />;
     }
-    if (status === "REJECTED" || status === "CANCELLED" || status === "WITHDRAWN") {
+    if (
+      status === "REJECTED" ||
+      status === "CANCELLED" ||
+      status === "WITHDRAWN"
+    ) {
       return <XCircle size={14} />;
     }
     return null;
@@ -124,7 +140,10 @@ export default function VendorTable({ tenderId, onSelectVendor }) {
           <FileText size={28} />
         </div>
         <h3>Select a Tender</h3>
-        <p>Select a tender to view the bids submitted by participating organizations.</p>
+        <p>
+          Select a tender to view the bids submitted by participating
+          organizations.
+        </p>
       </div>
     );
   }
@@ -215,18 +234,21 @@ export default function VendorTable({ tenderId, onSelectVendor }) {
                     <tr key={bidId}>
                       <td className="row-number">{index + 1}</td>
                       <td>
-                        <strong style={{ color: "#0f172a" }}>
+                        <strong className="vendor-org-name">
                           {getOrgName(bid)}
                         </strong>
                       </td>
                       <td>
-                        {bid?.offered_value !== undefined && bid?.offered_value !== null
+                        {bid?.offered_value !== undefined &&
+                        bid?.offered_value !== null
                           ? new Intl.NumberFormat().format(bid.offered_value)
                           : "—"}
                       </td>
                       <td>{bid?.currency || "USD"}</td>
                       <td>
-                        <span className={`bid-status ${getStatusClass(bid?.status)}`}>
+                        <span
+                          className={`bid-status ${getStatusClass(bid?.status)}`}
+                        >
                           {getStatusIcon(bid?.status)}
                           {bid?.status || "SUBMITTED"}
                         </span>

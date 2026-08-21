@@ -40,6 +40,7 @@ import {
 } from "../../services/organizationService";
 
 import API from "../../services/api";
+
 import "./style/organization-details-premium.css";
 
 /* =========================================================
@@ -116,56 +117,44 @@ function resolveFileUrl(item) {
 
   if (!rawUrl) return "";
 
-  rawUrl = String(rawUrl).replace(/\\/g, "/");
+  rawUrl = String(rawUrl)
+    .trim()
+    .replace(/\\/g, "/");
 
-  if (!/^https?:\/\//i.test(rawUrl)) {
-    const cleanPath = rawUrl.startsWith("/")
-      ? rawUrl
-      : `/${rawUrl}`;
-
-    const baseUrl = String(
-      API.defaults.baseURL || "",
-    ).replace(/\/$/, "");
-
-    rawUrl = `${baseUrl}${cleanPath}`;
+  /* Base64 / data URL */
+  if (/^data:image\//i.test(rawUrl)) {
+    return rawUrl;
   }
 
-  if (
-    rawUrl.includes("ngrok-free.dev") &&
-    !rawUrl.includes("ngrok-skip-browser-warning")
-  ) {
-    const separator = rawUrl.includes("?")
-      ? "&"
-      : "?";
+  /* Absolute URL */
+  if (/^https?:\/\//i.test(rawUrl)) {
+    if (
+      rawUrl.includes("ngrok-free.dev") &&
+      !rawUrl.includes("ngrok-skip-browser-warning")
+    ) {
+      const separator = rawUrl.includes("?") ? "&" : "?";
 
-    rawUrl = `${rawUrl}${separator}ngrok-skip-browser-warning=1`;
+      return `${rawUrl}${separator}ngrok-skip-browser-warning=1`;
+    }
+
+    return rawUrl;
   }
 
-  return rawUrl;
-}
-
-/* =========================================================
-   FILE NAME
-========================================================= */
-
-function resolveFileName(item, fallback) {
-  if (typeof item === "string") {
-    return fallback;
+  /* Protocol-relative URL */
+  if (rawUrl.startsWith("//")) {
+    return `https:${rawUrl}`;
   }
 
-  if (item && typeof item === "object") {
-    return (
-      item.name ||
-      item.originalName ||
-      item.original_name ||
-      item.filename ||
-      item.file_name ||
-      item.title ||
-      fallback
-    );
-  }
+  /* Relative URL */
+  const baseUrl = String(
+    API.defaults.baseURL || ""
+  ).replace(/\/$/, "");
 
-  return fallback;
+  const cleanPath = rawUrl.startsWith("/")
+    ? rawUrl
+    : `/${rawUrl}`;
+
+  return `${baseUrl}${cleanPath}`;
 }
 
 /* =========================================================
@@ -227,16 +216,124 @@ function getExtension(url = "", item = null) {
   } catch (error) {
     console.error(
       "Error parsing extension:",
-      error,
+      error
     );
   }
 
   return "";
 }
 
+/* =========================================================
+   FILE NAME
+========================================================= */
+
+function resolveFileName(
+  item,
+  fallback = "Attachment"
+) {
+  if (!item) {
+    return fallback;
+  }
+
+  /* -------------------------------------------------------
+     STRING
+  ------------------------------------------------------- */
+
+  if (typeof item === "string") {
+    const raw = item.trim();
+
+    if (!raw) {
+      return fallback;
+    }
+
+    try {
+      const cleanUrl = raw
+        .split("?")[0]
+        .split("#")[0]
+        .replace(/\\/g, "/");
+
+      const parts = cleanUrl.split("/");
+      const filename = parts.pop();
+
+      if (filename) {
+        try {
+          return decodeURIComponent(filename);
+        } catch {
+          return filename;
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Error resolving file name:",
+        error
+      );
+    }
+
+    return fallback;
+  }
+
+  /* -------------------------------------------------------
+     OBJECT
+  ------------------------------------------------------- */
+
+  if (typeof item === "object") {
+    const possibleNames = [
+      item.name,
+      item.file_name,
+      item.filename,
+      item.original_name,
+      item.original_filename,
+      item.title,
+      item.document_name,
+    ];
+
+    for (const value of possibleNames) {
+      if (
+        typeof value === "string" &&
+        value.trim()
+      ) {
+        return value.trim();
+      }
+    }
+
+    const url = resolveFileUrl(item);
+
+    if (url) {
+      try {
+        const cleanUrl = url
+          .split("?")[0]
+          .split("#")[0]
+          .replace(/\\/g, "/");
+
+        const parts = cleanUrl.split("/");
+        const filename = parts.pop();
+
+        if (filename) {
+          try {
+            return decodeURIComponent(filename);
+          } catch {
+            return filename;
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Error resolving file name from URL:",
+          error
+        );
+      }
+    }
+  }
+
+  return fallback;
+}
+
+/* =========================================================
+   IMAGE EXTENSION
+========================================================= */
+
 function isImageExtension(ext) {
   return IMAGE_EXTENSIONS.includes(
-    String(ext || "").toLowerCase(),
+    String(ext || "").toLowerCase()
   );
 }
 
@@ -253,7 +350,7 @@ function normalizeStatus(status) {
 
 function prettyStatus(status) {
   const value = String(
-    status || "Pending",
+    status || "Pending"
   ).trim();
 
   if (!value) {
@@ -262,11 +359,11 @@ function prettyStatus(status) {
 
   return value
     .toLowerCase()
-    .split(/[\s_-]+/)
+    .split(/[\s\_-]+/)
     .map(
       (part) =>
         part.charAt(0).toUpperCase() +
-        part.slice(1),
+        part.slice(1)
     )
     .join(" ");
 }
@@ -277,7 +374,7 @@ function prettyStatus(status) {
 
 function normalizeDocumentTitle(
   name = "",
-  sourceKey = "",
+  sourceKey = ""
 ) {
   const source =
     `${sourceKey} ${name}`.toLowerCase();
@@ -326,7 +423,7 @@ function collectDocuments(data) {
 
   const pushItem = (
     value,
-    sourceKey,
+    sourceKey
   ) => {
     if (Array.isArray(value)) {
       value.forEach((item) => {
@@ -377,20 +474,23 @@ function collectDocuments(data) {
 
       seen.add(url);
 
-      const name = resolveFileName(
-        item,
+      const fallbackTitle =
         normalizeDocumentTitle(
           "",
-          sourceKey,
+          sourceKey
         ) ||
-          `Attachment #${
-            documents.length + 1
-          }`,
+        `Attachment #${
+          documents.length + 1
+        }`;
+
+      const name = resolveFileName(
+        item,
+        fallbackTitle
       );
 
       const ext = getExtension(
         url,
-        item,
+        item
       );
 
       documents.push({
@@ -400,14 +500,14 @@ function collectDocuments(data) {
         title:
           normalizeDocumentTitle(
             name,
-            sourceKey,
+            sourceKey
           ),
         ext,
         sourceKey,
         isImage:
           isImageExtension(ext),
       });
-    },
+    }
   );
 
   const priority = {
@@ -422,7 +522,7 @@ function collectDocuments(data) {
     const aKey =
       normalizeDocumentTitle(
         a.name,
-        a.sourceKey,
+        a.sourceKey
       )
         .toLowerCase()
         .replace(/\s+/g, "-");
@@ -430,7 +530,7 @@ function collectDocuments(data) {
     const bKey =
       normalizeDocumentTitle(
         b.name,
-        b.sourceKey,
+        b.sourceKey
       )
         .toLowerCase()
         .replace(/\s+/g, "-");
@@ -457,21 +557,21 @@ function normalizeAccount(account) {
     account?.f_name,
     account?.first_name,
     account?.firstName,
-    "",
+    ""
   );
 
   const lastName = pickString(
     account?.l_name,
     account?.last_name,
     account?.lastName,
-    "",
+    ""
   );
 
   const fullName =
     [firstName, lastName]
       .filter(
         (value) =>
-          value && value !== "N/A",
+          value && value !== "N/A"
       )
       .join(" ")
       .trim() ||
@@ -509,31 +609,24 @@ function normalizeAccount(account) {
 
   return {
     ...account,
-
     id,
-
     name: fullName,
-
     username:
       account?.username || "",
-
     email: pickString(
       account?.email,
-      "No Email",
+      "No Email"
     ),
-
     phone: pickString(
       account?.phone,
       account?.phone_number,
-      "N/A",
+      "N/A"
     ),
-
     role: pickString(
       account?.role,
       account?.type,
-      "N/A",
+      "N/A"
     ),
-
     status,
   };
 }
@@ -544,7 +637,7 @@ function normalizeAccount(account) {
 
 function normalizeAccounts(
   data,
-  usersRes,
+  usersRes
 ) {
   let list = [];
 
@@ -598,7 +691,7 @@ function normalizeAccounts(
           String(userId) ===
             String(adminId)
         );
-      },
+      }
     );
 
     if (!exists) {
@@ -619,15 +712,22 @@ function normalizeAccounts(
 ========================================================= */
 
 function resolveLogo(data) {
-  return (
-    resolveFileUrl(data?.logo) ||
-    resolveFileUrl(data?.avatar) ||
-    resolveFileUrl(
-      data?.image_url,
-    ) ||
-    resolveFileUrl(data?.image) ||
-    ""
-  );
+  if (!data) {
+    return "";
+  }
+
+  const logoValue =
+    data?.logo ||
+    data?.avatar ||
+    data?.image_url ||
+    data?.image ||
+    "";
+
+  if (!logoValue) {
+    return "";
+  }
+
+  return resolveFileUrl(logoValue);
 }
 
 /* =========================================================
@@ -637,12 +737,12 @@ function resolveLogo(data) {
 function buildOrgView(
   data,
   usersRes,
-  id,
+  id
 ) {
   const accounts =
     normalizeAccounts(
       data,
-      usersRes,
+      usersRes
     );
 
   return {
@@ -654,64 +754,64 @@ function buildOrgView(
     name: pickString(
       data?.org_name,
       data?.name,
-      "N/A",
+      "N/A"
     ),
 
     taxNumber: pickString(
       data?.commercial_register_num,
       data?.taxNumber,
       data?.tax_number,
-      "N/A",
+      "N/A"
     ),
 
     commercialRegisterDate:
       formatDate(
         data?.commercial_register_date ||
           data?.commercialRegisterDate ||
-          data?.registration_date,
+          data?.registration_date
       ),
 
     licenseNum: pickString(
       data?.license_num,
       data?.license_number,
-      "N/A",
+      "N/A"
     ),
 
     licenseDate: formatDate(
       data?.license_date ||
-        data?.licenseDate,
+        data?.licenseDate
     ),
 
     email: pickString(
       data?.email,
-      "N/A",
+      "N/A"
     ),
 
     phone: pickString(
       data?.phone_number,
       data?.phone,
-      "N/A",
+      "N/A"
     ),
 
     address: pickString(
       data?.address,
       data?.location,
-      "N/A",
+      "N/A"
     ),
 
     website: pickString(
       data?.website,
-      "N/A",
+      "N/A"
     ),
 
     status: pickString(
       data?.status,
-      "Pending",
+      "Pending"
     ),
 
     createdAt: formatDate(
       data?.createdAt ||
-        data?.created_at,
+        data?.created_at
     ),
 
     documents:
@@ -726,7 +826,7 @@ function buildOrgView(
       Boolean(
         data?.has_admin ||
           data?.hasAdmin ||
-          data?.adminUser,
+          data?.adminUser
       ),
   };
 }
@@ -747,7 +847,7 @@ async function fetchOrgView(id) {
   if (!res?.success) {
     throw new Error(
       res?.error?.message ||
-        "Failed to fetch organization details.",
+        "Failed to fetch organization details."
     );
   }
 
@@ -757,12 +857,37 @@ async function fetchOrgView(id) {
     res?.data ||
     {};
 
+  console.log(
+    "ORGANIZATION RAW DATA:",
+    data
+  );
+
+  console.log(
+    "ORGANIZATION LOGO:",
+    data?.logo
+  );
+
+  console.log(
+    "ORGANIZATION AVATAR:",
+    data?.avatar
+  );
+
+  console.log(
+    "ORGANIZATION IMAGE URL:",
+    data?.image_url
+  );
+
+  console.log(
+    "ORGANIZATION IMAGE:",
+    data?.image
+  );
+
   return {
     data,
     view: buildOrgView(
       data,
       usersRes,
-      id,
+      id
     ),
   };
 }
@@ -850,29 +975,28 @@ export default function OrganizationDetails() {
      REFRESH
   ===================================================== */
 
-  const refreshDetails =
-    async () => {
-      try {
-        const {
-          data,
-          view,
-        } = await fetchOrgView(id);
+  const refreshDetails = async () => {
+    try {
+      const {
+        data,
+        view,
+      } = await fetchOrgView(id);
 
-        setRawOrg(data);
-        setOrgData(view);
-        setError("");
-      } catch (err) {
-        console.error(
-          "Error loading org:",
-          err,
-        );
+      setRawOrg(data);
+      setOrgData(view);
+      setError("");
+    } catch (err) {
+      console.error(
+        "Error loading org:",
+        err
+      );
 
-        setError(
-          err?.message ||
-            "An error occurred while loading organization data.",
-        );
-      }
-    };
+      setError(
+        err?.message ||
+          "An error occurred while loading organization data."
+      );
+    }
+  };
 
   /* =====================================================
      INITIAL LOAD
@@ -898,12 +1022,12 @@ export default function OrganizationDetails() {
 
         console.error(
           "Error loading org:",
-          err,
+          err
         );
 
         setError(
           err?.message ||
-            "An error occurred while loading organization data.",
+            "An error occurred while loading organization data."
         );
       } finally {
         if (!cancelled) {
@@ -924,41 +1048,35 @@ export default function OrganizationDetails() {
   ===================================================== */
 
   useEffect(() => {
-    const handleEscape =
-      (event) => {
-        if (
-          event.key !==
-          "Escape"
-        ) {
-          return;
-        }
+    const handleEscape = (
+      event
+    ) => {
+      if (
+        event.key !== "Escape"
+      ) {
+        return;
+      }
 
-        if (selectedDocument) {
-          setSelectedDocument(
-            null,
-          );
-          return;
-        }
+      if (selectedDocument) {
+        setSelectedDocument(null);
+        return;
+      }
 
-        if (showAccountDetails) {
-          setShowAccountDetails(
-            false,
-          );
-          setSelectedAccount(
-            null,
-          );
-        }
-      };
+      if (showAccountDetails) {
+        setShowAccountDetails(false);
+        setSelectedAccount(null);
+      }
+    };
 
     document.addEventListener(
       "keydown",
-      handleEscape,
+      handleEscape
     );
 
     return () => {
       document.removeEventListener(
         "keydown",
-        handleEscape,
+        handleEscape
       );
     };
   }, [
@@ -971,7 +1089,7 @@ export default function OrganizationDetails() {
   ===================================================== */
 
   const handleViewAccount = (
-    account,
+    account
   ) => {
     const accountId =
       account?.id ||
@@ -984,17 +1102,17 @@ export default function OrganizationDetails() {
       {
         account,
         accountId,
-      },
+      }
     );
 
     if (!accountId) {
       console.error(
         "Cannot open user details: account ID is missing.",
-        account,
+        account
       );
 
       setAccountActionError(
-        "Cannot open account details because the account ID is missing.",
+        "Cannot open account details because the account ID is missing."
       );
 
       return;
@@ -1005,9 +1123,7 @@ export default function OrganizationDetails() {
       id: accountId,
     });
 
-    setShowAccountDetails(
-      true,
-    );
+    setShowAccountDetails(true);
   };
 
   /* =====================================================
@@ -1016,9 +1132,7 @@ export default function OrganizationDetails() {
 
   const closeAccountDetails =
     () => {
-      setShowAccountDetails(
-        false,
-      );
+      setShowAccountDetails(false);
       setSelectedAccount(null);
     };
 
@@ -1029,7 +1143,7 @@ export default function OrganizationDetails() {
   const handleAccountStatusChange =
     async (
       account,
-      newStatus,
+      newStatus
     ) => {
       const accountId =
         account?.id ||
@@ -1039,8 +1153,9 @@ export default function OrganizationDetails() {
 
       if (!accountId) {
         setAccountActionError(
-          "Cannot update this account because the account ID is missing.",
+          "Cannot update this account because the account ID is missing."
         );
+
         return;
       }
 
@@ -1061,7 +1176,7 @@ export default function OrganizationDetails() {
 
       const confirmed =
         window.confirm(
-          `Are you sure you want to ${actionText} this account?`,
+          `Are you sure you want to ${actionText} this account?`
         );
 
       if (!confirmed) {
@@ -1070,69 +1185,50 @@ export default function OrganizationDetails() {
 
       try {
         setAccountUpdatingId(
-          accountId,
+          accountId
         );
 
-        setAccountActionError(
-          "",
-        );
+        setAccountActionError("");
+        setAccountActionSuccess("");
 
-        setAccountActionSuccess(
-          "",
-        );
-
-        /*
-         * PUT /api/users/{id}
-         */
         const response =
           await API.put(
             `/api/users/${accountId}`,
             {
               status: newStatus,
-            },
+            }
           );
 
         console.log(
           "Account status updated:",
-          response?.data,
+          response?.data
         );
 
         setAccountActionSuccess(
           `Account status changed to ${prettyStatus(
-            newStatus,
-          )}.`,
+            newStatus
+          )}.`
         );
 
-        /*
-         * Refresh organization
-         * and accounts
-         */
         await refreshDetails();
 
-        /*
-         * Update selected account
-         * inside details modal too
-         */
         setSelectedAccount(
           (previous) =>
             previous
               ? {
                   ...previous,
-                  status:
-                    newStatus,
+                  status: newStatus,
                 }
-              : previous,
+              : previous
         );
 
         setTimeout(() => {
-          setAccountActionSuccess(
-            "",
-          );
+          setAccountActionSuccess("");
         }, 3000);
       } catch (error) {
         console.error(
           "Failed to update account status:",
-          error,
+          error
         );
 
         const message =
@@ -1146,11 +1242,11 @@ export default function OrganizationDetails() {
           "Failed to update account status.";
 
         setAccountActionError(
-          message,
+          message
         );
       } finally {
         setAccountUpdatingId(
-          null,
+          null
         );
       }
     };
@@ -1162,7 +1258,7 @@ export default function OrganizationDetails() {
   const hasAtLeastOneAccount =
     Boolean(
       orgData?.accounts
-        ?.length > 0,
+        ?.length > 0
     );
 
   /* =====================================================
@@ -1219,7 +1315,7 @@ export default function OrganizationDetails() {
             className="btn-secondary"
             onClick={() =>
               navigate(
-                "/organizations",
+                "/organizations"
               )
             }
           >
@@ -1232,7 +1328,7 @@ export default function OrganizationDetails() {
 
   const statusClass =
     normalizeStatus(
-      orgData.status,
+      orgData.status
     );
 
   /* =====================================================
@@ -1258,19 +1354,41 @@ export default function OrganizationDetails() {
                 <img
                   src={orgData.logo}
                   alt={orgData.name}
+                  onError={(e) => {
+                    console.error(
+                      "Organization logo failed to load:",
+                      orgData.logo
+                    );
+
+                    e.currentTarget.style.display =
+                      "none";
+
+                    const fallback =
+                      e.currentTarget
+                        .nextElementSibling;
+
+                    if (fallback) {
+                      fallback.style.display =
+                        "block";
+                    }
+                  }}
                 />
-              ) : (
-                (
-                  orgData.name ||
-                  "O"
-                )
+              ) : null}
+
+              <span
+                style={{
+                  display: orgData.logo
+                    ? "none"
+                    : "block",
+                }}
+              >
+                {(orgData.name || "O")
                   .charAt(0)
-                  .toUpperCase()
-              )}
+                  .toUpperCase()}
+              </span>
             </div>
 
             <div className="organization-hero-info">
-
               <div className="organization-name-row">
                 <h1>
                   {orgData.name}
@@ -1282,13 +1400,12 @@ export default function OrganizationDetails() {
                   <span className="status-dot" />
 
                   {prettyStatus(
-                    orgData.status,
+                    orgData.status
                   )}
                 </span>
               </div>
 
               <div className="organization-meta-row">
-
                 <span>
                   <FileCheck
                     size={15}
@@ -1313,22 +1430,19 @@ export default function OrganizationDetails() {
                     {orgData.createdAt}
                   </strong>
                 </span>
-
               </div>
             </div>
           </div>
 
           <div className="organization-hero-actions">
-
             <div className="organization-action-buttons">
-
               {!hasAtLeastOneAccount && (
                 <button
                   type="button"
                   className="organization-action create"
                   onClick={() =>
                     setIsCreateAdminOpen(
-                      true,
+                      true
                     )
                   }
                 >
@@ -1340,9 +1454,7 @@ export default function OrganizationDetails() {
                   Account
                 </button>
               )}
-
             </div>
-
           </div>
         </section>
 
@@ -1351,11 +1463,8 @@ export default function OrganizationDetails() {
         ===================================================== */}
 
         <section className="details-section-card">
-
           <div className="details-section-header">
-
             <div className="details-section-title">
-
               <span className="section-icon blue">
                 <Building
                   size={18}
@@ -1373,9 +1482,7 @@ export default function OrganizationDetails() {
                   organization
                 </p>
               </div>
-
             </div>
-
           </div>
 
           <div className="info-cards-grid">
@@ -1513,11 +1620,9 @@ export default function OrganizationDetails() {
         ===================================================== */}
 
         <section className="details-section-card attachments-section">
-
           <div className="details-section-header">
 
             <div className="details-section-title">
-
               <span className="section-icon purple">
                 <ImageIcon
                   size={18}
@@ -1536,7 +1641,6 @@ export default function OrganizationDetails() {
                   the organization
                 </p>
               </div>
-
             </div>
 
             <span className="section-count">
@@ -1551,17 +1655,13 @@ export default function OrganizationDetails() {
                   : "Files"
               }
             </span>
-
           </div>
 
           {orgData.documents
             .length > 0 ? (
-
             <div className="attachments-grid">
-
               {orgData.documents.map(
                 (doc) => (
-
                   <article
                     className="attachment-card"
                     key={
@@ -1569,7 +1669,6 @@ export default function OrganizationDetails() {
                       doc.url
                     }
                   >
-
                     <div className="attachment-preview">
 
                       {doc.isImage ? (
@@ -1578,13 +1677,15 @@ export default function OrganizationDetails() {
                           className="attachment-image-button"
                           onClick={() =>
                             setSelectedDocument(
-                              doc,
+                              doc
                             )
                           }
                           aria-label={`Preview ${doc.name}`}
                         >
                           <img
-                            src={doc.url}
+                            src={
+                              doc.url
+                            }
                             alt={
                               doc.name
                             }
@@ -1601,7 +1702,6 @@ export default function OrganizationDetails() {
                         </button>
                       ) : (
                         <div className="attachment-file-preview">
-
                           <div className="file-preview-icon">
                             {doc.ext ===
                             "pdf" ? (
@@ -1622,10 +1722,9 @@ export default function OrganizationDetails() {
                           <span>
                             {String(
                               doc.ext ||
-                                "FILE",
+                                "FILE"
                             ).toUpperCase()}
                           </span>
-
                         </div>
                       )}
 
@@ -1634,7 +1733,6 @@ export default function OrganizationDetails() {
                     <div className="attachment-meta">
 
                       <div className="attachment-title-row">
-
                         <div>
                           <span className="attachment-category">
                             {
@@ -1647,7 +1745,9 @@ export default function OrganizationDetails() {
                               doc.name
                             }
                           >
-                            {doc.name}
+                            {
+                              doc.name
+                            }
                           </h3>
                         </div>
 
@@ -1662,7 +1762,6 @@ export default function OrganizationDetails() {
                             className="attachment-type-icon"
                           />
                         )}
-
                       </div>
 
                       <div className="attachment-bottom-row">
@@ -1670,7 +1769,7 @@ export default function OrganizationDetails() {
                         <span className="attachment-extension">
                           {String(
                             doc.ext ||
-                              "FILE",
+                              "FILE"
                           ).toUpperCase()}
                         </span>
 
@@ -1681,7 +1780,7 @@ export default function OrganizationDetails() {
                               type="button"
                               onClick={() =>
                                 setSelectedDocument(
-                                  doc,
+                                  doc
                                 )
                               }
                               title="Preview"
@@ -1723,19 +1822,13 @@ export default function OrganizationDetails() {
 
                         </div>
                       </div>
-
                     </div>
-
                   </article>
-                ),
+                )
               )}
-
             </div>
-
           ) : (
-
             <div className="empty-state-box">
-
               <div className="empty-state-icon">
                 <FileText
                   size={24}
@@ -1755,11 +1848,8 @@ export default function OrganizationDetails() {
                   organization.
                 </p>
               </div>
-
             </div>
-
           )}
-
         </section>
 
         {/* =====================================================
@@ -1767,11 +1857,9 @@ export default function OrganizationDetails() {
         ===================================================== */}
 
         <section className="details-section-card accounts-section">
-
           <div className="details-section-header">
 
             <div className="details-section-title">
-
               <span className="section-icon green">
                 <Users
                   size={18}
@@ -1791,7 +1879,6 @@ export default function OrganizationDetails() {
                   organization
                 </p>
               </div>
-
             </div>
 
             <span className="section-count">
@@ -1806,7 +1893,6 @@ export default function OrganizationDetails() {
                   : "Accounts"
               }
             </span>
-
           </div>
 
           {/* SUCCESS */}
@@ -1881,7 +1967,7 @@ export default function OrganizationDetails() {
                 type="button"
                 onClick={() =>
                   setAccountActionError(
-                    "",
+                    ""
                   )
                 }
                 style={{
@@ -1902,20 +1988,16 @@ export default function OrganizationDetails() {
             </div>
           )}
 
-          {/* =================================================
-              ACCOUNTS EXIST
-          ================================================= */}
+          {/* ACCOUNTS EXIST */}
 
           {hasAtLeastOneAccount ? (
-
             <div className="accounts-grid">
 
               {orgData.accounts.map(
                 (
                   account,
-                  index,
+                  index
                 ) => {
-
                   const accountId =
                     account?.id ||
                     account?._id ||
@@ -1925,17 +2007,17 @@ export default function OrganizationDetails() {
                   const accountStatus =
                     String(
                       account?.status ||
-                        "PENDING",
+                        "PENDING"
                     )
                       .trim()
                       .toUpperCase();
 
                   const isUpdating =
                     String(
-                      accountUpdatingId,
+                      accountUpdatingId
                     ) ===
                     String(
-                      accountId,
+                      accountId
                     );
 
                   return (
@@ -1947,27 +2029,66 @@ export default function OrganizationDetails() {
                       }
                     >
 
-                      {/* =================================
-                          ACCOUNT TOP
-                      ================================= */}
+                      {/* ACCOUNT TOP */}
 
                       <div className="account-card-top">
 
-                        <div className="account-avatar">
-                          {(
-                            account.name ||
-                            "A"
-                          )
-                            .charAt(
-                              0,
+                        <div className="profile-avatar">
+                          {orgData.logo ? (
+                            <img
+                              src={
+                                orgData.logo
+                              }
+                              alt={
+                                orgData.name
+                              }
+                              onError={(
+                                e
+                              ) => {
+                                console.error(
+                                  "Organization logo failed to load:",
+                                  orgData.logo
+                                );
+
+                                e.currentTarget.style.display =
+                                  "none";
+
+                                const fallback =
+                                  e.currentTarget
+                                    .nextElementSibling;
+
+                                if (
+                                  fallback
+                                ) {
+                                  fallback.style.display =
+                                    "block";
+                                }
+                              }}
+                            />
+                          ) : null}
+
+                          <span
+                            style={{
+                              display:
+                                orgData.logo
+                                  ? "none"
+                                  : "block",
+                            }}
+                          >
+                            {(
+                              orgData.name ||
+                              "O"
                             )
-                            .toUpperCase()}
+                              .charAt(
+                                0
+                              )
+                              .toUpperCase()}
+                          </span>
                         </div>
 
                         <div className="account-meta">
 
                           <div className="account-name-row">
-
                             <strong
                               title={
                                 account.name
@@ -1980,14 +2101,13 @@ export default function OrganizationDetails() {
 
                             <span
                               className={`account-status-badge ${normalizeStatus(
-                                account.status,
+                                account.status
                               )}`}
                             >
                               {prettyStatus(
-                                account.status,
+                                account.status
                               )}
                             </span>
-
                           </div>
 
                           {account.username && (
@@ -2050,9 +2170,7 @@ export default function OrganizationDetails() {
                         </div>
                       </div>
 
-                      {/* =================================
-                          ACCOUNT ACTIONS
-                      ================================= */}
+                      {/* ACCOUNT ACTIONS */}
 
                       <div
                         className="account-card-actions"
@@ -2082,7 +2200,7 @@ export default function OrganizationDetails() {
                           }
                           onClick={() =>
                             handleViewAccount(
-                              account,
+                              account
                             )
                           }
                           title={
@@ -2100,9 +2218,7 @@ export default function OrganizationDetails() {
                           View Details
                         </button>
 
-                        {/* =================================
-                            PENDING
-                        ================================= */}
+                        {/* PENDING */}
 
                         {accountStatus ===
                           "PENDING" && (
@@ -2116,7 +2232,7 @@ export default function OrganizationDetails() {
                               onClick={() =>
                                 handleAccountStatusChange(
                                   account,
-                                  "ACTIVE",
+                                  "ACTIVE"
                                 )
                               }
                               title="Approve account"
@@ -2148,7 +2264,7 @@ export default function OrganizationDetails() {
                               onClick={() =>
                                 handleAccountStatusChange(
                                   account,
-                                  "REJECTED",
+                                  "REJECTED"
                                 )
                               }
                               title="Reject account"
@@ -2173,9 +2289,7 @@ export default function OrganizationDetails() {
                           </>
                         )}
 
-                        {/* =================================
-                            ACTIVE
-                        ================================= */}
+                        {/* ACTIVE */}
 
                         {accountStatus ===
                           "ACTIVE" && (
@@ -2188,7 +2302,7 @@ export default function OrganizationDetails() {
                             onClick={() =>
                               handleAccountStatusChange(
                                 account,
-                                "BANNED",
+                                "BANNED"
                               )
                             }
                             title="Block account"
@@ -2212,9 +2326,7 @@ export default function OrganizationDetails() {
                           </button>
                         )}
 
-                        {/* =================================
-                            BANNED / REJECTED
-                        ================================= */}
+                        {/* BANNED / REJECTED */}
 
                         {(accountStatus ===
                           "BANNED" ||
@@ -2229,7 +2341,7 @@ export default function OrganizationDetails() {
                             onClick={() =>
                               handleAccountStatusChange(
                                 account,
-                                "ACTIVE",
+                                "ACTIVE"
                               )
                             }
                             title="Activate account"
@@ -2256,11 +2368,10 @@ export default function OrganizationDetails() {
                       </div>
                     </div>
                   );
-                },
+                }
               )}
 
             </div>
-
           ) : (
 
             /* =================================================
@@ -2293,7 +2404,7 @@ export default function OrganizationDetails() {
                   className="organization-action create"
                   onClick={() =>
                     setIsCreateAdminOpen(
-                      true,
+                      true
                     )
                   }
                   style={{
@@ -2310,10 +2421,8 @@ export default function OrganizationDetails() {
                 </button>
 
               </div>
-
             </div>
           )}
-
         </section>
       </main>
 
@@ -2328,14 +2437,14 @@ export default function OrganizationDetails() {
           aria-modal="true"
           aria-label="Document preview"
           onMouseDown={(
-            event,
+            event
           ) => {
             if (
               event.target ===
               event.currentTarget
             ) {
               setSelectedDocument(
-                null,
+                null
               );
             }
           }}
@@ -2343,7 +2452,6 @@ export default function OrganizationDetails() {
           <div className="document-lightbox-card">
 
             <div className="document-lightbox-header">
-
               <div>
                 <span>
                   {
@@ -2363,18 +2471,16 @@ export default function OrganizationDetails() {
                 className="lightbox-close"
                 onClick={() =>
                   setSelectedDocument(
-                    null,
+                    null
                   )
                 }
                 aria-label="Close preview"
               >
                 <X size={20} />
               </button>
-
             </div>
 
             <div className="document-lightbox-body">
-
               <img
                 src={
                   selectedDocument.url
@@ -2383,20 +2489,17 @@ export default function OrganizationDetails() {
                   selectedDocument.name
                 }
               />
-
             </div>
 
             <div className="document-lightbox-footer">
-
               <span>
                 {String(
                   selectedDocument.ext ||
-                    "IMAGE",
+                    "IMAGE"
                 ).toUpperCase()}
               </span>
 
               <div>
-
                 <a
                   href={
                     selectedDocument.url
@@ -2423,9 +2526,7 @@ export default function OrganizationDetails() {
 
                   Download
                 </a>
-
               </div>
-
             </div>
 
           </div>
@@ -2444,7 +2545,7 @@ export default function OrganizationDetails() {
             aria-modal="true"
             aria-label="Account details"
             onMouseDown={(
-              event,
+              event
             ) => {
               if (
                 event.target ===
@@ -2457,7 +2558,6 @@ export default function OrganizationDetails() {
             <div className="account-details-modal">
 
               <div className="account-details-modal-header">
-
                 <div>
                   <span className="account-details-modal-label">
                     Organization
@@ -2481,11 +2581,9 @@ export default function OrganizationDetails() {
                 >
                   <X size={20} />
                 </button>
-
               </div>
 
               <div className="account-details-modal-body">
-
                 <UserDetails
                   user={
                     selectedAccount
@@ -2494,7 +2592,6 @@ export default function OrganizationDetails() {
                     closeAccountDetails
                   }
                 />
-
               </div>
 
             </div>
@@ -2511,7 +2608,7 @@ export default function OrganizationDetails() {
         }
         onClose={() =>
           setIsCreateAdminOpen(
-            false,
+            false
           )
         }
         org={orgData}

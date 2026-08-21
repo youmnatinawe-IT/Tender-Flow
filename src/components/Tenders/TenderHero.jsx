@@ -8,19 +8,7 @@ export default function TenderHero() {
         <p>Monitor, manage and analyze all tenders across the platform.</p>
       </div>
 
-      <div className="hero-actions">
-        <button className="hero-btn secondary">
-          <FileText size={16} />
-          <span>Drafts</span>
-        </button>
-
-        <button className="hero-btn secondary">
-          <BarChart3 size={16} />
-          <span>Reports</span>
-        </button>
-
     
-      </div>
     </div>
   );
 }
