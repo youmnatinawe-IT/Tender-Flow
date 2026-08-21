@@ -1,0 +1,35 @@
+/* =========================================================
+   RTL / LTR adjustments — minimal, additive only.
+   Loaded after all other stylesheets.
+   ========================================================= */
+
+/* Notification badge anchors to the outer edge in RTL */
+[dir="rtl"] .navbar .badge {
+  right: auto;
+  left: -2px;
+}
+
+/* Back arrow points the correct way */
+[dir="rtl"] .nav-back-icon-btn svg {
+  transform: scaleX(-1);
+}
+
+/* Tables: let cell text follow the document direction */
+[dir="rtl"] table,
+[dir="rtl"] th,
+[dir="rtl"] td {
+  text-align: right;
+}
+
+[dir="rtl"] th:last-child,
+[dir="rtl"] td:last-child {
+  text-align: right;
+}
+
+/* Inputs inside search boxes keep caret on the correct side */
+[dir="rtl"] .search-box input {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Modals / alerts text follows direction naturally; nothing to flip. */

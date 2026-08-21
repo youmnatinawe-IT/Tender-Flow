@@ -5,6 +5,28 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>my-react-test</title>
+    <script>
+      /* Apply saved theme + language direction before React mounts to prevent flash */
+      (function () {
+        var theme = "light";
+        try {
+          var saved = localStorage.getItem("theme");
+          if (saved === "light" || saved === "dark") theme = saved;
+        } catch (e) {}
+        document.documentElement.setAttribute("data-theme", theme);
+
+        var lang = "en";
+        try {
+          var savedLang = localStorage.getItem("language");
+          if (savedLang === "en" || savedLang === "ar") lang = savedLang;
+        } catch (e) {}
+        document.documentElement.setAttribute("lang", lang);
+        document.documentElement.setAttribute(
+          "dir",
+          lang === "ar" ? "rtl" : "ltr"
+        );
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -4,13 +4,18 @@ import AuthPage from "./Pages/Auth/AuthPage";
 import Dashboard from "./Pages/Dashbord/Dashbord";
 import Organizations from "./Pages/Dashbord/Organizations";
 import Tenders from "./Pages/Dashbord/Tenders";
-import Users from "./Pages/Dashbord/Users"
-import Vendors from "./Pages/Dashbord/Bids"
+import Users from "./Pages/Dashbord/Users";
+import Vendors from "./Pages/Dashbord/Bids";
+import RegistrationRequests from "./Pages/Dashbord/RegistrationRequests";
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import OrganizationDetails from "./components/organaizations/organizationdetails";
 import SessionExpiryWatcher from "./components/SessionExpiryWatcher";
-import RolesPermissions from "./Pages/Dashbord/RolesPermissions"
+import RolesPermissions from "./Pages/Dashbord/RolesPermissions";
 import AdminProfile from "./Pages/Dashbord/Adminprofail";
+import AdminOnlyRoute from "./components/AdminOnlyRoute";
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,17 +34,68 @@ function App() {
   return (
     <BrowserRouter>
       <SessionExpiryWatcher />
+
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<AuthPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/organizations" element={<Organizations />} />
-        <Route path="/organizations/:id" element={<OrganizationDetails />} />
-        <Route path="/tenders" element={<Tenders />} />
-        <Route path="/users" element={<Users />} />
-           <Route path="/vendors" element={<  Vendors />} />
-           <Route path="/settings" element={<AdminProfile />} />
-            <Route path="/RolesPermissions" element={<RolesPermissions />} /> 
+        <Route
+          path="/"
+          element={<Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="/login"
+          element={<AuthPage />}
+        />
+
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
+
+        <Route
+          path="/organizations"
+          element={<Organizations />}
+        />
+
+        <Route
+          path="/organizations/:id"
+          element={<OrganizationDetails />}
+        />
+
+        <Route
+          path="/tenders"
+          element={<Tenders />}
+        />
+
+        {/* جميع المستخدمين */}
+        <Route
+          path="/users"
+          element={<Users />}
+        />
+
+        {/* طلبات التسجيل */}
+        <Route
+          path="/registration-requests"
+          element={<RegistrationRequests />}
+        />
+
+        <Route
+          path="/vendors"
+          element={<Vendors />}
+        />
+
+        <Route
+          path="/settings"
+          element={<AdminProfile />}
+        />
+
+       <Route
+  path="/RolesPermissions"
+  element={
+    <AdminOnlyRoute>
+      <RolesPermissions />
+    </AdminOnlyRoute>
+  }
+/>
       </Routes>
     </BrowserRouter>
   );
