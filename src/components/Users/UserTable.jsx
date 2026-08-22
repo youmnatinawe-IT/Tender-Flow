@@ -679,8 +679,7 @@ export default function UserTable({ filters }) {
 
               <th>Role</th>
 
-              {/* TEMP DEBUG COLUMN */}
-              <th>Role ID</th>
+             
 
               <th>Status</th>
 
@@ -813,26 +812,7 @@ export default function UserTable({ filters }) {
                         </span>
                       </td>
 
-                      {/* =================================================
-                          ROLE ID
-                          TEMPORARY DEBUG
-                      ================================================= */}
-
-                      <td>
-                        <code
-                          style={{
-                            fontSize:
-                              "11px",
-                            opacity: 0.8,
-                            wordBreak:
-                              "break-all",
-                          }}
-                        >
-                          {user?.role_id ||
-                            "NO ROLE"}
-                        </code>
-                      </td>
-
+                   
                       {/* =================================================
                           STATUS
                       ================================================= */}
